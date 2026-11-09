@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.cache/
+capturas/*/
+!capturas/README.md
+assets-src/
+*.log
