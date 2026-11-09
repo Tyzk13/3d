@@ -10,6 +10,7 @@
     "build:single": "vite build --mode single",
     "preview": "vite preview",
     "capturas": "node tools/capturas.mjs",
+    "assets": "NODE_USE_ENV_PROXY=1 node tools/baixar-assets.mjs",
     "servidor": "node server/servidor-sync.mjs"
   },
   "dependencies": {
@@ -18,7 +19,13 @@
     "three": "^0.187.0"
   },
   "devDependencies": {
+    "@gltf-transform/cli": "^4.5.1",
+    "@gltf-transform/core": "^4.5.1",
+    "@gltf-transform/extensions": "^4.5.1",
+    "@gltf-transform/functions": "^4.5.1",
     "@types/three": "^0.187.0",
+    "meshoptimizer": "^1.3.0",
+    "sharp": "^0.35.5",
     "typescript": "^7.0.2",
     "vite": "^8.3.7",
     "vite-plugin-singlefile": "^2.3.4"

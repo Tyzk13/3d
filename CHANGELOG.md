@@ -12,3 +12,10 @@
 - Corrigido: vistas Altar e Coro ficavam acima das paredes (as vigas tapavam a imagem); telhado agora
   aparece por padrão (a camada continua podendo ser desligada; a exportação VTT sempre o esconde).
 - Luzes convertidas para as unidades físicas do three atual (fator π) — calibração visual vem na etapa B.
+
+## B1 — pós-processamento
+
+- Pipeline `postprocessing` (pmndrs): render em meia-precisão (HDR) → AO N8AO → profundidade de campo
+  (só Alta) → bloom, aberração cromática leve, tone mapping AgX, contraste/saturação, vinheta, grão → SMAA.
+- Predefinições Baixa/Média/Alta: resolução, tamanho do mapa de sombra, AO, SMAA, DOF e grão.
+- Exportação VTT continua sem pós-processamento (tone mapping ligado só durante a exportação).

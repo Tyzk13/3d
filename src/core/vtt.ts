@@ -23,7 +23,7 @@ export function xrender(c: ReturnType<typeof xcalc>, opt: { canopy?: boolean; sh
   const oc = new THREE.OrthographicCamera(-c.Wd / 2, c.Wd / 2, c.Hd / 2, -c.Hd / 2, 0.1, 300);
   oc.position.set(cx, 120, cz); oc.up.set(0, 0, -1); oc.lookAt(cx, 0, cz);
   const hid: THREE.Object3D[] = [], hide = (o: THREE.Object3D) => { if (o.visible) { o.visible = false; hid.push(o); } };
-  const sv = { fog: S.fog, bg: S.background, ex: R.toneMappingExposure, hi: hemi.intensity, si: sun.intensity, sc: sun.castShadow, sp: sun.position.clone(), pr: R.getPixelRatio(), ly: M.layers.map(l => l.o.visible), lf: M.loft ? M.loft.visible : null };
+  const sv = { fog: S.fog, bg: S.background, ex: R.toneMappingExposure, hi: hemi.intensity, si: sun.intensity, sc: sun.castShadow, sp: sun.position.clone(), pr: R.getPixelRatio(), tm: R.toneMapping, ly: M.layers.map(l => l.o.visible), lf: M.loft ? M.loft.visible : null };
   try {
     for (const k in st.T) hide(st.T[k].g);
     [...helpers, dome].forEach(hide); M.mist.forEach(hide); M.halos.forEach(hide); M.lights.forEach(q => hide(q.l));
@@ -32,7 +32,7 @@ export function xrender(c: ReturnType<typeof xcalc>, opt: { canopy?: boolean; sh
     if (M.loft) M.loft.visible = c.A.lv === 2;
     M.exportHide().forEach(hide);
     if (!opt.canopy) M.G.traverse(o => { if (o.userData.canopy) hide(o); });
-    S.fog = null; S.background = new THREE.Color(0x101010); R.toneMappingExposure = 0.95;
+    S.fog = null; S.background = new THREE.Color(0x101010); R.toneMappingExposure = 0.95; R.toneMapping = THREE.ACESFilmicToneMapping;
     hemi.intensity = Math.PI; sun.intensity = 0.5 * Math.PI; sun.position.set(-20, 80, 12); sun.castShadow = !!opt.shadows;
     R.setPixelRatio(1); R.setSize(c.w, c.h, false); R.render(S, oc);
     return cv.toDataURL('image/png');
@@ -40,7 +40,7 @@ export function xrender(c: ReturnType<typeof xcalc>, opt: { canopy?: boolean; sh
     hid.forEach(o => { o.visible = true; });
     M.layers.forEach((l, i) => { l.o.visible = sv.ly[i]; });
     if (M.loft) M.loft.visible = sv.lf!;
-    S.fog = sv.fog; S.background = sv.bg; R.toneMappingExposure = sv.ex; hemi.intensity = sv.hi; sun.intensity = sv.si; sun.castShadow = sv.sc; sun.position.copy(sv.sp);
+    S.fog = sv.fog; S.background = sv.bg; R.toneMappingExposure = sv.ex; R.toneMapping = sv.tm; hemi.intensity = sv.hi; sun.intensity = sv.si; sun.castShadow = sv.sc; sun.position.copy(sv.sp);
     fit();
   }
 }
