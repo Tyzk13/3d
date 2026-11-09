@@ -10,7 +10,7 @@ export function fillAreas() {
   xinfo();
 }
 export function xcalc(areaIdx?: number, ppgIn?: number) {
-  const A = st.MP!.vtt.areas[areaIdx ?? (+$('xa').value || 0)], b = A.b, Wd = b[1] - b[0], Hd = b[3] - b[2];
+  const A = st.MP!.vtt.areas[areaIdx ?? (+$('xa').value || 0)], b = A.b, Wd = +(b[1] - b[0]).toFixed(3), Hd = +(b[3] - b[2]).toFixed(3);
   const mx = Math.min(8192, R.capabilities.maxTextureSize || 4096);
   let g = ppgIn ?? (+$('xp').value || 70);
   g = Math.max(20, Math.floor(Math.min(g, mx / Wd, mx / Hd, Math.sqrt(24e6 / (Wd * Hd)))));
