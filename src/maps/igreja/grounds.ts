@@ -15,7 +15,7 @@ export const FENCE = { x: 26, z0: -24, z1: 40 };
 export const PATH = { w: 2.8, z0: 12.8, z1: 40 };
 export const PARK = { x0: 10, x1: 25, z0: 24, z1: 39 };
 export const SHED = { x: 19, z: 8, w: 4.2, d: 3.2, h: 2.5 };
-export const GAZEBO = { x: -20, z: 24.5, r: 3 };
+export const GAZEBO = { x: 15, z: -11, r: 3 };
 export const GRAVE = { x0: -22, x1: -11, z0: -4, z1: 14 };
 
 let sd = 41;
