@@ -3,6 +3,6 @@
 import type { MapModule } from '../core/types';
 
 export const MAPS: Record<string, MapModule> = {
-  igreja: { id: 'igreja', n: 'Igreja', build: async M => (await import('./igreja')).build(M) },
+  igreja: { id: 'igreja', n: 'Igreja', build: async M => (await import('./igreja/index')).build(M) },
   campo: { id: 'campo', n: 'Campo aberto', build: async M => (await import('./campo')).build(M) },
 };

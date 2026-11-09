@@ -25,7 +25,7 @@ export interface MapRuntime {
   loft: THREE.Object3D | null;
   walk: THREE.Object3D[];
   lights: MapLight[];
-  glass: THREE.MeshBasicMaterial[];
+  glass: THREE.Material[];
   halos: THREE.Sprite[];
   mist: THREE.Sprite[];
   lamps: THREE.MeshBasicMaterial[];

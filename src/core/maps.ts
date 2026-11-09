@@ -52,6 +52,7 @@ export async function loadMap(id: string) {
     st.V = M.views; st.vi = 0; st.anim = null;
     const v = st.V[0];
     $('bv').textContent = 'Vista: ' + v.n;
+    cam.fov = v.fov || 50; cam.updateProjectionMatrix();
     cam.position.set(...v.p); ctl.target.set(...v.t); ctl.update();
     setTime(st.pi);
     let i = 0; for (const k in st.T) placeT(st.T[k], i++);

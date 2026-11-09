@@ -1,97 +1,121 @@
-// Céu, luz do sol/ambiente, reflexos e predefinições de clima.
+// Céu (HDRI), luz ambiente/reflexos (PMREM do HDRI), sol/lua, névoa e predefinições de clima.
+// Cada clima carrega seu HDRI sob demanda; a cor da névoa é tirada do horizonte do próprio HDRI.
 import * as THREE from 'three';
+import { HDRLoader } from 'three/addons/loaders/HDRLoader.js';
 import { R, S } from './engine';
-import { LI } from './kit';
 import { st } from './state';
+import type { Grade } from './post';
 
 export interface Preset {
   n: string;
-  glow?: number;
-  sky: [string, string, string];
-  cl: string; dk: string;
-  fog: number; fd: [number, number];
+  hdr: string;
+  /** brilho do céu visível e da luz ambiente/reflexos vinda do HDRI */
+  bg: number; env: number; blur: number;
+  /** rotação do HDRI (rad) */
+  rot: number;
+  /** sol/lua: cor, intensidade, direção (azimute°, elevação°) */
+  sc: number; si: number; az: number; el: number;
+  /** preenchimento do chão (hemisfério) */
   hs: number; hg: number; hi: number;
-  sc: number; si: number; sp: [number, number, number];
-  win: number; wr?: [number, number, number];
-  door: number; dc?: number;
-  lamp: number; pw: number; pud: number;
-  ex?: number; mist?: number;
+  /** névoa: densidade e multiplicador/tingimento da cor tirada do horizonte */
+  fogD: number; fogK: number; fogTint?: number;
+  /** luzes artificiais (lampiões, velas, porta): 0 = apagadas, 1 = normal */
+  lamps: number;
+  /** vitrais vistos de fora: brilho */
+  win: number;
+  grade: Partial<Grade>;
 }
 
 export const PRE: Preset[] = [
-  { n: 'Terror', glow: .55, sky: ['#06090e', '#161d27', '#323c48'], cl: '70,80,92', dk: '6,9,14', fog: 0x1a2129, fd: [16, 125], hs: 0x6f84a8, hg: 0x12100f, hi: .55, sc: 0x8fa2c0, si: .45, sp: [-42, 15, 30], win: 0xffffff, wr: [1.5, 1.05, .62], door: 1.3, dc: 0xff9a4a, lamp: 0xffc27a, pw: 1, pud: .4, ex: 1.3, mist: .2 },
-  { n: 'Anoitecer', glow: .45, sky: ['#141b27', '#3b4658', '#7d8794'], cl: '110,120,138', dk: '20,26,38', fog: 0x6a7585, fd: [28, 175], hs: 0x8296bd, hg: 0x1b1a1c, hi: .85, sc: 0xd9c9b8, si: .8, sp: [-60, 13, 34], win: 0xffffff, wr: [1.7, 1.3, .85], door: 1.4, dc: 0xffa050, lamp: 0xffd9a0, pw: 1, pud: .5, ex: 1.15, mist: .22 },
-  { n: 'Crepúsculo', glow: .5, dc: 0xff2a1a, ex: 1.1, mist: .15, sky: ['#070308', '#35101a', '#a02c2a'], cl: '150,34,36', dk: '8,4,8', fog: 0x2c1014, fd: [18, 120], hs: 0xff7a60, hg: 0x1c0c0e, hi: .75, sc: 0xff7352, si: .8, sp: [-40, 18, 34], win: 0xff5a48, door: 2.4, lamp: 0xff9a6a, pw: 1, pud: 1 },
-  { n: 'Nublado', sky: ['#56606a', '#868f96', '#b0b4b1'], cl: '120,128,134', dk: '60,66,72', fog: 0xa4a9a8, fd: [26, 150], hs: 0xfff0d8, hg: 0x3a3226, hi: .78, sc: 0xdfe6ee, si: .55, sp: [-30, 45, 25], win: 0xc8c8d0, door: 0, lamp: 0x7a7468, pw: 0, pud: .15 },
-  { n: 'Noite', glow: .6, sky: ['#03050c', '#0e1426', '#262d44'], cl: '40,50,80', dk: '2,4,10', fog: 0x1a2036, fd: [22, 130], hs: 0x7f93d6, hg: 0x10131c, hi: .3, sc: 0x9db4ff, si: .4, sp: [-25, 40, 20], win: 0xffd49a, door: .6, lamp: 0xffd27a, pw: 1, pud: .45 },
+  { n: 'Terror', hdr: 'overcast_soil_puresky', bg: 0.05, env: 0.16, blur: 0.02, rot: 0, sc: 0x9db0d0, si: 0.35, az: 220, el: 38, hs: 0x55657d, hg: 0x15130f, hi: 0.12, fogD: 0.022, fogK: 0.75, fogTint: 0x8fa0b8, lamps: 1, win: 1.6, grade: { exposure: 1.15, saturation: -0.3, contrast: 0.16, brightness: -0.02, bloom: 0.75, vignette: 0.62 } },
+  { n: 'Anoitecer', hdr: 'kloppenheim_07_puresky', bg: 0.22, env: 0.38, blur: 0.0, rot: 2.2, sc: 0xffc29a, si: 0.9, az: 245, el: 8, hs: 0x7787a3, hg: 0x1b1814, hi: 0.18, fogD: 0.013, fogK: 0.95, lamps: 1, win: 1.2, grade: { exposure: 1.0, saturation: -0.2, contrast: 0.14, bloom: 0.6, vignette: 0.5 } },
+  { n: 'Crepúsculo', hdr: 'qwantani_dusk_2_puresky', bg: 0.35, env: 0.5, blur: 0, rot: 0.6, sc: 0xffa070, si: 1.1, az: 250, el: 5, hs: 0x8a7fa0, hg: 0x1c1512, hi: 0.2, fogD: 0.011, fogK: 1, lamps: 1, win: 1.1, grade: { exposure: 1.0, saturation: -0.12, contrast: 0.12, bloom: 0.55, vignette: 0.5 } },
+  { n: 'Nublado', hdr: 'kloofendal_overcast_puresky', bg: 0.8, env: 0.9, blur: 0, rot: 0, sc: 0xe8eef5, si: 1.4, az: 200, el: 50, hs: 0xc8d0da, hg: 0x2a2620, hi: 0.25, fogD: 0.009, fogK: 1, lamps: 0, win: 0.35, grade: { exposure: 1.0, saturation: -0.18, contrast: 0.1, bloom: 0.35, vignette: 0.4 } },
+  { n: 'Noite', hdr: 'qwantani_night_puresky', bg: 0.35, env: 0.18, blur: 0, rot: 0, sc: 0xa9c1ff, si: 0.4, az: 160, el: 42, hs: 0x3c4a6a, hg: 0x0c0d10, hi: 0.1, fogD: 0.016, fogK: 0.8, lamps: 1, win: 1.6, grade: { exposure: 1.15, saturation: -0.25, contrast: 0.16, bloom: 0.8, vignette: 0.6 } },
 ];
 
-// ---------- cúpula do céu desenhada em canvas ----------
-const skC = document.createElement('canvas'); skC.width = 1024; skC.height = 512;
-const skx = skC.getContext('2d')!;
-export const skt = new THREE.CanvasTexture(skC); skt.colorSpace = THREE.SRGBColorSpace;
-export const dome = new THREE.Mesh(new THREE.SphereGeometry(450, 32, 16), new THREE.MeshBasicMaterial({ map: skt, side: THREE.BackSide, fog: false }));
-S.add(dome);
+const HDR_URLS = import.meta.glob('../assets/hdri/*.hdr', { query: '?url', import: 'default', eager: true }) as Record<string, string>;
+const hdrUrl = (id: string) => Object.entries(HDR_URLS).find(([k]) => k.includes('/' + id + '_'))?.[1];
 
 const pmrem = new THREE.PMREMGenerator(R);
-const envScene = new THREE.Scene();
-envScene.add(new THREE.Mesh(new THREE.SphereGeometry(50, 32, 16), new THREE.MeshBasicMaterial({ map: skt, side: THREE.BackSide })));
-let envRT: THREE.WebGLRenderTarget | null = null;
-export const env = { hdr: null as THREE.Texture | null };
-function updEnv() {
-  if (env.hdr) return;
-  if (envRT) envRT.dispose();
-  envRT = pmrem.fromScene(envScene, 0, 0.1, 200);
-  S.environment = envRT.texture;
-}
-export function applyHdr(tex: THREE.Texture | null) {
-  env.hdr = tex;
-  if (tex) {
+const cache: Record<string, Promise<{ tex: THREE.DataTexture; env: THREE.Texture; horizon: THREE.Color }>> = {};
+function loadHdr(id: string) {
+  return (cache[id] ||= (async () => {
+    const url = hdrUrl(id);
+    if (!url) throw new Error('HDRI não encontrado: ' + id);
+    const tex = await new HDRLoader().setDataType(THREE.HalfFloatType).loadAsync(url);
     tex.mapping = THREE.EquirectangularReflectionMapping;
-    dome.material.map = tex; dome.scale.x = -1;
-    if (envRT) envRT.dispose(); envRT = pmrem.fromEquirectangular(tex); S.environment = envRT.texture;
-  } else { dome.material.map = skt; dome.scale.x = 1; updEnv(); }
-  dome.material.needsUpdate = true;
+    const env = pmrem.fromEquirectangular(tex).texture;
+    return { tex, env, horizon: horizonColor(tex) };
+  })());
+}
+/** Média de uma faixa logo acima do horizonte (linear). */
+function horizonColor(tex: THREE.DataTexture) {
+  const { data, width, height } = tex.image as { data: Uint16Array; width: number; height: number };
+  const c = new THREE.Color(0, 0, 0), y0 = Math.floor(height * 0.44), y1 = Math.floor(height * 0.5);
+  let n = 0;
+  for (let y = y0; y < y1; y++) for (let x = 0; x < width; x += 4) {
+    const i = (y * width + x) * 4;
+    c.r += THREE.DataUtils.fromHalfFloat(data[i]); c.g += THREE.DataUtils.fromHalfFloat(data[i + 1]); c.b += THREE.DataUtils.fromHalfFloat(data[i + 2]); n++;
+  }
+  return c.multiplyScalar(1 / n);
 }
 
-export const hemi = new THREE.HemisphereLight(0xfff0d8, 0x3a3226, 0.95); S.add(hemi);
-export const sun = new THREE.DirectionalLight(0xfff0d6, 1.05);
-sun.position.set(-30, 45, 25); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -0.0005; sun.shadow.normalBias = 0.02;
-Object.assign(sun.shadow.camera, { left: -55, right: 55, top: 55, bottom: -55, near: 1, far: 160 });
+export const hemi = new THREE.HemisphereLight(0xffffff, 0x202020, 0.3); S.add(hemi);
+export const sun = new THREE.DirectionalLight(0xffffff, 1);
+sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -0.0003; sun.shadow.normalBias = 0.03; sun.shadow.radius = 3;
+Object.assign(sun.shadow.camera, { left: -55, right: 55, top: 55, bottom: -55, near: 1, far: 200 });
 S.add(sun); S.add(sun.target);
+S.fog = new THREE.FogExp2(0x808890, 0.01);
+
+/** Cúpula vazia mantida para compatibilidade (a exportação VTT a esconde). O céu é S.background. */
+export const dome = new THREE.Object3D();
+export const env = { hdr: null as THREE.Texture | null };
 
 export function setShadowRadius(r: number) {
-  Object.assign(sun.shadow.camera, { left: -r, right: r, top: r, bottom: -r, far: Math.max(160, r * 4) });
+  Object.assign(sun.shadow.camera, { left: -r, right: r, top: r, bottom: -r, far: Math.max(200, r * 4) });
   sun.shadow.camera.updateProjectionMatrix();
 }
 
-export function setTime(i: number) {
-  const p = PRE[i];
-  skx.clearRect(0, 0, 1024, 512);
-  const g = skx.createLinearGradient(0, 0, 0, 512);
-  g.addColorStop(0, p.sky[0]); g.addColorStop(0.38, p.sky[1]); g.addColorStop(0.5, p.sky[2]); g.addColorStop(1, p.sky[0]);
-  skx.fillStyle = g; skx.fillRect(0, 0, 1024, 512);
-  let q = 11; const r = () => (q = (q * 16807) % 2147483647) / 2147483647;
-  for (let k = 0; k < 170; k++) {
-    const x = r() * 1024, y = 40 + r() * 190, w = 50 + r() * 130, c = r() < 0.6 ? p.dk : p.cl, gr = skx.createRadialGradient(x, y, 0, x, y, w);
-    gr.addColorStop(0, 'rgba(' + c + ',.28)'); gr.addColorStop(1, 'rgba(' + c + ',0)'); skx.fillStyle = gr;
-    skx.save(); skx.translate(x, y); skx.scale(1, 0.35); skx.translate(-x, -y); skx.fillRect(x - w, y - w, 2 * w, 2 * w); skx.restore();
-  }
-  skt.needsUpdate = true; updEnv();
-  const fog = S.fog as THREE.Fog;
-  fog.color.set(p.fog); fog.near = p.fd[0]; fog.far = p.fd[1];
-  hemi.color.set(p.hs); hemi.groundColor.set(p.hg); hemi.intensity = p.hi * 0.6 * LI;
-  sun.color.set(p.sc); sun.intensity = p.si * LI; sun.position.set(p.sp[0], p.sp[1], p.sp[2]);
-  R.toneMappingExposure = p.ex || 1;
+let userHdr: { tex: THREE.Texture; env: THREE.Texture } | null = null;
+/** HDRI escolhido pelo usuário (Importar 3D → HDRI). null volta ao HDRI do clima. */
+export function applyHdr(tex: THREE.Texture | null) {
+  env.hdr = tex;
+  userHdr = tex ? { tex, env: pmrem.fromEquirectangular(tex).texture } : null;
+  if (tex) tex.mapping = THREE.EquirectangularReflectionMapping;
+  setTime(st.pi);
+}
+
+let reqId = 0;
+export const timeHooks: ((p: Preset) => void)[] = [];
+
+export async function setTime(i: number) {
+  const p = PRE[i], my = ++reqId;
+  const h = await loadHdr(p.hdr);
+  if (my !== reqId) return; // outro clima foi pedido enquanto carregava
+  const tex = userHdr?.tex || h.tex, envT = userHdr?.env || h.env;
+  S.background = tex; S.environment = envT;
+  S.backgroundIntensity = p.bg; S.environmentIntensity = p.env; S.backgroundBlurriness = p.blur;
+  S.backgroundRotation.set(0, p.rot, 0); S.environmentRotation.set(0, p.rot, 0);
+  const fog = S.fog as THREE.FogExp2;
+  fog.color.copy(h.horizon).multiplyScalar(p.bg * p.fogK);
+  if (p.fogTint != null) fog.color.multiply(new THREE.Color(p.fogTint));
+  fog.density = p.fogD;
+  const az = THREE.MathUtils.degToRad(p.az), el = THREE.MathUtils.degToRad(p.el);
+  sun.position.set(Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el)).multiplyScalar(80);
+  sun.color.set(p.sc); sun.intensity = p.si;
+  hemi.color.set(p.hs); hemi.groundColor.set(p.hg); hemi.intensity = p.hi;
   const M = st.MP;
   if (M) {
-    M.lamps.forEach(m => m.color.set(p.lamp));
-    M.glass.forEach(m => m.color.set(p.win));
-    if (p.wr) M.glass.forEach(m => m.color.setRGB(p.wr![0], p.wr![1], p.wr![2]));
-    M.lights.forEach(l => (l.l.intensity = p.pw ? l.n : l.d));
-    if (M.puddle) (M.puddle as any).opacity = p.pud;
-    M.halos.forEach(h => (h.material.opacity = p.glow || 0));
-    M.mist.forEach(m => (m.material.opacity = p.mist == null ? 0.12 : p.mist));
+    M.lights.forEach(l => (l.l.intensity = l.n * p.lamps));
+    M.lamps.forEach(m => m.color.setScalar(p.lamps ? 1 : 0.15));
+    M.glass.forEach((m: any) => { if (m.emissive) m.emissiveIntensity = p.win; else m.color.setScalar(p.win); });
+    M.halos.forEach(s => (s.material.opacity = 0.22 * p.lamps));
+    M.mist.forEach(s => (s.material.opacity = 0.08));
     if (M.onTime) M.onTime(p);
   }
+  timeHooks.forEach(f => f(p));
 }
+
+/** Pré-carrega os HDRIs dos climas (em segundo plano). */
+export function preloadSkies() { PRE.forEach(p => loadHdr(p.hdr).catch(() => {})); }

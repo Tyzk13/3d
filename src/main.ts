@@ -1,10 +1,11 @@
 // Ponto de entrada: monta a interface, carrega o mapa e roda o laço de renderização.
 import './style.css';
+import './core/heightfog';
 import * as THREE from 'three';
 import { CFG } from './core/config';
 import { R, S, cam, ctl, fit } from './core/engine';
 import { st, $ } from './core/state';
-import { PRE, setTime } from './core/sky';
+import { PRE, setTime, timeHooks, preloadSkies } from './core/sky';
 import { DEF, makeToken, dropT, onChar, onPos, selT, sizeT, save, placeT, initTokenInput, tickTokens, snapTokens } from './core/tokens';
 import { NET, handlers, startNet } from './core/net';
 import { WM, setWalk, walkStep, walkPointer, initWalk, placeWalkCam } from './core/walk';
@@ -20,6 +21,7 @@ st.showC = CFG.chars;
 if (!CFG.ui) document.body.classList.add('nu');
 if (CFG.ro) document.body.classList.add('ro');
 
+timeHooks.push(p => post.setGrade(p.grade));
 handlers.onPos = onPos; handlers.onChar = onChar; handlers.dropT = dropT;
 
 // ---------- novo personagem ----------
@@ -139,7 +141,7 @@ function captureApi() {
       const h = rc.intersectObjects(st.MP!.walk, false)[0]; WM.y = h ? h.point.y : 0;
       a.target.set(WM.x, WM.z); a.ty = WM.y; snapTokens(); placeWalkCam();
     },
-    time(i: number) { st.pi = i; setTime(i); },
+    async time(i: number) { st.pi = i; await setTime(i); },
     map: (id: string) => loadMap(id),
     frames(n = 1) { for (let i = 0; i < n; i++) { if (WM.on) placeWalkCam(); snapTokens(); post.render(1 / 60); } },
     shot(png = false) { this.frames(post.warmup()); return png ? R.domElement.toDataURL('image/png') : R.domElement.toDataURL('image/jpeg', 0.9); },
@@ -155,10 +157,12 @@ async function start() {
   post.init(CFG.quality);
   loading.step('Montando o cenário', 0.2);
   await loadMap(CFG.map);
+  await setTime(st.pi);
   loading.step('Personagens', 0.85);
   DEF.forEach(makeToken);
   if (CFG.walk) setWalk(true);
   startNet();
+  if (!CFG.capture) setTimeout(preloadSkies, 3000);
   try { if (parent !== window) parent.postMessage({ evt: 'ready', maps: Object.keys(MAPS) }, '*'); } catch (_) { /* sem pai */ }
   if (CFG.capture) {
     captureApi();

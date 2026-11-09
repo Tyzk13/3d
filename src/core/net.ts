@@ -45,14 +45,15 @@ function netWs(url: string) {
     const stEl = $('st');
     const snd = (o: any) => { if (ws && ws.readyState === 1) ws.send(JSON.stringify(o)); };
     const open = () => {
-      const qs = 'room=' + encodeURIComponent(CFG.room) + (CFG.ro ? '&ro=1' : '');
+      const qs = 'room=' + encodeURIComponent(CFG.room) + (CFG.ro ? '&ro=1' : '') + (CFG.key ? '&key=' + encodeURIComponent(CFG.key) : '');
       ws = new WebSocket(url + (url.indexOf('?') > 0 ? '&' : '?') + qs);
       ws.onopen = () => { stEl.textContent = CFG.ro ? 'ao vivo (só ver)' : 'ao vivo (ws)'; if (first) { first = false; ok(true); } };
       ws.onerror = () => { if (first) { first = false; ok(false); } };
       ws.onclose = () => { stEl.textContent = 'reconectando…'; setTimeout(open, 2500); };
       ws.onmessage = e => {
         let m: any; try { m = JSON.parse(e.data); } catch (_) { return; }
-        if (m.t === 'pos') handlers.onPos(m.map, m.id, m.v);
+        if (m.t === 'hello') { if (!m.edit && !CFG.ro) { CFG.ro = true; document.body.classList.add('ro'); stEl.textContent = 'ao vivo (só ver)'; } }
+        else if (m.t === 'pos') handlers.onPos(m.map, m.id, m.v);
         else if (m.t === 'char') handlers.onChar(m.id, m.v);
         else if (m.t === 'delchar') handlers.dropT(m.id);
       };

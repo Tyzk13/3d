@@ -54,7 +54,9 @@ const t0 = Date.now();
 for (const time of TIMES) {
   const url = `http://127.0.0.1:${port}/?capture=1&ui=0&map=${MAP}&time=${time}&q=${opt.q || 'alta'}`;
   await page.goto(url);
-  await page.waitForFunction(() => window.__capReady === true, null, { timeout: 180000 });
+  const tl = Date.now();
+  await page.waitForFunction(() => window.__capReady === true, null, { timeout: 600000 });
+  console.log(`  cena pronta em ${((Date.now() - tl) / 1000).toFixed(0)} s`);
   for (const s of SHOTS) {
     const ok = await page.evaluate(({ s }) => {
       const c = window.__cap;
