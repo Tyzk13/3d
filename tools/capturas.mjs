@@ -36,7 +36,9 @@ const SHOTS = [
 ].filter(s => !opt.only || opt.only.split(',').includes(s.id));
 
 const stamp = new Date().toISOString().replace(/[-:]/g, '').slice(0, 13).replace('T', '-');
-const outDir = path.join(root, 'capturas', `${stamp}-${label}`);
+// grava numa pasta temporária (ignorada pelo git) e renomeia no fim
+const finalDir = path.join(root, 'capturas', `${stamp}-${label}`);
+const outDir = path.join(root, 'capturas', `_em-andamento-${stamp}-${label}`);
 fs.mkdirSync(outDir, { recursive: true });
 
 // build de produção numa pasta temporária (imune a edições durante a captura)
@@ -100,7 +102,8 @@ for (const time of TIMES) {
 }
 
 if (errors.length) fs.writeFileSync(path.join(outDir, 'erros.txt'), errors.join('\n'));
-console.log(`\n${files.length} capturas em ${((Date.now() - t0) / 1000).toFixed(0)} s → ${path.relative(root, outDir)}`);
+fs.rmSync(finalDir, { recursive: true, force: true }); fs.renameSync(outDir, finalDir);
+console.log(`\n${files.length} capturas em ${((Date.now() - t0) / 1000).toFixed(0)} s → ${path.relative(root, finalDir)}`);
 if (errors.length) console.log(`${errors.length} avisos/erros do navegador (ver erros.txt):\n  ` + errors.slice(0, 8).join('\n  '));
 await browser.close();
 await server.close();
