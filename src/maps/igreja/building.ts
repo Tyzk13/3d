@@ -123,7 +123,7 @@ export function buildChurch(G: THREE.Group): Building {
     // ferragens
     [0.6, 2.4].forEach(y => cube(hw * 0.9, 0.08, 0.02, -s * hw * 0.48, y, 0.1, iron(), pivot));
     const ring = new THREE.Mesh(new THREE.TorusGeometry(0.08, 0.012, 6, 16), iron()); ring.position.set(-s * (hw - 0.2), 1.25, 0.12); pivot.add(ring);
-    pivot.rotation.y = s * 1.15; // portas abertas para fora
+    pivot.rotation.y = s * 1.4; // portas bem abertas para fora
     doorLeaves.push(pivot);
     solids.push(leaf);
   });

@@ -6,6 +6,11 @@ Todo asset de terceiros usado no projeto é listado aqui, com link e licença.
 |---|---|---|---|---|
 | three.js, postprocessing, n8ao | código | mrdoob e colaboradores, pmndrs, N8python | MIT | npm |
 | Personagens (tokens/) | imagem | dono do projeto | — | — |
+| Vitrais, rosas, bancos, igreja | gerados por código | este projeto | — | `src/core/procedural.ts`, `src/maps/igreja/` |
+
+Os modelos da Poly Haven foram reduzidos (desbaste de folhas, simplificação de malha, texturas em WebP)
+com `tools/arvores.sh` e `tools/orcamento.sh` — a licença CC0 permite modificar sem restrições.
+Ferramentas usadas só no preparo (não distribuídas): Blender (GPL), gltf-transform (MIT), sharp (Apache-2.0).
 
 <!-- polyhaven:inicio -->
 

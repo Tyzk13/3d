@@ -38,6 +38,9 @@ export function startWalk() {
   else if (f && f.distance < 90 && d.y < -0.02) { WM.x = f.point.x; WM.z = f.point.z; WM.y = f.point.y; WM.yaw = Math.atan2(-d.x, -d.z); }
   else { WM.x = M.walkStart.x; WM.z = M.walkStart.z; WM.y = 0; WM.yaw = 0; }
   WM.pitch = WM.third ? -0.15 : 0; placeWalkCam();
+  const sx = WM.x, sz = WM.z;
+  // usado pelo teste automático (tools/testar-funcoes.mjs)
+  (window as any).__walkState = () => ({ moved: Math.hypot(WM.x - sx, WM.z - sz), y: WM.y, x: WM.x, z: WM.z });
 }
 export function setWalk(on: boolean) {
   if (on === WM.on) return;
