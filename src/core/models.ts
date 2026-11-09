@@ -33,7 +33,7 @@ function fixMaterials(root: THREE.Object3D, id: string) {
         return;
       }
       if (/flame|chama/.test(n)) { o.castShadow = false; m.emissiveIntensity = 2.5; m.toneMapped = true; return; }
-      if (/lamp|bulb/.test(n) && LIT.test(id)) { if (!seen.has(m)) { seen.add(m); m.emissive.set(0xffc27a); m.emissiveIntensity = 2.2; m.userData.litBase = 2.2; litGlass.push(m); } return; }
+      if (/(_lamp$|bulb)/.test(n) && LIT.test(id)) { if (!seen.has(m)) { seen.add(m); m.emissive.set(0xffc27a); m.emissiveIntensity = 2.2; m.userData.litBase = 2.2; litGlass.push(m); } return; }
       if (m.transparent || m.alphaTest > 0) {
         m.transparent = false; m.depthWrite = true; m.alphaTest = 0.45; m.side = THREE.DoubleSide;
         m.alphaToCoverage = true;

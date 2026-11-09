@@ -19,7 +19,7 @@ const res = []; const ok = (name, cond, extra = '') => { res.push([cond ? '✓' 
 
 // página que incorpora num iframe, para testar o postMessage
 const url = `http://127.0.0.1:${port}/`;
-await p.setContent(`<iframe id=f src="${url}?q=baixa&room=t1" style="width:600px;height:380px"></iframe><script>window.msgs=[];addEventListener('message',e=>msgs.push(e.data))</script>`);
+await p.setContent(`<iframe id=f src="${url}?q=media&room=t1" style="width:600px;height:380px"></iframe><script>window.msgs=[];addEventListener('message',e=>msgs.push(e.data))</script>`);
 await p.waitForFunction(() => window.msgs.some(m => m && m.evt === 'ready'), null, { timeout: 600000 });
 ok('iframe recebe {evt:"ready"}', true);
 const fr = p.frames().find(f => f.url().startsWith(url));
