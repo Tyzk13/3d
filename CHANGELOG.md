@@ -78,3 +78,12 @@
 - Concreto externo cinza (`concrete_wall_008`), vitrais menos estourados.
 - Varais de lampadinhas (pórtico, caminho, caramanchão) e lanternas com velas no corredor.
 - Capturas usam tempo fixo (imagens reproduzíveis).
+
+## Acabamento 2
+
+- Gramado procedural (dezenas de milhares de touceiras de lâminas com vento; densidade pela qualidade).
+- Grama base mais verde (`leafy_grass`), vidro de luminárias aceso, poeira e feixes mais sutis.
+- Corrigido: erro da barra de carregamento ao trocar de mapa depois de carregado.
+- `tools/testar-funcoes.mjs`: teste automático (iframe/ready, carregamento, caminhar, clima e mapa por
+  postMessage, erros de página) — passando.
+- VTT: paredes recortadas na área exportada e tamanho arredondado; todas as áreas validadas.

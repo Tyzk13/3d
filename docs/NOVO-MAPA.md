@@ -76,6 +76,22 @@ Defina vistas com os nomes usados pelo script (ou passe outros) e rode:
 npm run capturas -- teste --map=meuMapa
 ```
 
+## Efeitos prontos para usar
+
+| Função | Arquivo | Para quê |
+|---|---|---|
+| `instance(id, lista, G, { wind })` | `core/models.ts` | espalhar modelos; `wind: { amp, freq, flutter }` faz balançar (sombra acompanha) |
+| `grassField({ count, area, allow, height })` | `core/grass.ts` | gramado denso de touceiras com vento |
+| `makeTerrain({ … })` | `core/terrain.ts` | chão com 3 materiais misturados por máscara + colisor leve |
+| `pbr(id, { size })` / `boxUV(geo)` | `core/pbr.ts` | material PBR da Poly Haven com UV em metros |
+| `weather(material)` | `core/weathering.ts` | sujeira, musgo e escorridos em fachadas |
+| `EnvProbe` | `core/probe.ts` | reflexo/luz rebatida própria de um interior |
+| `dustMotes(caixa)` / `lightShaft(…)` | `core/anim.ts` | poeira no ar e feixes de luz |
+| `halo(x, y, z, tamanho)` | `core/kit.ts` | brilho em volta de lâmpadas (some de dia) |
+
+Animação por quadro: `M.tick = (dt, t) => { … }`. Efeitos de shader usam `anim.time` (já atualizado
+pelo núcleo). Nas capturas automáticas o tempo é fixo, para as imagens serem comparáveis.
+
 ## Unidades e convenções
 
 - 1 unidade = 1 metro = 1 quadrado da grade. O chão fica em y = 0; frente do mapa = +z.
