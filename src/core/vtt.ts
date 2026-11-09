@@ -27,7 +27,7 @@ export function xrender(c: ReturnType<typeof xcalc>, opt: { canopy?: boolean; sh
   try {
     for (const k in st.T) hide(st.T[k].g);
     [...helpers, dome].forEach(hide); M.mist.forEach(hide); M.halos.forEach(hide); M.lights.forEach(q => hide(q.l));
-    M.G.traverse(o => { if ((o as any).isPointLight || (o as any).isSpotLight) hide(o); });
+    M.G.traverse(o => { if ((o as any).isPointLight || (o as any).isSpotLight || (o as any).isRectAreaLight || o.userData.noExport || (o as any).isSprite || (o as any).isPoints) hide(o); });
     M.layers.forEach(l => { if (/Telhado/.test(l.n)) l.o.visible = false; });
     if (M.loft) M.loft.visible = c.A.lv === 2;
     M.exportHide().forEach(hide);

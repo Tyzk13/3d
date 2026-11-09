@@ -6,10 +6,12 @@ import type { MapRuntime, View } from '../../core/types';
 import { begin, K } from '../../core/kit';
 import { buildChurch } from './building';
 import { EnvProbe } from '../../core/probe';
+import { dustMotes, lightShaft } from '../../core/anim';
+import { mistTex } from '../../core/kit';
 import { st } from '../../core/state';
 import { buildInterior, PEW } from './interior';
 import { buildGrounds, SHED, GAZEBO } from './grounds';
-import { FLOOR, NX, NZ, WT, LOFT, LOFT_Z, TOWER, DOOR } from './common';
+import { FLOOR, NX, NZ, WT, LOFT, LOFT_Z, TOWER, DOOR, WIN, WIN_Z, TOP } from './common';
 
 const P = (x: number, y: number, z: number) => [x, y, z] as [number, number, number];
 export const VIEWS: View[] = [
@@ -83,10 +85,48 @@ export async function build(M: MapRuntime) {
   const probe = new EnvProbe(new THREE.Vector3(0, FLOOR + 2.4, -1), new THREE.Box3(new THREE.Vector3(-NX - 0.15, 0, -NZ - 0.15), new THREE.Vector3(NX + 0.15, 13, NZ + 0.15)), 1);
   probe.bind(G, o => !!o.userData.ns || !!o.userData.exterior);
   const tokens = () => Object.values(st.T).map(t => t.g);
-  M.onTime = p => { fills.forEach(l => (l.intensity = p.env * 3.2)); probe.update(tokens()); probe.update(tokens()); };
-  // velas tremulando de leve
-  const flick = M.lights.filter(l => l.n > 0 && l.n < 4);
-  M.tick = (_dt, t) => flick.forEach((l, i) => { if (l.l.intensity > 0) l.l.intensity = l.n * (0.9 + 0.1 * Math.sin(t * 13 + i * 7) * Math.sin(t * 7.3 + i)); });
+  // ---------- atmosfera animada ----------
+  // poeira em suspensão na nave
+  const dust = dustMotes(new THREE.Box3(new THREE.Vector3(-NX + 0.3, FLOOR + 0.3, -NZ + 0.5), new THREE.Vector3(NX - 0.3, TOP, NZ - 0.5)), 520);
+  I.group.add(dust);
+  // feixes de luz entrando pelos vitrais (frios) e saindo pela porta (quente)
+  const shafts: THREE.Mesh[] = [];
+  [-1, 1].forEach(sd => WIN_Z.forEach(z => {
+    const sh = lightShaft(new THREE.Vector3(sd * (NX - 0.02), FLOOR + WIN.sill + WIN.h * 0.42, z), new THREE.Vector3(-sd, -0.62, 0.18), 6.5, WIN.w * 0.95, WIN.h * 0.8, 0x9fb4d8);
+    I.group.add(sh); shafts.push(sh);
+  }));
+  const doorShaft = lightShaft(new THREE.Vector3(0, FLOOR + 1.9, NZ + 0.3), new THREE.Vector3(0, -0.32, 1), 7, DOOR.w * 0.95, 3.4, 0xffa25a);
+  G.add(doorShaft);
+  [...shafts, doorShaft, dust].forEach(o => (o.userData.noExport = 1));
+  // névoa baixa à deriva no terreno (fora da igreja)
+  const mist: THREE.Sprite[] = [];
+  let ms = 5; const mr = () => (ms = (ms * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < 22; i++) {
+    let x = (mr() - 0.5) * 70, z = -20 + mr() * 70;
+    if (Math.abs(x) < NX + 4 && Math.abs(z) < NZ + 4) x += x < 0 ? -12 : 12;
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: mistTex(), color: 0xb9c3cf, transparent: true, depthWrite: false, opacity: 0.08 }));
+    const sc = 9 + mr() * 9; sp.scale.set(sc, sc * 0.28, 1); sp.position.set(x, sc * 0.11 + 0.15, z); sp.userData.v = 0.08 + mr() * 0.12; sp.userData.ns = 1;
+    G.add(sp); mist.push(sp); M.mist.push(sp);
+  }
+  M.onTime = p => {
+    fills.forEach(l => (l.intensity = p.env * 3.2));
+    shafts.forEach(m => ((m.material as THREE.ShaderMaterial).uniforms.uInt.value = 0.05 + p.env * 0.22));
+    (doorShaft.material as THREE.ShaderMaterial).uniforms.uInt.value = 0.1 * p.lamps;
+    (dust.material as THREE.ShaderMaterial).uniforms.uInt.value = 0.25 + 0.35 * p.lamps;
+    lampsOn = p.lamps > 0;
+    const hide = [...tokens(), ...shafts, doorShaft, dust];
+    probe.update(hide); probe.update(hide);
+  };
+  // velas e lustres tremulando, chamas pulsando, lustres balançando, névoa andando
+  const flick = M.lights.filter(l => l.n > 0 && l.n < 4), chand = M.lights.filter(l => l.n >= 20);
+  let lampsOn = true;
+  M.tick = (dt, t) => {
+    flick.forEach((l, i) => { if (l.l.intensity > 0) l.l.intensity = l.n * (0.86 + 0.14 * Math.sin(t * 13 + i * 7) * Math.sin(t * 7.3 + i)); });
+    chand.forEach((l, i) => { if (l.l.intensity > 0) l.l.intensity = l.n * (0.95 + 0.05 * Math.sin(t * 9.1 + i * 3) * Math.sin(t * 5.3 + i)); });
+    if (lampsOn) M.lamps.forEach((m, i) => { const b = m.userData.base; if (b) m.color.copy(b).multiplyScalar(0.88 + 0.12 * Math.sin(t * 11 + i * 2.1) * Math.sin(t * 6.1 + i)); });
+    I.swing.forEach((p, i) => { p.rotation.x = Math.sin(t * 0.63 + i * 1.7) * 0.006; p.rotation.z = Math.sin(t * 0.51 + i) * 0.005; });
+    mist.forEach(m => { m.position.x += m.userData.v * dt; if (m.position.x > 40) m.position.x = -40; });
+  };
   void K; void PEW;
 }
 

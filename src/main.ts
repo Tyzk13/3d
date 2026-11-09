@@ -5,7 +5,8 @@ import * as THREE from 'three';
 import { CFG } from './core/config';
 import { R, S, cam, ctl, fit } from './core/engine';
 import { st, $ } from './core/state';
-import { PRE, setTime, timeHooks, preloadSkies } from './core/sky';
+import { PRE, setTime, timeHooks, preloadSkies, driftSky } from './core/sky';
+import { anim } from './core/anim';
 import { DEF, makeToken, dropT, onChar, onPos, selT, sizeT, save, placeT, initTokenInput, tickTokens, snapTokens } from './core/tokens';
 import { NET, handlers, startNet } from './core/net';
 import { WM, setWalk, walkStep, walkPointer, initWalk, placeWalkCam } from './core/walk';
@@ -121,6 +122,7 @@ function frame(ts?: number) {
   if (fpsEl) R.info.reset();
   const dt = Math.min(0.1, timer.getDelta()), t = timer.getElapsed(), M = st.MP;
   if (!M) return;
+  anim.time.value = t; driftSky(t);
   tickTokens(WM.on, WM.third, WM.av);
   if (M.tick) M.tick(dt, t);
   if (st.anim) {
@@ -152,7 +154,7 @@ function captureApi() {
     },
     async time(i: number) { st.pi = i; await setTime(i); },
     map: (id: string) => loadMap(id),
-    frames(n = 1) { for (let i = 0; i < n; i++) { if (WM.on) placeWalkCam(); snapTokens(); tickTokens(WM.on, WM.third, WM.av); post.render(1 / 60); } },
+    frames(n = 1) { anim.time.value = 7.3; for (let i = 0; i < n; i++) { if (WM.on) placeWalkCam(); if (st.MP?.tick) st.MP.tick(1 / 60, 7.3); snapTokens(); tickTokens(WM.on, WM.third, WM.av); post.render(1 / 60); } },
     shot(png = false) { this.frames(post.warmup()); return png ? R.domElement.toDataURL('image/png') : R.domElement.toDataURL('image/jpeg', 0.9); },
     vtt(area: number, ppg: number) { const c = xcalc(area, ppg), png = xrender(c, {}); return { png, json: dd2vtt(c, png) }; },
   };

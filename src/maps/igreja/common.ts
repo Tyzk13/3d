@@ -1,6 +1,7 @@
 // Medidas, materiais e utilitários de geometria compartilhados pelo mapa da igreja.
 import * as THREE from 'three';
 import { pbr, boxUV } from '../../core/pbr';
+import { weather } from '../../core/weathering';
 
 // ---------- medidas (metros; 1 quadrado da grade = 1 m) ----------
 export const FLOOR = 0.6;          // piso da nave (acima do terreno, y=0)
@@ -18,9 +19,9 @@ export const TOWER = { x0: -10.5, x1: -6.4, z0: 9.0, z1: 13.1, h: 14.5 };
 
 // ---------- materiais ----------
 export const M = {
-  concrete: () => pbr('concrete_wall_008', { size: 3.4, color: 0xa9b0b6, envMapIntensity: 0.8 }),
+  concrete: () => weather(pbr('concrete_wall_008', { size: 3.4, color: 0xa9b0b6, envMapIntensity: 0.8 }), { ground: 0 }),
   concreteOld: () => pbr('concrete_wall_006', { size: 3.2, color: 0xaab4bc, envMapIntensity: 0.7 }),
-  concreteDark: () => pbr('concrete_wall_004', { size: 2.2, color: 0x8e8c88, envMapIntensity: 0.5 }),
+  concreteDark: () => weather(pbr('concrete_wall_004', { size: 2.2, color: 0x8e8c88, envMapIntensity: 0.5 }), { ground: 0, grime: 0.5, streaks: 0.15 }),
   concreteTrim: () => pbr('concrete_wall_004', { size: 1.6, color: 0xb2aea6, envMapIntensity: 0.5 }),
   plaster: () => pbr('grey_plaster', { size: 3, color: 0xdcd9d2, envMapIntensity: 0.3 }),
   woodDark: () => pbr('dark_wooden_planks', { size: 2, color: 0x9a8a7a, envMapIntensity: 0.4 }),

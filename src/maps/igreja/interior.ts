@@ -4,14 +4,14 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { boxUV } from '../../core/pbr';
 import { roseGeometry, leafGeometry, looseePetalGeometry } from '../../core/procedural';
-import { place, model } from '../../core/models';
+import { place, model, instance } from '../../core/models';
 import { K, halo } from '../../core/kit';
 import { FLOOR, NX, NZ, LOFT, LOFT_Z, M, iron, brass, velvet, cube, mesh, bx } from './common';
 
 export const PEW = { len: 3.6, x: 3.05, rows: [-5.6, -4.35, -3.1, -1.85, -0.6, 0.65, 1.9, 3.15] };
 export const CHANCEL = { z0: -NZ, z1: -7.4, h: 0.45 };
 
-export interface Interior { loft: THREE.Group; solids: THREE.Object3D[]; floors: THREE.Object3D[]; flowers: Flowers }
+export interface Interior { loft: THREE.Group; solids: THREE.Object3D[]; floors: THREE.Object3D[]; flowers: Flowers; swing: THREE.Object3D[]; group: THREE.Group }
 
 /** Coletor de flores (rosas + folhas) instanciadas no fim, numa só chamada de desenho cada. */
 export class Flowers {
@@ -101,6 +101,16 @@ export function buildInterior(G: THREE.Group): Interior {
   F.scatterPetals(-0.6, 0.6, CHANCEL.z1 + 0.6, NZ - 0.4, FLOOR + 0.018, 120);
   F.scatterPetals(-1.1, 1.1, CHANCEL.z1 + 0.6, NZ - 0.4, FLOOR + 0.008, 50);
 
+  // lanternas com velas no chão, ao longo do corredor
+  { const lan: { x: number; y: number; z: number; ry: number; s: number }[] = [];
+    PEW.rows.forEach((z, i) => { if (i % 2) return; [-1, 1].forEach(s => lan.push({ x: s * 1.0, y: FLOOR, z: z - 0.35, ry: i * 0.7 + s, s: 0.75 })); });
+    instance('wooden_lantern_01', lan, I).catch(() => {});
+    const flame = new THREE.MeshBasicMaterial({ color: 0xffa850 }); K.M.lamps.push(flame);
+    const fg = new THREE.SphereGeometry(0.022, 6, 6); fg.scale(1, 1.8, 1);
+    const fl = new THREE.InstancedMesh(fg, flame, lan.length), oo = new THREE.Object3D();
+    lan.forEach((l, i) => { oo.position.set(l.x, FLOOR + 0.12, l.z); oo.updateMatrix(); fl.setMatrixAt(i, oo.matrix); halo(l.x, FLOOR + 0.14, l.z, 0.28); });
+    fl.userData.ns = 1; I.add(fl); }
+
   // ---------- presbitério ----------
   const st = M.stoneFloor();
   const plat = cube(NX * 2, CHANCEL.h, CHANCEL.z1 - CHANCEL.z0, 0, FLOOR + CHANCEL.h / 2, (CHANCEL.z0 + CHANCEL.z1) / 2, [trim, trim, st, trim, trim, trim], I);
@@ -188,12 +198,16 @@ export function buildInterior(G: THREE.Group): Interior {
   lamps.push(place('GothicCabinet_01', -NX + 0.35, PY, -9.4, Math.PI / 2, 1, I));
   Promise.all(lamps).catch(e => console.warn(e));
   const chZ = [-3.6, 0.8];
+  // lustres pendurados por corrente; o grupo tem o pivô no forro para balançar como pêndulo
+  const swing: THREE.Object3D[] = [];
   model('Chandelier_03').then(src => {
     const bb = new THREE.Box3().setFromObject(src), sz = bb.getSize(new THREE.Vector3()), k = 1.25 / Math.max(sz.x, sz.z);
+    const ceil = 11.2, base = FLOOR + 4.9, top = base + sz.y * k;
     chZ.forEach(z => {
-      const c = src.clone(true); c.scale.setScalar(k); c.position.set(0, FLOOR + 4.9 - bb.min.y * k, z); I.add(c);
-      const chain = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 1, 6), iron()); const top = FLOOR + 4.9 + sz.y * k, ceil = 11.2;
-      chain.scale.y = ceil - top; chain.position.set(0, (ceil + top) / 2, z); I.add(chain);
+      const pivot = new THREE.Group(); pivot.position.set(0, ceil, z); I.add(pivot);
+      const c = src.clone(true); c.scale.setScalar(k); c.position.set(0, base - bb.min.y * k - ceil, 0); pivot.add(c);
+      const chain = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, ceil - top, 6), iron()); chain.position.y = -(ceil - top) / 2; pivot.add(chain);
+      swing.push(pivot);
     });
   }).catch(e => console.warn(e));
   // luz dos lustres e das velas do altar (intensidades físicas, em candelas)
@@ -201,6 +215,6 @@ export function buildInterior(G: THREE.Group): Interior {
   chZ.forEach(z => { const l = new THREE.PointLight(0xffb36b, 0, 0, 2); l.position.set(0, FLOOR + 5.15, z); I.add(l); lights.push({ l, d: 0, n: 26 }); halo(0, FLOOR + 5.2, z, 1.6); });
   [-1.05, 1.05].forEach(x => { const l = new THREE.PointLight(0xff9a50, 0, 0, 2); l.position.set(x, PY + 1.75, AZ + 0.2); I.add(l); lights.push({ l, d: 0, n: 3.2 }); halo(x, PY + 1.6, AZ, 0.9); });
 
-  return { loft: LF, solids, floors, flowers: F };
+  return { loft: LF, solids, floors, flowers: F, swing, group: I };
 }
 export { bx };

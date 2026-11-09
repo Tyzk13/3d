@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { addWind, windDepth, type WindOpts } from './anim';
 
 const FILES = import.meta.glob('@assets/models/*.glb', { query: '?url', import: 'default', eager: true }) as Record<string, string>;
 const fileFor = (id: string) => Object.entries(FILES).find(([k]) => k.endsWith(`/models/${id}.glb`))?.[1];
@@ -57,7 +58,7 @@ export interface Xf { x: number; y: number; z: number; ry?: number; s?: number; 
  * Espalha um modelo com InstancedMesh (um por material). `variant` escolhe só um nó-raiz do glb
  * (ex.: fir_tree_01 tem 3 árvores); undefined = modelo inteiro.
  */
-export async function instance(id: string, list: Xf[], parent: THREE.Object3D, opt: { variant?: number; shadow?: boolean } = {}) {
+export async function instance(id: string, list: Xf[], parent: THREE.Object3D, opt: { variant?: number; shadow?: boolean; wind?: Omit<WindOpts, 'height'> } = {}) {
   if (!list.length) return [];
   const root = await model(id);
   const src = opt.variant == null ? root : root.children[opt.variant % root.children.length];
@@ -81,6 +82,8 @@ export async function instance(id: string, list: Xf[], parent: THREE.Object3D, o
     const bb = new THREE.Box3(); byMat.forEach(gs => gs.forEach(g => { g.computeBoundingBox(); bb.union(g.boundingBox!); }));
     off.set(-(bb.min.x + bb.max.x) / 2, -bb.min.y, -(bb.min.z + bb.max.z) / 2);
   }
+  // altura do (sub)modelo, para o vento dobrar mais no topo
+  let topY = 0.1; byMat.forEach(gs => gs.forEach(g => { g.computeBoundingBox(); topY = Math.max(topY, g.boundingBox!.max.y + off.y); }));
   const o3 = new THREE.Object3D(), out: THREE.InstancedMesh[] = [];
   byMat.forEach((gs, mat) => {
     gs.forEach(g => { if (!g.index) g.setIndex([...Array(g.attributes.position.count).keys()]); });
@@ -93,6 +96,11 @@ export async function instance(id: string, list: Xf[], parent: THREE.Object3D, o
       const s = t.s ?? 1; o3.scale.set(s, t.sy ?? s, s); o3.updateMatrix(); im.setMatrixAt(i, o3.matrix);
     });
     im.castShadow = opt.shadow ?? true; im.receiveShadow = true;
+    if (opt.wind && (mat as THREE.MeshStandardMaterial).isMeshStandardMaterial) {
+      const w = { ...opt.wind, height: topY }, fol = mat.alphaTest > 0;
+      addWind(mat, w, fol);
+      if (im.castShadow) im.customDepthMaterial = windDepth(mat as THREE.MeshStandardMaterial, w, fol);
+    }
     im.computeBoundingSphere();
     parent.add(im); out.push(im);
   });
@@ -113,7 +121,7 @@ function dequantize(src: THREE.BufferGeometry) {
 }
 
 /** Como instance(), mas sorteia entre as variantes (nós-raiz) do modelo — arbustos, pedras, mato. */
-export async function instanceVariants(id: string, list: (Xf & { v?: number })[], parent: THREE.Object3D, opt: { shadow?: boolean } = {}) {
+export async function instanceVariants(id: string, list: (Xf & { v?: number })[], parent: THREE.Object3D, opt: { shadow?: boolean; wind?: Omit<WindOpts, 'height'> } = {}) {
   const root = await model(id), n = Math.max(1, root.children.length);
   if (n === 1) return instance(id, list, parent, opt);
   const by: Xf[][] = Array.from({ length: n }, () => []);

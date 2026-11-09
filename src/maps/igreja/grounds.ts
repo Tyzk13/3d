@@ -2,6 +2,7 @@
 // estacionamento com carros cobertos, galpão, caramanchão, cemitério antigo, estátua, árvores e vegetação.
 import * as THREE from 'three';
 import { boxUV } from '../../core/pbr';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { makeTerrain, fbm, noise2 } from '../../core/terrain';
 import { model, place, instance, instanceVariants, hasModel, modelSize, type Xf } from '../../core/models';
 import type { View } from '../../core/types';
@@ -20,6 +21,12 @@ export const GRAVE = { x0: -22, x1: -11, z0: -4, z1: 14 };
 let sd = 41;
 const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
 const sm = (a: number, b: number, x: number) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+
+// vento por tipo de planta: amplitude no topo (m), frequência (rad/s), tremor das folhas (m)
+const WIND = {
+  fir: { amp: 0.22, freq: 0.7, flutter: 0.02 }, tree: { amp: 0.1, freq: 0.95, flutter: 0.018 },
+  shrub: { amp: 0.05, freq: 1.3, flutter: 0.012 }, grass: { amp: 0.07, freq: 1.8, flutter: 0.008 }, low: { amp: 0.04, freq: 1.5, flutter: 0.01 },
+};
 
 export interface Grounds { solids: THREE.Object3D[]; floors: THREE.Object3D[]; lightsVtt: [number, number, number, number, string][] }
 
@@ -137,6 +144,16 @@ export async function buildGrounds(G: THREE.Group, F: Flowers, views: View[] = [
   F.scatterPetals(-0.6, 0.6, PATH.z0, PATH.z0 + 22, 0.065, 160);
   F.scatterPetals(-1.3, 1.3, PATH.z0, PATH.z0 + 26, 0.055, 80);
 
+  // ---------- varais de lampadinhas (catenária entre dois pontos) ----------
+  const bulbPos: THREE.Vector3[] = [], wires: THREE.BufferGeometry[] = [];
+  const garland = (a: THREE.Vector3, b: THREE.Vector3, sag: number, n: number) => {
+    const pts: THREE.Vector3[] = [];
+    for (let i = 0; i <= 24; i++) { const t = i / 24; const p = a.clone().lerp(b, t); p.y -= sag * 4 * t * (1 - t); pts.push(p); }
+    const curve = new THREE.CatmullRomCurve3(pts);
+    wires.push(new THREE.TubeGeometry(curve, 24, 0.006, 4, false));
+    for (let i = 1; i < n; i++) { const p = curve.getPointAt(i / n); p.y -= 0.03; bulbPos.push(p); }
+  };
+
   // ---------- poças (refletem o céu e as luzes) ----------
   const puddleMat = new THREE.MeshStandardMaterial({ color: 0x0b0c0d, roughness: 0.05, metalness: 0.0, envMapIntensity: 0.9, transparent: true, opacity: 0.9 });
   const puddle = (x: number, z: number, r: number, y: number) => {
@@ -180,6 +197,11 @@ export async function buildGrounds(G: THREE.Group, F: Flowers, views: View[] = [
       await instance('street_lamp_01', posts, O);
       posts.forEach((p, i) => { const y = sz.y * k - 0.35; halo(p.x, y, p.z, 0.9); if (i < 4) addLight(p.x, y - 0.1, p.z, 7, 0xffb877); lightsVtt.push([p.x, p.z, 5, 0.7, 'ffb067']); });
     } }
+
+  // varais: frente do pórtico e entre os postes do caminho
+  garland(new THREE.Vector3(-2.3, FLOOR + 3.3, NZ + 2.75), new THREE.Vector3(2.3, FLOOR + 3.3, NZ + 2.75), 0.35, 16);
+  [-1, 1].forEach(s => { [[17, 25], [25, 33]].forEach(([z0, z1]) => garland(new THREE.Vector3(s * 2.2, 3.0, z0), new THREE.Vector3(s * 2.2, 3.0, z1), 0.55, 18)); });
+  [[17, 17], [25, 25], [33, 33]].forEach(([z]) => garland(new THREE.Vector3(-2.2, 3.05, z), new THREE.Vector3(2.2, 3.05, z), 0.5, 12));
 
   // ---------- decoração do casamento no caminho ----------
   { const lan: Xf[] = [];
@@ -247,6 +269,8 @@ export async function buildGrounds(G: THREE.Group, F: Flowers, views: View[] = [
     place('wooden_lantern_01', 0, 2.6, 0, 0, 1.1, g).catch(() => {});
     addLight(Z.x, 2.6, Z.z, 4, 0xffae60); halo(Z.x, 2.75, Z.z, 1.6); lightsVtt.push([Z.x, Z.z, 5, 0.7, 'ffb067']);
     F.bunch(Z.x, 0.95, Z.z, 0.3, 26, 1.5); // o coletor de flores usa coordenadas do mundo
+    for (let k = 0; k < 8; k++) { const a0 = (k / 8) * Math.PI * 2 + Math.PI / 8, a1 = ((k + 1) / 8) * Math.PI * 2 + Math.PI / 8;
+      garland(new THREE.Vector3(Z.x + Math.cos(a0) * Z.r, 3.0, Z.z + Math.sin(a0) * Z.r), new THREE.Vector3(Z.x + Math.cos(a1) * Z.r, 3.0, Z.z + Math.sin(a1) * Z.r), 0.22, 7); }
     const tbl = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.05, 20), M.fabric()); tbl.position.y = 0.78; g.add(tbl);
     const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.18, 0.5, 10), M.woodBeam()); leg.position.y = 0.55; g.add(leg); }
 
@@ -276,13 +300,13 @@ export async function buildGrounds(G: THREE.Group, F: Flowers, views: View[] = [
   // ---------- árvores ----------
   { const byId: Record<string, Xf[]> = {};
     inner.forEach(t => (byId[t.id] ||= []).push({ x: t.x, y: groundH(t.x, t.z) - 0.05, z: t.z, ry: t.r, s: t.s }));
-    for (const [id, L] of Object.entries(byId)) (await instance(id, L, O)).forEach(m => (m.userData.canopy = 1));
+    for (const [id, L] of Object.entries(byId)) (await instance(id, L, O, { wind: WIND.tree })).forEach(m => (m.userData.canopy = 1));
     const fb: Record<string, Xf[]> = {};
     forest.forEach(t => { const k = (t.far ? t.id + '_lod1' : t.id) + '#' + t.v; (fb[k] ||= []).push({ x: t.x, y: groundH(t.x, t.z) - 0.1, z: t.z, ry: t.r, s: t.s }); });
     for (const [k, L] of Object.entries(fb)) {
       const [id, v] = k.split('#');
       const mid = hasModel(id) ? id : id.replace('_lod1', '');
-      (await instance(mid, L, O, { variant: +v, shadow: !id.includes('lod1') })).forEach(m => (m.userData.canopy = 1));
+      (await instance(mid, L, O, { variant: +v, shadow: !id.includes('lod1'), wind: WIND.fir })).forEach(m => (m.userData.canopy = 1));
     }
     // tronco morto, tocos e raízes
     await instance('dead_tree_trunk', [{ x: -24, y: 0, z: 22, ry: 1, s: 1.4 }, { x: 23.5, y: 0, z: -14, ry: 2.4, s: 1.2 }, { x: -6, y: 0, z: -21, ry: 0.4, s: 1.0 }], O).catch(() => {});
@@ -295,22 +319,30 @@ export async function buildGrounds(G: THREE.Group, F: Flowers, views: View[] = [
     const sk = Object.keys(shrubs);
     for (let z = FENCE.z0 + 1; z < FENCE.z1; z += 1.6) [-1, 1].forEach(s => { if (rnd() < 0.75) shrubs[sk[(rnd() * 4) | 0]].push({ x: s * (FENCE.x - 0.9) + (rnd() - 0.5) * 0.6, y: 0, z: z + (rnd() - 0.5), ry: rnd() * 6, s: 0.9 + rnd() * 0.7 }); });
     for (let x = -FENCE.x + 1; x < FENCE.x; x += 1.6) if (rnd() < 0.75) shrubs[sk[(rnd() * 4) | 0]].push({ x, y: 0, z: FENCE.z0 + 0.9 + (rnd() - 0.5) * 0.5, ry: rnd() * 6, s: 0.9 + rnd() * 0.7 });
-    for (const [id, L] of Object.entries(shrubs)) await instanceVariants(id, L, O, { shadow: Q.vegShadow }).catch(() => {});
+    for (const [id, L] of Object.entries(shrubs)) await instanceVariants(id, L, O, { shadow: Q.vegShadow, wind: WIND.shrub }).catch(() => {});
     // cerca-viva baixa ao longo das laterais da igreja
     const hedge: Xf[] = [];
     [-1, 1].forEach(s => { for (let z = -NZ + 0.5; z < NZ - 1; z += 0.9) hedge.push({ x: s * (NX + WT + 1.45), y: 0, z, ry: rnd() * 6, s: 0.55 + rnd() * 0.15 }); });
     for (let x = -4.5; x <= 4.5; x += 0.9) hedge.push({ x, y: 0, z: -NZ - WT - 1.4, ry: rnd() * 6, s: 0.6 });
-    await instance('moss_01', hedge, O).catch(() => {});
+    await instance('moss_01', hedge, O, { wind: { amp: 0.02, freq: 1.1, flutter: 0.006 } }).catch(() => {});
     // samambaias e urtigas sob as árvores; mato no gramado
     const ferns: Xf[] = [], nettles: Xf[] = [], grass: Xf[] = [], rocks: Xf[] = [];
     inner.forEach(t => { for (let i = 0; i < Q.ferns; i++) { const a = rnd() * 6.28, r = 1 + rnd() * 3; (rnd() < 0.6 ? ferns : nettles).push({ x: t.x + Math.cos(a) * r, y: groundH(t.x, t.z), z: t.z + Math.sin(a) * r, ry: rnd() * 6, s: 0.8 + rnd() * 0.8 }); } });
     for (let i = 0; i < 6000 && grass.length < Q.grass; i++) { const x = (rnd() - 0.5) * 2 * (FENCE.x - 1), z = FENCE.z0 + 1 + rnd() * (FENCE.z1 - FENCE.z0 - 2); if (!free(x, z, -3.5) && !(Math.abs(x) > 4 && Math.abs(x) < 9 && z > 13)) continue; if (Math.abs(x) < 2.6 && z > 11) continue; grass.push({ x, y: groundH(x, z) - 0.02, z, ry: rnd() * 6, s: 0.6 + rnd() * 0.7 }); }
     for (let i = 0; i < 14; i++) { const a = rnd() * 6.28, r = 30 + rnd() * 25; rocks.push({ x: Math.cos(a) * r, y: groundH(Math.cos(a) * r, 8 + Math.sin(a) * r) - 0.1, z: 8 + Math.sin(a) * r, ry: rnd() * 6, s: 0.8 + rnd() * 1.2 }); }
-    await instanceVariants('fern_02', ferns, O, { shadow: Q.vegShadow }).catch(() => {});
-    await instanceVariants('nettle_plant', nettles, O, { shadow: Q.vegShadow }).catch(() => {});
-    await instanceVariants('grass_medium_01', grass, O, { shadow: false }).catch(() => {});
+    await instanceVariants('fern_02', ferns, O, { shadow: Q.vegShadow, wind: WIND.low }).catch(() => {});
+    await instanceVariants('nettle_plant', nettles, O, { shadow: Q.vegShadow, wind: WIND.low }).catch(() => {});
+    await instanceVariants('grass_medium_01', grass, O, { shadow: false, wind: WIND.grass }).catch(() => {});
     await instanceVariants('rock_moss_set_01', rocks, O).catch(() => {});
     await instance('boulder_01', [{ x: -25, y: 0, z: 36, ry: 1, s: 1 }, { x: 24, y: 0, z: -22, ry: 2, s: 1.2 }], O).catch(() => {});
+  }
+  // instancia as lampadinhas e os fios (uma chamada de desenho cada)
+  if (bulbPos.length) {
+    const bm = new THREE.MeshBasicMaterial({ color: 0xffc070 }); K.M.lamps.push(bm);
+    const bi = new THREE.InstancedMesh(new THREE.SphereGeometry(0.028, 8, 6), bm, bulbPos.length), o = new THREE.Object3D();
+    bulbPos.forEach((p, i) => { o.position.copy(p); o.updateMatrix(); bi.setMatrixAt(i, o.matrix); });
+    bi.userData.ns = 1; O.add(bi);
+    const wm = new THREE.Mesh(mergeGeometries(wires), iron()); wm.castShadow = false; wm.userData.ns = 1; O.add(wm);
   }
   return { solids, floors, lightsVtt };
 }

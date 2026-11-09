@@ -26,7 +26,7 @@ export async function build(M: MapRuntime) {
   const trees: Xf[] = [];
   for (let i = 0; i < 70; i++) { const a = rnd() * 6.283, r = 20 + rnd() * 45; trees.push({ x: Math.cos(a) * r, y: height(Math.cos(a) * r, Math.sin(a) * r) - 0.1, z: Math.sin(a) * r, ry: rnd() * 6, s: 0.8 + rnd() * 0.4 }); }
   // fir_tree_01 tem 3 variantes (nós-raiz); `variant` escolhe uma
-  for (let v = 0; v < 3; v++) (await instance('fir_tree_01', trees.filter((_, i) => i % 3 === v), G, { variant: v })).forEach(m => (m.userData.canopy = 1));
+  for (let v = 0; v < 3; v++) (await instance('fir_tree_01', trees.filter((_, i) => i % 3 === v), G, { variant: v, wind: { amp: 0.22, freq: 0.7, flutter: 0.02 } })).forEach(m => (m.userData.canopy = 1));
   const rocks: Xf[] = []; for (let i = 0; i < 18; i++) { const a = rnd() * 6.283, rr = 6 + rnd() * 12; rocks.push({ x: Math.cos(a) * rr, y: 0, z: Math.sin(a) * rr, ry: rnd() * 6, s: 0.6 + rnd() * 0.8 }); }
   await instanceVariants('rock_moss_set_01', rocks, G);
   await instance('tree_stump_01', [{ x: 2.2, y: 0, z: -2, ry: 1 }, { x: -2.4, y: 0, z: -4.2, ry: 2 }], G);

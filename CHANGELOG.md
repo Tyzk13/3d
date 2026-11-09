@@ -67,3 +67,14 @@
   com paredes, portas e luzes desenhadas.
 - Mapa `campo` reescrito com as APIs novas, como exemplo; guia `docs/NOVO-MAPA.md` (F) e
   `docs/HOSPEDAGEM.md` (E: deploy, iframe, CSP).
+
+## Animações sutis e acabamento
+
+- Vento na vegetação feito na GPU (árvores dobram, folhas tremem, rajadas lentas); a sombra acompanha
+  o movimento (material de profundidade com o mesmo vento).
+- Chamas e lâmpadas tremulando, lustres balançando de leve (pêndulo com pivô no forro), nuvens andando,
+  névoa baixa à deriva, poeira em suspensão na nave, feixes de luz pelos vitrais e pela porta.
+- Envelhecimento procedural do concreto (sujeira e musgo subindo do chão, escorridos de chuva).
+- Concreto externo cinza (`concrete_wall_008`), vitrais menos estourados.
+- Varais de lampadinhas (pórtico, caminho, caramanchão) e lanternas com velas no corredor.
+- Capturas usam tempo fixo (imagens reproduzíveis).
