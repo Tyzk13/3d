@@ -3,10 +3,10 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { boxUV } from '../../core/pbr';
-import { roseGeometry, leafGeometry, looseePetalGeometry } from '../../core/procedural';
+import { roseGeometry, leafGeometry, looseePetalGeometry, oldPainting } from '../../core/procedural';
 import { place, model, instance } from '../../core/models';
 import { K, halo } from '../../core/kit';
-import { FLOOR, NX, NZ, LOFT, LOFT_Z, M, iron, brass, velvet, cube, mesh, bx } from './common';
+import { FLOOR, NX, NZ, LOFT, LOFT_Z, WIN, WIN_Z, M, iron, brass, velvet, cube, mesh, bx } from './common';
 
 export const PEW = { len: 3.6, x: 3.05, rows: [-5.6, -4.35, -3.1, -1.85, -0.6, 0.65, 1.9, 3.15] };
 export const CHANCEL = { z0: -NZ, z1: -7.4, h: 0.45 };
@@ -110,6 +110,31 @@ export function buildInterior(G: THREE.Group): Interior {
     const fl = new THREE.InstancedMesh(fg, flame, lan.length), oo = new THREE.Object3D();
     lan.forEach((l, i) => { oo.position.set(l.x, FLOOR + 0.12, l.z); oo.updateMatrix(); fl.setMatrixAt(i, oo.matrix); halo(l.x, FLOOR + 0.14, l.z, 0.28); });
     fl.userData.ns = 1; I.add(fl); }
+
+  // Via-Sacra: quadros antigos nas pilastras
+  { let n = 1;
+    [-1, 1].forEach(s => [-6, -2, 2].forEach(z => {
+      const g = new THREE.Group(); g.position.set(s * (NX - 0.24), FLOOR + 2.55, z); g.rotation.y = -s * Math.PI / 2; I.add(g);
+      cube(0.5, 0.62, 0.05, 0, 0, 0, M.woodBeam(), g);
+      const pm = new THREE.MeshStandardMaterial({ map: oldPainting(n++), roughness: 0.45, envMapIntensity: 0.6 });
+      const pnl = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.5), pm); pnl.position.z = 0.027; g.add(pnl);
+      cube(0.08, 0.08, 0.04, 0, 0.36, 0.01, brass(), g); // pequena cruz/plaqueta no topo
+    })); }
+
+  // velas nos peitoris das janelas (cera, chama, halo) — sem luz própria: o brilho vem do bloom
+  { const wax = new THREE.MeshStandardMaterial({ color: 0xe8e0cc, roughness: 0.55, emissive: 0x3a2410, emissiveIntensity: 0.6, envMapIntensity: 0.4 });
+    const flame = new THREE.MeshBasicMaterial({ color: 0xffb060 }); K.M.lamps.push(flame);
+    const cg = new THREE.CylinderGeometry(0.032, 0.035, 1, 12); cg.translate(0, 0.5, 0);
+    const fg = new THREE.SphereGeometry(0.014, 6, 6); fg.scale(1, 2, 1);
+    const cand: THREE.Matrix4[] = [], fl: THREE.Matrix4[] = [], oo = new THREE.Object3D();
+    [-1, 1].forEach(s => WIN_Z.forEach((z, i) => [-0.32, 0, 0.3].forEach((dz, k) => {
+      const h = [0.22, 0.32, 0.17][(k + i) % 3], x = s * (NX + 0.07), y = FLOOR + WIN.sill + 0.0;
+      oo.position.set(x, y, z + dz); oo.scale.set(1, h, 1); oo.updateMatrix(); cand.push(oo.matrix.clone());
+      oo.position.set(x, y + h + 0.025, z + dz); oo.scale.set(1, 1, 1); oo.updateMatrix(); fl.push(oo.matrix.clone());
+      halo(x, y + h + 0.03, z + dz, 0.22);
+    })));
+    const ci = new THREE.InstancedMesh(cg, wax, cand.length); cand.forEach((m, i) => ci.setMatrixAt(i, m)); ci.castShadow = true; ci.receiveShadow = true; I.add(ci);
+    const fi = new THREE.InstancedMesh(fg, flame, fl.length); fl.forEach((m, i) => fi.setMatrixAt(i, m)); fi.userData.ns = 1; I.add(fi); }
 
   // ---------- presbitério ----------
   const st = M.stoneFloor();

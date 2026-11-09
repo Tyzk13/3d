@@ -5,6 +5,7 @@ import { HDRLoader } from 'three/addons/loaders/HDRLoader.js';
 import { R, S } from './engine';
 import { st } from './state';
 import type { Grade } from './post';
+import { litGlass } from './models';
 
 export interface Preset {
   n: string;
@@ -116,6 +117,7 @@ export async function setTime(i: number) {
     M.mist.forEach(s => (s.material.opacity = 0.08));
     if (M.onTime) M.onTime(p);
   }
+  litGlass.forEach(m => (m.emissiveIntensity = (m.userData.litBase ?? 1.4) * (p.lamps ? 1 : 0.02)));
   timeHooks.forEach(f => f(p));
 }
 

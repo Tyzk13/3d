@@ -163,6 +163,14 @@ export function buildChurch(G: THREE.Group): Building {
     gut.rotation.x = Math.PI / 2; gut.position.set(s * (span + 0.02), yEave - 0.02, 0); gut.material.side = THREE.DoubleSide; RF.add(gut);
   });
   cube(0.34, 0.22, OZ * 2 + 1.25, 0, TOP + RISE + 0.08, 0, iron(), RF); // cumeeira
+  // tubos de descida das calhas nas quatro quinas
+  [-1, 1].forEach(s => [-1, 1].forEach(q => {
+    if (s < 0 && q > 0) return; // quina da torre
+    const x = s * (span + 0.02), z = q * (OZ + 0.45), h = yEave - 0.1;
+    const pipe = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, h, 10), iron()); pipe.position.set(x, h / 2, z); pipe.castShadow = true; RF.add(pipe);
+    const sh = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 0.3, 10), iron()); sh.rotation.x = q * 0.9; sh.position.set(x, 0.12, z + q * 0.12); RF.add(sh);
+    for (let k = 1; k < 4; k++) cube(0.04, 0.03, 0.14, x, (h * k) / 4, z - q * 0.07, iron(), RF);
+  }));
   // tesouras (tirante, pernas, pendural) a cada 4 m
   const beam = M.woodBeam();
   [-9, -5, -1, 3].forEach(z => {

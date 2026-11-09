@@ -12,19 +12,32 @@ const cache: Record<string, Promise<THREE.Group>> = {};
 
 export const hasModel = (id: string) => !!fileFor(id);
 
-/** Ajusta materiais vindos do glTF: folhagem com recorte alfa (sem ordenação), sombra e reflexo moderado. */
-function fixMaterials(root: THREE.Object3D) {
+/** Vidros de luminárias (acendem à noite). O clima ajusta `emissiveIntensity` (sky.ts). */
+export const litGlass: THREE.MeshStandardMaterial[] = [];
+const LIT = /street_lamp|lantern|chandelier/i;
+
+/** Ajusta materiais vindos do glTF: folhagem com recorte alfa (sem ordenação), vidro transparente, chamas e vidros acesos. */
+function fixMaterials(root: THREE.Object3D, id: string) {
+  const seen = new Set<THREE.Material>();
   root.traverse((o: any) => {
     if (!o.isMesh) return;
     o.castShadow = o.receiveShadow = true;
     const ms = Array.isArray(o.material) ? o.material : [o.material];
     ms.forEach((m: THREE.MeshStandardMaterial) => {
-      if (m.transparent || m.alphaTest > 0 || (m.map && /leaf|leaves|twig|needle|branch|grass|fern|nettle|moss|shrub/i.test(m.name))) {
-        if (m.transparent || m.alphaTest > 0) {
-          m.transparent = false; m.depthWrite = true; m.alphaTest = 0.45; m.side = THREE.DoubleSide;
-          m.alphaToCoverage = true;
-          o.userData.foliage = true;
-        }
+      const n = (m.name || '').toLowerCase();
+      if (/glass|vidro/.test(n)) {
+        o.castShadow = false;
+        if (seen.has(m)) return; seen.add(m);
+        m.transparent = true; m.depthWrite = false; m.roughness = Math.min(m.roughness, 0.15); m.envMapIntensity = 1.2;
+        if (LIT.test(id)) { m.emissive.set(0xffb468); m.emissiveIntensity = 1.4; m.opacity = Math.max(m.opacity, 0.55); m.userData.litBase = 1.4; litGlass.push(m); }
+        return;
+      }
+      if (/flame|chama/.test(n)) { o.castShadow = false; m.emissiveIntensity = 2.5; m.toneMapped = true; return; }
+      if (/lamp|bulb/.test(n) && LIT.test(id)) { if (!seen.has(m)) { seen.add(m); m.emissive.set(0xffc27a); m.emissiveIntensity = 2.2; m.userData.litBase = 2.2; litGlass.push(m); } return; }
+      if (m.transparent || m.alphaTest > 0) {
+        m.transparent = false; m.depthWrite = true; m.alphaTest = 0.45; m.side = THREE.DoubleSide;
+        m.alphaToCoverage = true;
+        o.userData.foliage = true;
       }
       m.envMapIntensity = 0.8;
     });
@@ -39,7 +52,7 @@ export function model(id: string): Promise<THREE.Group> {
     const g = await loader.loadAsync(url);
     const root = g.scene;
     root.updateMatrixWorld(true);
-    fixMaterials(root);
+    fixMaterials(root, id);
     return root;
   })());
 }

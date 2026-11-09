@@ -108,3 +108,30 @@ export function looseePetalGeometry() {
   const p = g.attributes.position; for (let i = 0; i < p.count; i++) p.setY(i, (p.getX(i) ** 2 + p.getZ(i) ** 2) * 6);
   g.computeVertexNormals(); return g;
 }
+
+/** Pintura a óleo antiga e escura (para quadros da Via-Sacra): figuras vagas, verniz amarelado, craquelado. */
+export function oldPainting(s = 1) {
+  seed = s * 131 + 7;
+  const W = 160, H = 200, c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d')!;
+  const bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, '#2a2016'); bg.addColorStop(0.6, '#1b140d'); bg.addColorStop(1, '#100b07');
+  g.fillStyle = bg; g.fillRect(0, 0, W, H);
+  // céu/arco de fundo
+  g.fillStyle = 'rgba(120,96,60,0.35)'; g.beginPath(); g.arc(W / 2, H * 0.35, W * 0.42, Math.PI, 0); g.fill();
+  // figuras: silhuetas alongadas
+  const n = 2 + ((rnd() * 3) | 0);
+  for (let i = 0; i < n; i++) {
+    const x = W * (0.2 + 0.6 * (i + rnd() * 0.5) / n), h = H * (0.45 + rnd() * 0.2), w = W * 0.12;
+    g.fillStyle = ['#4a2a1c', '#2c3446', '#5a4630', '#3a2018'][(rnd() * 4) | 0];
+    g.beginPath(); g.ellipse(x, H - h * 0.45 - 10, w * 0.5, h * 0.42, 0, 0, Math.PI * 2); g.fill();
+    g.fillStyle = '#8a6a4a'; g.beginPath(); g.arc(x, H - h * 0.9 - 6, w * 0.22, 0, Math.PI * 2); g.fill();
+  }
+  // cruz ao fundo em algumas
+  if (rnd() < 0.6) { g.fillStyle = '#3a2a1a'; g.fillRect(W * 0.62, H * 0.18, 6, H * 0.5); g.fillRect(W * 0.62 - 18, H * 0.28, 42, 6); }
+  // verniz amarelado e vinheta
+  g.fillStyle = 'rgba(160,120,40,0.12)'; g.fillRect(0, 0, W, H);
+  const v = g.createRadialGradient(W / 2, H / 2, 20, W / 2, H / 2, W * 0.75); v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,0.6)'); g.fillStyle = v; g.fillRect(0, 0, W, H);
+  // craquelado
+  g.strokeStyle = 'rgba(0,0,0,0.35)'; g.lineWidth = 0.6;
+  for (let i = 0; i < 60; i++) { let x = rnd() * W, y = rnd() * H; g.beginPath(); g.moveTo(x, y); for (let k = 0; k < 4; k++) { x += (rnd() - 0.5) * 14; y += (rnd() - 0.5) * 14; g.lineTo(x, y); } g.stroke(); }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
+}
