@@ -74,7 +74,7 @@ export function dustMotes(box: THREE.Box3, n = 400, color = 0xffe2b8) {
         p.z += cos(uTime * 0.05 + seed * 1.3) * 0.6;
         p.y = uMin.y + mod(p.y - uMin.y + uTime * 0.025 * (0.5 + fract(seed)), uSize.y);
         vec4 mv = modelViewMatrix * vec4(p, 1.0);
-        gl_PointSize = clamp(30.0 / -mv.z, 1.0, 6.0);
+        gl_PointSize = clamp(9.0 / -mv.z, 0.8, 2.6);
         vA = 0.55 + 0.45 * sin(uTime * 0.8 + seed * 7.0);
         vA *= smoothstep(0.0, 0.08, (p.y - uMin.y) / uSize.y) * smoothstep(1.0, 0.85, (p.y - uMin.y) / uSize.y);
         gl_Position = projectionMatrix * mv;
@@ -107,8 +107,8 @@ export function lightShaft(from: THREE.Vector3, dir: THREE.Vector3, len: number,
       float n2(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(h(i), h(i + vec2(1, 0)), f.x), mix(h(i + vec2(0, 1)), h(i + vec2(1, 1)), f.x), f.y); }
       void main() {
         float along = pow(1.0 - clamp(vL.x, 0.0, 1.0), 1.6);
-        float edge = smoothstep(0.5, 0.18, abs(vL.y)) * smoothstep(0.5, 0.18, abs(vL.z));
-        float facing = pow(abs(dot(vN, vV)), 1.5);
+        float edge = smoothstep(0.5, 0.05, abs(vL.y)) * smoothstep(0.5, 0.05, abs(vL.z));
+        float facing = pow(abs(dot(vN, vV)), 3.0);
         float dust = 0.75 + 0.25 * n2(vL.yz * 6.0 + vec2(uTime * 0.05, uTime * 0.03));
         float a = along * edge * facing * dust * uInt;
         gl_FragColor = vec4(uColor * a, 1.0);

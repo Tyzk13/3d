@@ -110,9 +110,9 @@ export async function build(M: MapRuntime) {
   }
   M.onTime = p => {
     fills.forEach(l => (l.intensity = p.env * 3.2));
-    shafts.forEach(m => ((m.material as THREE.ShaderMaterial).uniforms.uInt.value = 0.05 + p.env * 0.22));
-    (doorShaft.material as THREE.ShaderMaterial).uniforms.uInt.value = 0.1 * p.lamps;
-    (dust.material as THREE.ShaderMaterial).uniforms.uInt.value = 0.25 + 0.35 * p.lamps;
+    shafts.forEach(m => ((m.material as THREE.ShaderMaterial).uniforms.uInt.value = 0.015 + p.env * 0.09));
+    (doorShaft.material as THREE.ShaderMaterial).uniforms.uInt.value = 0.06 * p.lamps;
+    (dust.material as THREE.ShaderMaterial).uniforms.uInt.value = 0.08 + 0.12 * p.lamps;
     lampsOn = p.lamps > 0;
     const hide = [...tokens(), ...shafts, doorShaft, dust];
     probe.update(hide); probe.update(hide);
