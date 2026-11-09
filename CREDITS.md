@@ -35,6 +35,7 @@ Ferramentas usadas só no preparo (não distribuídas): Blender (GPL), gltf-tran
 | Quatrefoil Jacquard Fabric (`quatrefoil_jacquard_fabric`) | textura | colormass, Rico Cilliers | CC0 | https://polyhaven.com/a/quatrefoil_jacquard_fabric |
 | Rusty Metal 02 (`rusty_metal_02`) | textura | Rob Tuytel | CC0 | https://polyhaven.com/a/rusty_metal_02 |
 | Concrete Wall 008 (`concrete_wall_008`) | textura | Dario Barresi, Charlotte Baglioni | CC0 | https://polyhaven.com/a/concrete_wall_008 |
+| Leafy Grass (`leafy_grass`) | textura | Charlotte Baglioni | CC0 | https://polyhaven.com/a/leafy_grass |
 | Overcast Soil (Pure Sky) (`overcast_soil_puresky`) | HDRI | Jarod Guest, Sergej Majboroda | CC0 | https://polyhaven.com/a/overcast_soil_puresky |
 | Kloppenheim 07 (Pure Sky) (`kloppenheim_07_puresky`) | HDRI | Greg Zaal, Jarod Guest | CC0 | https://polyhaven.com/a/kloppenheim_07_puresky |
 | Qwantani Dusk 2 (Pure Sky) (`qwantani_dusk_2_puresky`) | HDRI | Greg Zaal, Jarod Guest | CC0 | https://polyhaven.com/a/qwantani_dusk_2_puresky |

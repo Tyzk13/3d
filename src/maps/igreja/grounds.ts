@@ -90,7 +90,7 @@ export async function buildGrounds(G: THREE.Group, F: Flowers, views: View[] = [
   // ---------- terreno ----------
   const ter = makeTerrain({
     size: 320, seg: 256, height: groundH,
-    base: { id: 'sparse_grass', size: 3.2 }, r: { id: 'forest_ground_04', size: 2.5 }, g: { id: 'brown_mud_leaves_01', size: 2.6 },
+    base: { id: 'leafy_grass', size: 3.0 }, r: { id: 'forest_ground_04', size: 2.5 }, g: { id: 'brown_mud_leaves_01', size: 2.6 },
     mask: (x, z) => {
       const n = fbm(x * 0.09, z * 0.09, 3), n2 = noise2(x * 0.5, z * 0.5);
       let dirt = sm(0.62, 0.8, n) * 0.7;

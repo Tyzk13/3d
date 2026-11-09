@@ -16,7 +16,7 @@ export async function build(M: MapRuntime) {
   const height = (x: number, z: number) => Math.max(0, Math.hypot(x, z) - 16) * 0.06 * fbm(x * 0.05, z * 0.05, 3) * 4;
   const ter = makeTerrain({
     size: 200, seg: 160, height,
-    base: { id: 'sparse_grass', size: 3 }, r: { id: 'forest_ground_04', size: 2.5 }, g: { id: 'brown_mud_leaves_01', size: 2.5 },
+    base: { id: 'leafy_grass', size: 3 }, r: { id: 'forest_ground_04', size: 2.5 }, g: { id: 'brown_mud_leaves_01', size: 2.5 },
     mask: (x, z) => { const d = Math.hypot(x, z + 3); return [Math.max(0, 1 - d / 3.5), Math.min(1, Math.max(0, (Math.hypot(x, z) - 14) / 10))]; },
   });
   G.add(ter.mesh, ter.collider);
