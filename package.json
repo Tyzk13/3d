@@ -1,0 +1,26 @@
+{
+  "name": "mapa-3d-tabletop",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Mapas 3D para RPG de mesa (Ordem Paranormal) — igreja de casamento",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "build:single": "vite build --mode single",
+    "preview": "vite preview",
+    "capturas": "node tools/capturas.mjs",
+    "servidor": "node server/servidor-sync.mjs"
+  },
+  "dependencies": {
+    "n8ao": "^2.0.1",
+    "postprocessing": "^6.39.6",
+    "three": "^0.187.0"
+  },
+  "devDependencies": {
+    "@types/three": "^0.187.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.7",
+    "vite-plugin-singlefile": "^2.3.4"
+  }
+}
