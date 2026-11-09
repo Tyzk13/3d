@@ -27,14 +27,14 @@ export interface Preset {
 }
 
 export const PRE: Preset[] = [
-  { n: 'Terror', hdr: 'overcast_soil_puresky', bg: 0.05, env: 0.16, blur: 0.02, rot: 0, sc: 0x9db0d0, si: 0.35, az: 220, el: 38, hs: 0x55657d, hg: 0x15130f, hi: 0.12, fogD: 0.022, fogK: 0.75, fogTint: 0x8fa0b8, lamps: 1, win: 1.6, grade: { exposure: 1.15, saturation: -0.3, contrast: 0.16, brightness: -0.02, bloom: 0.75, vignette: 0.62 } },
-  { n: 'Anoitecer', hdr: 'kloppenheim_07_puresky', bg: 0.22, env: 0.38, blur: 0.0, rot: 2.2, sc: 0xffc29a, si: 0.9, az: 245, el: 8, hs: 0x7787a3, hg: 0x1b1814, hi: 0.18, fogD: 0.013, fogK: 0.95, lamps: 1, win: 1.2, grade: { exposure: 1.0, saturation: -0.2, contrast: 0.14, bloom: 0.6, vignette: 0.5 } },
-  { n: 'Crepúsculo', hdr: 'qwantani_dusk_2_puresky', bg: 0.35, env: 0.5, blur: 0, rot: 0.6, sc: 0xffa070, si: 1.1, az: 250, el: 5, hs: 0x8a7fa0, hg: 0x1c1512, hi: 0.2, fogD: 0.011, fogK: 1, lamps: 1, win: 1.1, grade: { exposure: 1.0, saturation: -0.12, contrast: 0.12, bloom: 0.55, vignette: 0.5 } },
+  { n: 'Terror', hdr: 'overcast_soil_puresky', bg: 0.05, env: 0.2, blur: 0.02, rot: 0, sc: 0x9db0d0, si: 0.35, az: 320, el: 38, hs: 0x55657d, hg: 0x15130f, hi: 0.12, fogD: 0.022, fogK: 0.75, fogTint: 0x8fa0b8, lamps: 1, win: 1.6, grade: { exposure: 1.15, saturation: -0.3, contrast: 0.16, brightness: -0.02, bloom: 0.75, vignette: 0.62 } },
+  { n: 'Anoitecer', hdr: 'kloppenheim_07_puresky', bg: 0.22, env: 0.45, blur: 0.0, rot: 2.2, sc: 0xffd6b8, si: 0.7, az: 300, el: 10, hs: 0x7787a3, hg: 0x1b1814, hi: 0.18, fogD: 0.013, fogK: 0.95, lamps: 1, win: 1.2, grade: { exposure: 1.05, saturation: -0.2, contrast: 0.14, bloom: 0.6, vignette: 0.5 } },
+  { n: 'Crepúsculo', hdr: 'qwantani_dusk_2_puresky', bg: 0.35, env: 0.5, blur: 0, rot: 0.6, sc: 0xffa070, si: 1.1, az: 290, el: 5, hs: 0x8a7fa0, hg: 0x1c1512, hi: 0.2, fogD: 0.011, fogK: 1, lamps: 1, win: 1.1, grade: { exposure: 1.0, saturation: -0.12, contrast: 0.12, bloom: 0.55, vignette: 0.5 } },
   { n: 'Nublado', hdr: 'kloofendal_overcast_puresky', bg: 0.8, env: 0.9, blur: 0, rot: 0, sc: 0xe8eef5, si: 1.4, az: 200, el: 50, hs: 0xc8d0da, hg: 0x2a2620, hi: 0.25, fogD: 0.009, fogK: 1, lamps: 0, win: 0.35, grade: { exposure: 1.0, saturation: -0.18, contrast: 0.1, bloom: 0.35, vignette: 0.4 } },
   { n: 'Noite', hdr: 'qwantani_night_puresky', bg: 0.35, env: 0.18, blur: 0, rot: 0, sc: 0xa9c1ff, si: 0.4, az: 160, el: 42, hs: 0x3c4a6a, hg: 0x0c0d10, hi: 0.1, fogD: 0.016, fogK: 0.8, lamps: 1, win: 1.6, grade: { exposure: 1.15, saturation: -0.25, contrast: 0.16, bloom: 0.8, vignette: 0.6 } },
 ];
 
-const HDR_URLS = import.meta.glob('../assets/hdri/*.hdr', { query: '?url', import: 'default', eager: true }) as Record<string, string>;
+const HDR_URLS = import.meta.glob('@assets/hdri/*.hdr', { query: '?url', import: 'default', eager: true }) as Record<string, string>;
 const hdrUrl = (id: string) => Object.entries(HDR_URLS).find(([k]) => k.includes('/' + id + '_'))?.[1];
 
 const pmrem = new THREE.PMREMGenerator(R);

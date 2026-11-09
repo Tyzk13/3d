@@ -1,23 +1,46 @@
-// @ts-nocheck — código portado do HTML original.
-// Mapa-modelo simples: mostra o mínimo para criar um mapa novo (ver docs/NOVO-MAPA.md).
+// Mapa-modelo: clareira na floresta com fogueira. Mostra o mínimo para criar um mapa novo
+// (ver docs/NOVO-MAPA.md). Tudo que um mapa precisa: construir em M.G, registrar o chão em M.walk,
+// e definir vistas, VTT e (opcionalmente) camadas, colisão, luzes e animação.
 import * as THREE from 'three';
 import type { MapRuntime } from '../core/types';
-import { begin, rnd, mat, inst, PL, TX } from '../core/kit';
+import { begin, halo } from '../core/kit';
+import { makeTerrain, fbm } from '../core/terrain';
+import { instance, instanceVariants, type Xf } from '../core/models';
 
-export function build(M: MapRuntime) {
+export async function build(M: MapRuntime) {
   begin(M, 11);
-  const G = M.G, walk = M.walk;
-  const { grass } = TX();
-  const fm = new THREE.MeshBasicMaterial({ color: 0xffb347 });
-  M.shadowRadius = 55;const g=new THREE.Mesh(new THREE.PlaneGeometry(500,500),mat(0xffffff,{map:grass,bumpMap:grass,bumpScale:2,roughness:1}));g.rotation.x=-Math.PI/2;g.userData.ns=1;g.receiveShadow=true;G.add(g);walk.push(g);
-  const gp=[];for(let i=-20;i<=20;i++)gp.push(i,.02,-20,i,.02,20,-20,.02,i,20,.02,i);
-  const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(gp,3));const gl=new THREE.LineSegments(gg,new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.12}));gl.userData.ns=1;G.add(gl);
-  const tr=[],cr=[],rk=[];for(let i=0;i<60;i++){const a=rnd()*6.283,r=24+rnd()*50,x=Math.cos(a)*r,z=Math.sin(a)*r,h=3+rnd()*3;tr.push({x:x,y:h/2,z:z,sx:1.3,sy:h});cr.push({x:x,y:h+1.2,z:z,sx:2.2,sy:2.4,sz:2.2,c:[0x23402a,0x2a4a30,0x1f3a28][i%3]})}
-  for(let i=0;i<24;i++){const a=rnd()*6.283,r=3+rnd()*18;rk.push({x:Math.cos(a)*r,y:.2,z:Math.sin(a)*r,sx:.4+rnd()*.8,sy:.4+rnd()*.5,sz:.4+rnd()*.8,r:rnd()*6,c:0x6f6c66})}
-  inst(new THREE.CylinderGeometry(.18,.28,1,8),mat(0x5b3f28),tr);inst(new THREE.IcosahedronGeometry(1,1),mat(0xffffff,{flatShading:true}),cr,1).userData.canopy=1;inst(new THREE.DodecahedronGeometry(1,0),mat(0xffffff,{flatShading:true}),rk,1);
-  const fire=new THREE.Mesh(new THREE.SphereGeometry(.25,8,8),fm);fire.position.set(0,.3,-3);fire.userData.ns=1;G.add(fire);PL(0,1.2,-3,1.2,1.8,16);
-  G.traverse(o=>{if(o.isMesh&&!o.userData.ns){o.castShadow=o.receiveShadow=true}});
-  M.vtt={areas:[{n:'Campo 40×40',b:[-20,20,-20,20],lv:1}],walls:[],portals:[],lights:[[0,-3,6,.9,'ffb067']]};
-  G.traverse(o=>{if(o.isMesh&&o.material&&o.material.isMeshStandardMaterial&&o.material.envMapIntensity===1)o.material.envMapIntensity=.45});
-  M.layers=[];M.views=[{n:'Geral',p:[0,16,24],t:[0,0,0]},{n:'Tática',p:[0,34,.2],t:[0,0,0]}];
+  const G = M.G;
+  let s = 11; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+
+  // 1) terreno: plano na clareira, ondulado na mata
+  const height = (x: number, z: number) => Math.max(0, Math.hypot(x, z) - 16) * 0.06 * fbm(x * 0.05, z * 0.05, 3) * 4;
+  const ter = makeTerrain({
+    size: 200, seg: 160, height,
+    base: { id: 'sparse_grass', size: 3 }, r: { id: 'forest_ground_04', size: 2.5 }, g: { id: 'brown_mud_leaves_01', size: 2.5 },
+    mask: (x, z) => { const d = Math.hypot(x, z + 3); return [Math.max(0, 1 - d / 3.5), Math.min(1, Math.max(0, (Math.hypot(x, z) - 14) / 10))]; },
+  });
+  G.add(ter.mesh, ter.collider);
+  M.walk.push(ter.collider); // onde personagens pisam (malha simples de colisão)
+
+  // 2) modelos espalhados com instancing
+  const trees: Xf[] = [];
+  for (let i = 0; i < 70; i++) { const a = rnd() * 6.283, r = 20 + rnd() * 45; trees.push({ x: Math.cos(a) * r, y: height(Math.cos(a) * r, Math.sin(a) * r) - 0.1, z: Math.sin(a) * r, ry: rnd() * 6, s: 0.8 + rnd() * 0.4 }); }
+  // fir_tree_01 tem 3 variantes (nós-raiz); `variant` escolhe uma
+  for (let v = 0; v < 3; v++) (await instance('fir_tree_01', trees.filter((_, i) => i % 3 === v), G, { variant: v })).forEach(m => (m.userData.canopy = 1));
+  const rocks: Xf[] = []; for (let i = 0; i < 18; i++) { const a = rnd() * 6.283, rr = 6 + rnd() * 12; rocks.push({ x: Math.cos(a) * rr, y: 0, z: Math.sin(a) * rr, ry: rnd() * 6, s: 0.6 + rnd() * 0.8 }); }
+  await instanceVariants('rock_moss_set_01', rocks, G);
+  await instance('tree_stump_01', [{ x: 2.2, y: 0, z: -2, ry: 1 }, { x: -2.4, y: 0, z: -4.2, ry: 2 }], G);
+
+  // 3) fogueira: brasas emissivas + luz pontual (n = intensidade quando as luzes estão acesas)
+  const ember = new THREE.Mesh(new THREE.SphereGeometry(0.28, 10, 8), new THREE.MeshBasicMaterial({ color: 0xff7a2a }));
+  ember.position.set(0, 0.12, -3); ember.scale.y = 0.5; G.add(ember); M.lamps.push(ember.material);
+  const fire = new THREE.PointLight(0xff8a3a, 0, 0, 2); fire.position.set(0, 0.8, -3); G.add(fire);
+  M.lights.push({ l: fire, d: 0, n: 18 }); halo(0, 0.5, -3, 1.6);
+  M.tick = (_dt, t) => { if (fire.intensity > 0) fire.intensity = 18 * (0.85 + 0.15 * Math.sin(t * 11) * Math.sin(t * 6.7)); };
+
+  // 4) vistas, VTT e região de sombra
+  M.shadowRadius = 30;
+  M.views = [{ n: 'Geral', p: [0, 14, 22], t: [0, 0, -2] }, { n: 'Tática', p: [0, 40, 0.1], t: [0, 0, 0] }];
+  M.walkStart = { x: 0, z: 6 };
+  M.vtt = { areas: [{ n: 'Clareira 40×40', b: [-20, 20, -20, 20], lv: 1 }], walls: [], portals: [], lights: [[0, -3, 6, 0.9, 'ff8a3a']] };
 }

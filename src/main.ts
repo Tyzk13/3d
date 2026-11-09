@@ -97,7 +97,8 @@ function initUi() {
   $('bch').onclick = () => setC(!st.showC); setC(st.showC);
   const QN = { baixa: 'Baixa', media: 'Média', alta: 'Alta' } as const, QS = ['baixa', 'media', 'alta'] as const;
   $('bq').textContent = 'Qualidade: ' + QN[CFG.quality];
-  $('bq').onclick = () => { CFG.quality = QS[(QS.indexOf(CFG.quality) + 1) % 3]; post.setQuality(CFG.quality); $('bq').textContent = 'Qualidade: ' + QN[CFG.quality]; };
+  // qualidade: resolução/sombras/pós na hora; densidade da vegetação ao recarregar o mapa
+  $('bq').onclick = async () => { CFG.quality = QS[(QS.indexOf(CFG.quality) + 1) % 3]; post.setQuality(CFG.quality); $('bq').textContent = 'Qualidade: ' + QN[CFG.quality]; await loadMap(st.curMap); };
   ctl.addEventListener('start', () => { st.anim = null; });
 }
 
@@ -110,8 +111,14 @@ addEventListener('message', e => {
 
 // ---------- laço ----------
 const timer = new THREE.Timer();
+// medidor de quadros por segundo (?fps=1)
+const fpsEl = new URLSearchParams(location.search).get('fps') === '1' ? Object.assign(document.body.appendChild(document.createElement('div')), { id: 'fps' }) : null;
+if (fpsEl) R.info.autoReset = false;
+if (fpsEl) Object.assign(fpsEl.style, { position: 'fixed', right: '8px', top: '8px', font: '12px monospace', background: '#000a', color: '#9f9', padding: '3px 6px', borderRadius: '6px', zIndex: '9' });
+let fpsN = 0, fpsT = performance.now();
 function frame(ts?: number) {
   timer.update(ts);
+  if (fpsEl) R.info.reset();
   const dt = Math.min(0.1, timer.getDelta()), t = timer.getElapsed(), M = st.MP;
   if (!M) return;
   tickTokens(WM.on, WM.third, WM.av);
@@ -122,6 +129,7 @@ function frame(ts?: number) {
   }
   if (WM.on) walkStep(); else ctl.update();
   post.render(dt);
+  if (fpsEl && ++fpsN >= 30) { const n = performance.now(); fpsEl.textContent = (30000 / (n - fpsT)).toFixed(0) + ' fps · ' + R.info.render.calls + ' draws · ' + (R.info.render.triangles / 1e6).toFixed(2) + ' M tri'; fpsT = n; fpsN = 0; }
 }
 
 // ---------- capturas automáticas (tools/capturas.mjs) ----------
@@ -130,11 +138,12 @@ function captureApi() {
     allViews: () => st.MP!.views,
     view(v: { p: [number, number, number]; t: [number, number, number]; fov?: number }) {
       if (WM.on) setWalk(false);
+      st.showC = false; // vistas fixas: sem personagens
       st.anim = null; cam.fov = v.fov || 50; cam.updateProjectionMatrix();
       cam.position.set(...v.p); ctl.target.set(...v.t); ctl.update();
     },
     third(o: { x: number; z: number; yaw: number; pitch: number }) {
-      setWalk(true); WM.third = true;
+      st.showC = true; setWalk(true); WM.third = true;
       const a = WM.av!; WM.x = o.x; WM.z = o.z; WM.yaw = o.yaw; WM.pitch = o.pitch;
       // assenta no chão
       const rc = new THREE.Raycaster(new THREE.Vector3(o.x, 30, o.z), new THREE.Vector3(0, -1, 0));
@@ -143,7 +152,7 @@ function captureApi() {
     },
     async time(i: number) { st.pi = i; await setTime(i); },
     map: (id: string) => loadMap(id),
-    frames(n = 1) { for (let i = 0; i < n; i++) { if (WM.on) placeWalkCam(); snapTokens(); post.render(1 / 60); } },
+    frames(n = 1) { for (let i = 0; i < n; i++) { if (WM.on) placeWalkCam(); snapTokens(); tickTokens(WM.on, WM.third, WM.av); post.render(1 / 60); } },
     shot(png = false) { this.frames(post.warmup()); return png ? R.domElement.toDataURL('image/png') : R.domElement.toDataURL('image/jpeg', 0.9); },
     vtt(area: number, ppg: number) { const c = xcalc(area, ppg), png = xrender(c, {}); return { png, json: dd2vtt(c, png) }; },
   };
@@ -167,9 +176,13 @@ async function start() {
   if (CFG.capture) {
     captureApi();
     await loading.waitTextures();
+    await setTime(st.pi); // recaptura a sonda do interior já com as texturas
     (window as any).__capReady = true;
   } else {
     R.setAnimationLoop(frame);
+    loading.step('Texturas e modelos', 0.9);
+    await loading.waitTextures(30000);
+    await setTime(st.pi);
   }
   loading.done();
 }

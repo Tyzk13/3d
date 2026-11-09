@@ -5,10 +5,10 @@ import { CFG } from './config';
 import { st, $ } from './state';
 import { mat } from './kit';
 import { NET } from './net';
-import dante from '../assets/tokens/dante.png';
-import luis from '../assets/tokens/luis.png';
-import leo from '../assets/tokens/leo.png';
-import sabriny from '../assets/tokens/sabriny.png';
+import dante from '@assets/tokens/dante.png';
+import luis from '@assets/tokens/luis.png';
+import leo from '@assets/tokens/leo.png';
+import sabriny from '@assets/tokens/sabriny.png';
 
 export interface TokenDef { id: string; name: string; h: number; c: number; img: string; custom?: boolean }
 export interface Token {

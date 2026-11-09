@@ -25,7 +25,7 @@ export function buildChurch(G: THREE.Group): Building {
   const OX = NX + WT, OZ = NZ + WT; // faces externas
 
   // ---------- base (embasamento) e piso ----------
-  const plinth = cube(OX * 2 + 0.5, FLOOR, OZ * 2 + 0.5, 0, FLOOR / 2, 0, conD, G); floors.push(plinth);
+  const plinth = cube(OX * 2 + 0.5, FLOOR, OZ * 2 + 0.5, 0, FLOOR / 2, 0, conD, G); floors.push(plinth); plinth.userData.exterior = 1;
   const fl = mesh(boxUV(new THREE.PlaneGeometry(NX * 2, NZ * 2).rotateX(-Math.PI / 2)), M.floor(), 0, FLOOR + 0.005, 0, G);
   fl.castShadow = false; floors.push(fl);
 
@@ -157,7 +157,7 @@ export function buildChurch(G: THREE.Group): Building {
   [-1, 1].forEach(s => {
     const g = boxUV(new THREE.BoxGeometry(slabLen + 0.1, 0.22, OZ * 2 + 1.2));
     const r = mesh(g, [fascia, fascia, slate, ceil, fascia, fascia], s * span / 2, (TOP + RISE + yEave) / 2 + 0.12, 0, RF);
-    r.rotation.z = -s * ang;
+    r.rotation.z = -s * ang; r.userData.exterior = 1;
     // calha
     const gut = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, OZ * 2 + 1.2, 8, 1, true, 0, Math.PI), iron());
     gut.rotation.x = Math.PI / 2; gut.position.set(s * (span + 0.02), yEave - 0.02, 0); gut.material.side = THREE.DoubleSide; RF.add(gut);
@@ -184,13 +184,13 @@ export function buildChurch(G: THREE.Group): Building {
   // janelinhas estreitas no fuste (vidro escuro) e relógio antigo na frente
   const slitPts = pointedArch(0.45, 1.4);
   const darkGlass = glassMat('lanceta', 7);
-  [[0, 4.2], [0, 8.4]].forEach(([, y]) => {
+  [[0, 3.6], [0, 6.6]].forEach(([, y]) => {
     [[0, td / 2 + 0.005, 0], [-tw / 2 - 0.005, 0, -Math.PI / 2]].forEach(([x, z, r]) => {
       const p = mesh(panelGeo(slitPts), darkGlass, x as number, y, z as number, TG); p.rotation.y = r as number; p.castShadow = false;
       const f = mesh(frameGeo(slitPts, 0.1, 0.06), trim, x as number, y, (z as number) + (r ? 0 : 0.0), TG); f.rotation.y = r as number;
     });
   });
-  const clockFace = new THREE.Mesh(new THREE.CircleGeometry(0.75, 40), new THREE.MeshStandardMaterial({ color: 0xcfc6b0, roughness: 0.6, emissive: 0xffe6b0, emissiveIntensity: 0.0 }));
+  const clockFace = new THREE.Mesh(new THREE.CircleGeometry(0.75, 40), new THREE.MeshStandardMaterial({ color: 0x8e877a, roughness: 0.7 }));
   clockFace.position.set(0, shaftH - 1.6, td / 2 + 0.03); TG.add(clockFace);
   mesh(frameGeo(circle(0.75, 40), 0.12, 0.08), trim, 0, shaftH - 1.6, td / 2, TG);
   { const h1 = cube(0.04, 0.42, 0.02, 0, shaftH - 1.6 + 0.18, td / 2 + 0.06, iron(), TG); h1.rotation.z = -0.5; const h2 = cube(0.04, 0.6, 0.02, 0, shaftH - 1.6 + 0.25, td / 2 + 0.07, iron(), TG); h2.rotation.z = 2.4; h2.position.x = -0.2; }

@@ -7,6 +7,7 @@ import { placeT, selT } from './tokens';
 import { fillAreas } from './vtt';
 import { WM, startWalk } from './walk';
 import { MAPS } from '../maps/manifest';
+import { loading as loader } from './loading';
 import type { MapRuntime } from './types';
 
 function newRuntime(id: string): MapRuntime {
@@ -59,5 +60,7 @@ export async function loadMap(id: string) {
     selT(null); fillAreas();
     if (WM.on) startWalk();
     mapHooks.forEach(f => f(M));
+    // quando as texturas chegarem, reaplica o clima (recaptura sondas de ambiente)
+    loader.waitTextures(20000).then(() => { if (st.MP === M) setTime(st.pi); });
   } finally { loading = null; done(); }
 }

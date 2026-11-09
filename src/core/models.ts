@@ -4,11 +4,12 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
-const FILES = import.meta.glob('../assets/models/*.glb', { query: '?url', import: 'default', eager: true }) as Record<string, string>;
+const FILES = import.meta.glob('@assets/models/*.glb', { query: '?url', import: 'default', eager: true }) as Record<string, string>;
+const fileFor = (id: string) => Object.entries(FILES).find(([k]) => k.endsWith(`/models/${id}.glb`))?.[1];
 const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
 const cache: Record<string, Promise<THREE.Group>> = {};
 
-export const hasModel = (id: string) => !!FILES[`../assets/models/${id}.glb`];
+export const hasModel = (id: string) => !!fileFor(id);
 
 /** Ajusta materiais vindos do glTF: folhagem com recorte alfa (sem ordenação), sombra e reflexo moderado. */
 function fixMaterials(root: THREE.Object3D) {
@@ -32,7 +33,7 @@ function fixMaterials(root: THREE.Object3D) {
 /** Carrega (uma vez) e devolve o grupo original — não adicionar à cena; use clone() ou instance(). */
 export function model(id: string): Promise<THREE.Group> {
   return (cache[id] ||= (async () => {
-    const url = FILES[`../assets/models/${id}.glb`];
+    const url = fileFor(id);
     if (!url) throw new Error('Modelo não encontrado: ' + id);
     const g = await loader.loadAsync(url);
     const root = g.scene;

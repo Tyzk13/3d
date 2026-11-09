@@ -5,6 +5,7 @@ import { boxUV } from '../../core/pbr';
 import { makeTerrain, fbm, noise2 } from '../../core/terrain';
 import { model, place, instance, instanceVariants, hasModel, modelSize, type Xf } from '../../core/models';
 import type { View } from '../../core/types';
+import { CFG } from '../../core/config';
 import { K, halo } from '../../core/kit';
 import { Flowers } from './interior';
 import { FLOOR, NX, NZ, WT, M, iron, cube, mesh, bx } from './common';
@@ -13,7 +14,7 @@ export const FENCE = { x: 26, z0: -24, z1: 40 };
 export const PATH = { w: 2.8, z0: 12.8, z1: 40 };
 export const PARK = { x0: 10, x1: 25, z0: 24, z1: 39 };
 export const SHED = { x: 19, z: 8, w: 4.2, d: 3.2, h: 2.5 };
-export const GAZEBO = { x: -16, z: 30, r: 3 };
+export const GAZEBO = { x: -20, z: 24.5, r: 3 };
 export const GRAVE = { x0: -22, x1: -11, z0: -4, z1: 14 };
 
 let sd = 41;
@@ -33,6 +34,8 @@ export function groundH(x: number, z: number) {
 
 export async function buildGrounds(G: THREE.Group, F: Flowers, views: View[] = []): Promise<Grounds> {
   sd = 41;
+  // densidade por qualidade: mato, floresta (quantidade e distância do LOD), sombra da vegetação
+  const Q = { baixa: { grass: 150, forest: 70, lod: 40, vegShadow: false, ferns: 2 }, media: { grass: 600, forest: 110, lod: 46, vegShadow: true, ferns: 5 }, alta: { grass: 1400, forest: 140, lod: 60, vegShadow: true, ferns: 7 } }[CFG.quality];
   const solids: THREE.Object3D[] = [], floors: THREE.Object3D[] = [], lightsVtt: Grounds['lightsVtt'] = [];
   const O = new THREE.Group(); O.name = 'exterior'; G.add(O);
   const lights = K.M.lights;
@@ -49,7 +52,7 @@ export async function buildGrounds(G: THREE.Group, F: Flowers, views: View[] = [
     return Math.hypot(x - (ax + dx * t), z - (az + dz * t)) < 4.5 + 3 * Math.max(0, t);
   });
   const free = (x: number, z: number, m = 0) => !inCorridor(x, z) &&
-    !(Math.abs(x) < NX + 6 + m && z > -NZ - 5 - m && z < NZ + 5 + m) &&            // igreja
+    !(Math.abs(x) < NX + 9 + m && z > -NZ - 7 - m && z < NZ + 6 + m) &&            // igreja
     !(Math.abs(x) < 5 + m && z > 10 - m) &&                                         // caminho
     !(x > PARK.x0 - 2 - m && x < PARK.x1 + 2 + m && z > PARK.z0 - 2 - m && z < PARK.z1 + 3 + m) &&
     !(Math.hypot(x - SHED.x, z - SHED.z) < 5 + m) && !(Math.hypot(x - GAZEBO.x, z - GAZEBO.z) < 6 + m) &&
@@ -63,12 +66,12 @@ export async function buildGrounds(G: THREE.Group, F: Flowers, views: View[] = [
     inner.push({ x, z, id: innerIds[(rnd() * innerIds.length) | 0], s: 1.15 + rnd() * 0.45, r: rnd() * 6.28 });
   }
   const forest: { x: number; z: number; id: string; v: number; s: number; r: number; far: boolean }[] = [];
-  for (let i = 0; i < 2000 && forest.length < 110; i++) {
+  for (let i = 0; i < 2500 && forest.length < Q.forest; i++) {
     const a = rnd() * Math.PI * 2, rr = 36 + Math.pow(rnd(), 0.8) * 70, x = Math.cos(a) * rr * 1.05, z = 8 + Math.sin(a) * rr * 1.15;
     if (Math.abs(x) < FENCE.x + 4 && z > FENCE.z0 - 4 && z < FENCE.z1 + 4) continue;
     if (Math.abs(x) < 9 && z > FENCE.z1) continue; // abertura da estrada de acesso
     if (forest.some(t => Math.hypot(t.x - x, t.z - z) < 5) || inCorridor(x, z)) continue;
-    forest.push({ x, z, id: 'fir_tree_01', v: (rnd() * 3) | 0, s: 0.85 + rnd() * 0.4, r: rnd() * 6.28, far: rr > 46 });
+    forest.push({ x, z, id: 'fir_tree_01', v: (rnd() * 3) | 0, s: 0.85 + rnd() * 0.4, r: rnd() * 6.28, far: rr > Q.lod });
   }
   const underTree = (x: number, z: number) => {
     let m = 0;
@@ -83,9 +86,9 @@ export async function buildGrounds(G: THREE.Group, F: Flowers, views: View[] = [
     base: { id: 'sparse_grass', size: 3.2 }, r: { id: 'forest_ground_04', size: 2.5 }, g: { id: 'brown_mud_leaves_01', size: 2.6 },
     mask: (x, z) => {
       const n = fbm(x * 0.09, z * 0.09, 3), n2 = noise2(x * 0.5, z * 0.5);
-      let dirt = sm(0.55, 0.75, n) * 0.8;
+      let dirt = sm(0.62, 0.8, n) * 0.7;
       if (Math.abs(x) < PATH.w / 2 + 1.1 && z > PATH.z0 - 1) dirt = Math.max(dirt, 1 - sm(PATH.w / 2 - 0.2, PATH.w / 2 + 1.1, Math.abs(x)) * (0.6 + 0.4 * n2));
-      if (Math.abs(x) < NX + 2.2 && Math.abs(z) < NZ + 2.2) dirt = Math.max(dirt, 0.7);
+      if (Math.abs(x) < NX + 1.6 && Math.abs(z) < NZ + 1.6) dirt = Math.max(dirt, 0.6);
       if (x > PARK.x0 - 1.5 && x < PARK.x1 + 1.5 && z > PARK.z0 - 1.5 && z < PARK.z1 + 1.5) dirt = 1;
       if (Math.hypot(x - SHED.x, z - SHED.z) < 4.5) dirt = Math.max(dirt, 0.9);
       const leaves = Math.min(1, underTree(x, z) * (0.7 + 0.5 * n) + sm(30, 60, Math.hypot(x, z - 8)) * 0.5);
@@ -108,19 +111,19 @@ export async function buildGrounds(G: THREE.Group, F: Flowers, views: View[] = [
   const PZ0 = NZ + WT + 0.1, PZ1 = NZ + 2.6;
   // pórtico de madeira com telhado de ardósia
   [-1, 1].forEach(s => {
-    const p = cube(0.26, 4.0, 0.26, s * 2.3, FLOOR + 2.0, PZ1, M.woodBeam(), O); solids.push(p);
+    const p = cube(0.26, 3.4, 0.26, s * 2.3, FLOOR + 1.7, PZ1, M.woodBeam(), O); solids.push(p);
     cube(0.4, 0.2, 0.4, s * 2.3, FLOOR + 0.1, PZ1, trim, O);
-    cube(0.2, 0.26, PZ1 - PZ0 + 0.4, s * 2.3, FLOOR + 4.0, (PZ0 + PZ1) / 2, M.woodBeam(), O);
-    const br = cube(0.12, 0.9, 0.12, s * 2.3, FLOOR + 3.6, PZ1 - 0.4, M.woodBeam(), O); br.rotation.x = 0.7;
+    cube(0.2, 0.26, PZ1 - PZ0 + 0.4, s * 2.3, FLOOR + 3.4, (PZ0 + PZ1) / 2, M.woodBeam(), O);
+    const br = cube(0.12, 0.9, 0.12, s * 2.3, FLOOR + 3.0, PZ1 - 0.4, M.woodBeam(), O); br.rotation.x = 0.7;
   });
-  cube(4.86, 0.26, 0.24, 0, FLOOR + 4.0, PZ1, M.woodBeam(), O);
-  { const ang = 0.62, half = 2.75, len = half / Math.cos(ang);
-    [-1, 1].forEach(s => { const r = mesh(boxUV(new THREE.BoxGeometry(len, 0.12, PZ1 - PZ0 + 0.7)), [M.woodDark(), M.woodDark(), M.slate(), M.ceiling(), M.woodDark(), M.woodDark()], s * half / 2, FLOOR + 4.15 + (half * Math.tan(ang)) / 2, (PZ0 + PZ1) / 2 + 0.2, O); r.rotation.z = -s * ang; });
+  cube(4.86, 0.26, 0.24, 0, FLOOR + 3.4, PZ1, M.woodBeam(), O);
+  { const ang = 0.45, half = 2.75, len = half / Math.cos(ang);
+    [-1, 1].forEach(s => { const r = mesh(boxUV(new THREE.BoxGeometry(len, 0.12, PZ1 - PZ0 + 0.7)), [M.woodDark(), M.woodDark(), M.slate(), M.ceiling(), M.woodDark(), M.woodDark()], s * half / 2, FLOOR + 3.55 + (half * Math.tan(ang)) / 2, (PZ0 + PZ1) / 2 + 0.2, O); r.rotation.z = -s * ang; });
     const tri = new THREE.Shape([new THREE.Vector2(-2.5, 0), new THREE.Vector2(2.5, 0), new THREE.Vector2(0, 2.5 * Math.tan(ang))]);
-    mesh(boxUV(new THREE.ExtrudeGeometry(tri, { depth: 0.08, bevelEnabled: false })), M.woodDark(), 0, FLOOR + 4.12, PZ1 + 0.05, O); }
-  place('lantern_chandelier_01', 0, FLOOR + 3.4, (PZ0 + PZ1) / 2 + 0.3, 0, 1.1, O).catch(() => {});
-  addLight(0, FLOOR + 3.3, (PZ0 + PZ1) / 2 + 0.3, 6, 0xffb070);
-  halo(0, FLOOR + 3.35, (PZ0 + PZ1) / 2 + 0.3, 1.8);
+    mesh(boxUV(new THREE.ExtrudeGeometry(tri, { depth: 0.08, bevelEnabled: false })), M.woodDark(), 0, FLOOR + 3.52, PZ1 + 0.05, O); }
+  place('lantern_chandelier_01', 0, FLOOR + 2.85, (PZ0 + PZ1) / 2 + 0.3, 0, 1.0, O).catch(() => {});
+  addLight(0, FLOOR + 2.75, (PZ0 + PZ1) / 2 + 0.3, 6, 0xffb070);
+  halo(0, FLOOR + 2.8, (PZ0 + PZ1) / 2 + 0.3, 1.4);
   lightsVtt.push([0, (PZ0 + PZ1) / 2, 5, 0.8, 'ffb067']);
   // luz quente que sai pela porta aberta
   addLight(0, FLOOR + 2.2, NZ - 1.2, 9, 0xffa050);
@@ -135,7 +138,7 @@ export async function buildGrounds(G: THREE.Group, F: Flowers, views: View[] = [
   F.scatterPetals(-1.3, 1.3, PATH.z0, PATH.z0 + 26, 0.055, 80);
 
   // ---------- poças (refletem o céu e as luzes) ----------
-  const puddleMat = new THREE.MeshStandardMaterial({ color: 0x0b0c0d, roughness: 0.04, metalness: 0.0, envMapIntensity: 1.6, transparent: true, opacity: 0.92 });
+  const puddleMat = new THREE.MeshStandardMaterial({ color: 0x0b0c0d, roughness: 0.05, metalness: 0.0, envMapIntensity: 0.9, transparent: true, opacity: 0.9 });
   const puddle = (x: number, z: number, r: number, y: number) => {
     const pts: THREE.Vector2[] = []; const k = rnd() * 10;
     for (let i = 0; i < 28; i++) { const a = (i / 28) * Math.PI * 2, rr = r * (0.7 + 0.45 * noise2(Math.cos(a) * 1.3 + k, Math.sin(a) * 1.3 + k)); pts.push(new THREE.Vector2(Math.cos(a) * rr * 1.4, Math.sin(a) * rr)); }
@@ -196,7 +199,7 @@ export async function buildGrounds(G: THREE.Group, F: Flowers, views: View[] = [
     // vasos de barro com flores junto à escada
     [-1, 1].forEach(s => { place('planter_pot_clay', s * 2.85, FLOOR + 0.43, NZ + WT + 0.6, 0, 1.6, O).catch(() => {}); F.bunch(s * 2.85, FLOOR + 0.9, NZ + WT + 0.6, 0.28, 28, 1.6); });
     // bancos de jardim
-    [[-4.4, 20, Math.PI / 2], [4.4, 20, -Math.PI / 2], [-4.4, 31, Math.PI / 2], [4.4, 31, -Math.PI / 2]].forEach(([x, z, r]) => place('painted_wooden_bench', x, 0, z, r, 1, O).catch(() => {}));
+    [[-4.4, 20, Math.PI / 2], [4.4, 20, -Math.PI / 2], [-4.4, 31, Math.PI / 2], [4.4, 31, -Math.PI / 2]].forEach(([x, z, r]) => place('painted_wooden_bench', x, 0, z, r, 1, O).then(b => b.traverse((o: any) => { if (o.isMesh) { o.material = o.material.clone(); o.material.color.multiplyScalar(0.45); } })).catch(() => {}));
   }
 
   // ---------- estacionamento com carros cobertos ----------
@@ -243,7 +246,7 @@ export async function buildGrounds(G: THREE.Group, F: Flowers, views: View[] = [
     const ceil = new THREE.Mesh(new THREE.ConeGeometry(Z.r + 0.75, 1.75, 8, 1, true), M.ceiling()); ceil.material = ceil.material; ceil.position.y = 3.08 + 0.88; ceil.rotation.y = Math.PI / 8; (ceil as any).material = M.ceiling().clone(); (ceil.material as THREE.Material).side = THREE.BackSide; g.add(ceil);
     place('wooden_lantern_01', 0, 2.6, 0, 0, 1.1, g).catch(() => {});
     addLight(Z.x, 2.6, Z.z, 4, 0xffae60); halo(Z.x, 2.75, Z.z, 1.6); lightsVtt.push([Z.x, Z.z, 5, 0.7, 'ffb067']);
-    F.bunch(0, 0.95, 0, 0.3, 26, 1.5);
+    F.bunch(Z.x, 0.95, Z.z, 0.3, 26, 1.5); // o coletor de flores usa coordenadas do mundo
     const tbl = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.05, 20), M.fabric()); tbl.position.y = 0.78; g.add(tbl);
     const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.18, 0.5, 10), M.woodBeam()); leg.position.y = 0.55; g.add(leg); }
 
@@ -292,7 +295,7 @@ export async function buildGrounds(G: THREE.Group, F: Flowers, views: View[] = [
     const sk = Object.keys(shrubs);
     for (let z = FENCE.z0 + 1; z < FENCE.z1; z += 1.6) [-1, 1].forEach(s => { if (rnd() < 0.75) shrubs[sk[(rnd() * 4) | 0]].push({ x: s * (FENCE.x - 0.9) + (rnd() - 0.5) * 0.6, y: 0, z: z + (rnd() - 0.5), ry: rnd() * 6, s: 0.9 + rnd() * 0.7 }); });
     for (let x = -FENCE.x + 1; x < FENCE.x; x += 1.6) if (rnd() < 0.75) shrubs[sk[(rnd() * 4) | 0]].push({ x, y: 0, z: FENCE.z0 + 0.9 + (rnd() - 0.5) * 0.5, ry: rnd() * 6, s: 0.9 + rnd() * 0.7 });
-    for (const [id, L] of Object.entries(shrubs)) await instanceVariants(id, L, O).catch(() => {});
+    for (const [id, L] of Object.entries(shrubs)) await instanceVariants(id, L, O, { shadow: Q.vegShadow }).catch(() => {});
     // cerca-viva baixa ao longo das laterais da igreja
     const hedge: Xf[] = [];
     [-1, 1].forEach(s => { for (let z = -NZ + 0.5; z < NZ - 1; z += 0.9) hedge.push({ x: s * (NX + WT + 1.45), y: 0, z, ry: rnd() * 6, s: 0.55 + rnd() * 0.15 }); });
@@ -300,11 +303,11 @@ export async function buildGrounds(G: THREE.Group, F: Flowers, views: View[] = [
     await instance('moss_01', hedge, O).catch(() => {});
     // samambaias e urtigas sob as árvores; mato no gramado
     const ferns: Xf[] = [], nettles: Xf[] = [], grass: Xf[] = [], rocks: Xf[] = [];
-    inner.forEach(t => { for (let i = 0; i < 5; i++) { const a = rnd() * 6.28, r = 1 + rnd() * 3; (rnd() < 0.6 ? ferns : nettles).push({ x: t.x + Math.cos(a) * r, y: groundH(t.x, t.z), z: t.z + Math.sin(a) * r, ry: rnd() * 6, s: 0.8 + rnd() * 0.8 }); } });
-    for (let i = 0; i < 3000 && grass.length < 600; i++) { const x = (rnd() - 0.5) * 2 * (FENCE.x - 1), z = FENCE.z0 + 1 + rnd() * (FENCE.z1 - FENCE.z0 - 2); if (!free(x, z, -3.5) && !(Math.abs(x) > 4 && Math.abs(x) < 9 && z > 13)) continue; if (Math.abs(x) < 2.6 && z > 11) continue; grass.push({ x, y: groundH(x, z) - 0.02, z, ry: rnd() * 6, s: 0.6 + rnd() * 0.7 }); }
+    inner.forEach(t => { for (let i = 0; i < Q.ferns; i++) { const a = rnd() * 6.28, r = 1 + rnd() * 3; (rnd() < 0.6 ? ferns : nettles).push({ x: t.x + Math.cos(a) * r, y: groundH(t.x, t.z), z: t.z + Math.sin(a) * r, ry: rnd() * 6, s: 0.8 + rnd() * 0.8 }); } });
+    for (let i = 0; i < 6000 && grass.length < Q.grass; i++) { const x = (rnd() - 0.5) * 2 * (FENCE.x - 1), z = FENCE.z0 + 1 + rnd() * (FENCE.z1 - FENCE.z0 - 2); if (!free(x, z, -3.5) && !(Math.abs(x) > 4 && Math.abs(x) < 9 && z > 13)) continue; if (Math.abs(x) < 2.6 && z > 11) continue; grass.push({ x, y: groundH(x, z) - 0.02, z, ry: rnd() * 6, s: 0.6 + rnd() * 0.7 }); }
     for (let i = 0; i < 14; i++) { const a = rnd() * 6.28, r = 30 + rnd() * 25; rocks.push({ x: Math.cos(a) * r, y: groundH(Math.cos(a) * r, 8 + Math.sin(a) * r) - 0.1, z: 8 + Math.sin(a) * r, ry: rnd() * 6, s: 0.8 + rnd() * 1.2 }); }
-    await instanceVariants('fern_02', ferns, O).catch(() => {});
-    await instanceVariants('nettle_plant', nettles, O).catch(() => {});
+    await instanceVariants('fern_02', ferns, O, { shadow: Q.vegShadow }).catch(() => {});
+    await instanceVariants('nettle_plant', nettles, O, { shadow: Q.vegShadow }).catch(() => {});
     await instanceVariants('grass_medium_01', grass, O, { shadow: false }).catch(() => {});
     await instanceVariants('rock_moss_set_01', rocks, O).catch(() => {});
     await instance('boulder_01', [{ x: -25, y: 0, z: 36, ry: 1, s: 1 }, { x: 24, y: 0, z: -22, ry: 2, s: 1.2 }], O).catch(() => {});

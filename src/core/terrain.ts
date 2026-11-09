@@ -53,7 +53,7 @@ float hB = aB.r + 0.0, hR = aR.r + vSplat.x * 1.6 - 0.8, hG = aG.r + vSplat.y * 
 vec3 w = vec3(1.0 - clamp(vSplat.x + vSplat.y, 0.0, 1.0), vSplat.x, vSplat.y);
 w *= exp2(vec3(hB, hR, hG) * 6.0);
 w /= (w.x + w.y + w.z + 1e-5);
-diffuseColor.rgb *= cB.rgb * w.x + cR.rgb * w.y + cG.rgb * w.z;
+diffuseColor.rgb *= cB.rgb * vec3(0.86, 1.02, 0.8) * w.x + cR.rgb * w.y + cG.rgb * w.z;
 vec3 tArm = aB * w.x + aR * w.y + aG * w.z;`)
       .replace('#include <normal_fragment_maps>', `
 vec3 nB = texture2D(tBN, uvB).xyz * 2.0 - 1.0, nR = texture2D(tRN, uvR).xyz * 2.0 - 1.0, nG = texture2D(tGN, uvG).xyz * 2.0 - 1.0;

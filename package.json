@@ -7,11 +7,11 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "build:single": "vite build --mode single",
+    "build:single": "node tools/assets-leves.mjs && vite build --mode single",
     "preview": "vite preview",
     "capturas": "node tools/capturas.mjs",
     "assets": "NODE_USE_ENV_PROXY=1 node tools/baixar-assets.mjs",
-    "servidor": "node server/servidor-sync.mjs"
+    "servidor": "cd server && npm install --silent && node servidor-sync.mjs"
   },
   "dependencies": {
     "n8ao": "^2.0.1",

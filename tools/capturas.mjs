@@ -1,7 +1,7 @@
 // Capturas automáticas: abre a cena em câmeras fixas e climas e salva em capturas/<rodada>/.
 // Uso:  npm run capturas -- [rótulo] [--map=igreja] [--q=alta] [--w=1280] [--h=720] [--only=cinema,altar] [--times=0,1] [--png]
 // Gera também uma folha comparativa com as imagens de referencias/.
-import { createServer } from 'vite';
+import { build, preview } from 'vite';
 import { createRequire } from 'node:module';
 import { execSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -39,9 +39,11 @@ const stamp = new Date().toISOString().replace(/[-:]/g, '').slice(0, 13).replace
 const outDir = path.join(root, 'capturas', `${stamp}-${label}`);
 fs.mkdirSync(outDir, { recursive: true });
 
-const server = await createServer({ root, logLevel: 'error', server: { port: 0, host: '127.0.0.1' } });
-await server.listen();
-const port = server.httpServer.address().port;
+// build de produção numa pasta temporária (imune a edições durante a captura)
+const outBuild = path.join(root, '.cache', 'capturas-build');
+await build({ root, logLevel: 'error', build: { outDir: outBuild, emptyOutDir: true } });
+const port = 4300 + Math.floor(Math.random() * 500);
+const server = await preview({ root, logLevel: 'error', build: { outDir: outBuild }, preview: { port, host: '127.0.0.1', strictPort: true } });
 
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
@@ -102,3 +104,4 @@ console.log(`\n${files.length} capturas em ${((Date.now() - t0) / 1000).toFixed(
 if (errors.length) console.log(`${errors.length} avisos/erros do navegador (ver erros.txt):\n  ` + errors.slice(0, 8).join('\n  '));
 await browser.close();
 await server.close();
+process.exit(0);

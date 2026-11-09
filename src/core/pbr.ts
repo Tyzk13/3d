@@ -3,14 +3,15 @@
 import * as THREE from 'three';
 import { R } from './engine';
 
-const FILES = import.meta.glob('../assets/textures/*/*.webp', { query: '?url', import: 'default', eager: true }) as Record<string, string>;
+const FILES = import.meta.glob('@assets/textures/*/*.webp', { query: '?url', import: 'default', eager: true }) as Record<string, string>;
+const fileFor = (suffix: string) => Object.entries(FILES).find(([k]) => k.endsWith(suffix))?.[1];
 const loader = new THREE.TextureLoader();
 const texCache: Record<string, THREE.Texture> = {};
 
 function tex(id: string, map: 'diff' | 'nor' | 'arm') {
   const key = id + '/' + map;
   if (texCache[key]) return texCache[key];
-  const url = FILES[`../assets/textures/${id}/${map}.webp`];
+  const url = fileFor(`/textures/${id}/${map}.webp`);
   if (!url) return null;
   const t = loader.load(url);
   t.wrapS = t.wrapT = THREE.RepeatWrapping;

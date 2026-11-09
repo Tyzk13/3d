@@ -26,7 +26,7 @@ cam.position.set(-16, 6.5, 52);
 
 export const ctl = new OrbitControls(cam, cv);
 ctl.enableDamping = true;
-ctl.maxPolarAngle = 1.45;
+ctl.maxPolarAngle = 1.78; // permite olhar um pouco para cima (interiores)
 ctl.minDistance = 1.5;
 ctl.maxDistance = 95;
 ctl.target.set(-2, 6, 8);

@@ -29,6 +29,7 @@ Todo asset de terceiros usado no projeto é listado aqui, com link e licença.
 | Monastery Stone Floor (`monastery_stone_floor`) | textura | Amal Kumar | CC0 | https://polyhaven.com/a/monastery_stone_floor |
 | Quatrefoil Jacquard Fabric (`quatrefoil_jacquard_fabric`) | textura | colormass, Rico Cilliers | CC0 | https://polyhaven.com/a/quatrefoil_jacquard_fabric |
 | Rusty Metal 02 (`rusty_metal_02`) | textura | Rob Tuytel | CC0 | https://polyhaven.com/a/rusty_metal_02 |
+| Concrete Wall 008 (`concrete_wall_008`) | textura | Dario Barresi, Charlotte Baglioni | CC0 | https://polyhaven.com/a/concrete_wall_008 |
 | Overcast Soil (Pure Sky) (`overcast_soil_puresky`) | HDRI | Jarod Guest, Sergej Majboroda | CC0 | https://polyhaven.com/a/overcast_soil_puresky |
 | Kloppenheim 07 (Pure Sky) (`kloppenheim_07_puresky`) | HDRI | Greg Zaal, Jarod Guest | CC0 | https://polyhaven.com/a/kloppenheim_07_puresky |
 | Qwantani Dusk 2 (Pure Sky) (`qwantani_dusk_2_puresky`) | HDRI | Greg Zaal, Jarod Guest | CC0 | https://polyhaven.com/a/qwantani_dusk_2_puresky |
@@ -39,7 +40,6 @@ Todo asset de terceiros usado no projeto é listado aqui, com link e licença.
 | Brass Candleholders (`brass_candleholders`) | modelo | Tina | CC0 | https://polyhaven.com/a/brass_candleholders |
 | Wooden Chair 01 (`WoodenChair_01`) | modelo | Jake Mobley | CC0 | https://polyhaven.com/a/WoodenChair_01 |
 | Gothic Cabinet 01 (`GothicCabinet_01`) | modelo | Kirill Sannikov | CC0 | https://polyhaven.com/a/GothicCabinet_01 |
-| Large Castle Door (`large_castle_door`) | modelo | Tina | CC0 | https://polyhaven.com/a/large_castle_door |
 | Large Iron Gate (`large_iron_gate`) | modelo | Josh Dean | CC0 | https://polyhaven.com/a/large_iron_gate |
 | Street Lamp 01 (`street_lamp_01`) | modelo | Josh Dean | CC0 | https://polyhaven.com/a/street_lamp_01 |
 | Wooden Lantern 01 (`wooden_lantern_01`) | modelo | James Ray Cock | CC0 | https://polyhaven.com/a/wooden_lantern_01 |
@@ -52,7 +52,6 @@ Todo asset de terceiros usado no projeto é listado aqui, com link e licença.
 | Jacaranda Tree (`jacaranda_tree`) | modelo | Rob Tuytel, Rico Cilliers | CC0 | https://polyhaven.com/a/jacaranda_tree |
 | Tree Small 02 (`tree_small_02`) | modelo | Rico Cilliers | CC0 | https://polyhaven.com/a/tree_small_02 |
 | Fir Tree 01 (`fir_tree_01`) | modelo | Rob Tuytel, Rico Cilliers | CC0 | https://polyhaven.com/a/fir_tree_01 |
-| Pine Tree 01 (`pine_tree_01`) | modelo | Rob Tuytel, Rico Cilliers | CC0 | https://polyhaven.com/a/pine_tree_01 |
 | Shrub 01 (`shrub_01`) | modelo | Rico Cilliers | CC0 | https://polyhaven.com/a/shrub_01 |
 | Shrub 02 (`shrub_02`) | modelo | Rico Cilliers | CC0 | https://polyhaven.com/a/shrub_02 |
 | Shrub 03 (`shrub_03`) | modelo | Rico Cilliers | CC0 | https://polyhaven.com/a/shrub_03 |

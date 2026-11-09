@@ -49,3 +49,21 @@
 
 - `server/servidor-sync.mjs`: salas, persistência em JSON (gravação atômica), só-leitura imposto no
   servidor (`?ro=1` ou chave `EDIT_KEY`), filtro de origem, limite de taxa, ping para proxies, `/saude`.
+
+## B (calibração 1), C, D, F
+
+- Vistas internas na altura de uma pessoa (o limite de ângulo da órbita empurrava a câmera para cima).
+- Sonda de ambiente no interior (cubemap capturado com as luzes do momento → reflexos no piso e luz
+  rebatida nas paredes), luzes de área frias ao longo das janelas, sol do anoitecer pela frente.
+- Concreto mais cinza, grama mais verde, passadeira menos brilhante, pórtico mais baixo (não cobre a
+  rosácea), janelinha da torre fora do relógio, árvores longe das paredes e fora das linhas das câmeras.
+- Corrigido: buquê do caramanchão aparecia no meio do corredor da igreja.
+- Qualidade (C): Baixa/Média/Alta também controlam densidade de mato, tamanho da floresta, distância do
+  LOD e sombra da vegetação (recarrega o mapa ao trocar). Medidor `?fps=1`.
+- HTML único (C): usa assets leves (texturas 512 px, árvores LOD1) → ~29 MB em vez de 67 MB.
+- Capturas a partir de um build de produção (imune a edições durante a captura).
+- VTT (D): cor das luzes no formato AARRGGBB (o importador do Foundry lê assim), iluminação neutra na
+  imagem exportada; `node tools/testar-vtt.mjs` exporta todas as áreas, valida a estrutura e gera prévias
+  com paredes, portas e luzes desenhadas.
+- Mapa `campo` reescrito com as APIs novas, como exemplo; guia `docs/NOVO-MAPA.md` (F) e
+  `docs/HOSPEDAGEM.md` (E: deploy, iframe, CSP).

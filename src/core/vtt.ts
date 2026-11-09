@@ -23,7 +23,7 @@ export function xrender(c: ReturnType<typeof xcalc>, opt: { canopy?: boolean; sh
   const oc = new THREE.OrthographicCamera(-c.Wd / 2, c.Wd / 2, c.Hd / 2, -c.Hd / 2, 0.1, 300);
   oc.position.set(cx, 120, cz); oc.up.set(0, 0, -1); oc.lookAt(cx, 0, cz);
   const hid: THREE.Object3D[] = [], hide = (o: THREE.Object3D) => { if (o.visible) { o.visible = false; hid.push(o); } };
-  const sv = { fog: S.fog, bg: S.background, ex: R.toneMappingExposure, hi: hemi.intensity, si: sun.intensity, sc: sun.castShadow, sp: sun.position.clone(), pr: R.getPixelRatio(), tm: R.toneMapping, ly: M.layers.map(l => l.o.visible), lf: M.loft ? M.loft.visible : null };
+  const sv = { fog: S.fog, bg: S.background, ex: R.toneMappingExposure, hi: hemi.intensity, si: sun.intensity, sc: sun.castShadow, sp: sun.position.clone(), pr: R.getPixelRatio(), tm: R.toneMapping, ei: S.environmentIntensity, ly: M.layers.map(l => l.o.visible), lf: M.loft ? M.loft.visible : null };
   try {
     for (const k in st.T) hide(st.T[k].g);
     [...helpers, dome].forEach(hide); M.mist.forEach(hide); M.halos.forEach(hide); M.lights.forEach(q => hide(q.l));
@@ -32,7 +32,7 @@ export function xrender(c: ReturnType<typeof xcalc>, opt: { canopy?: boolean; sh
     if (M.loft) M.loft.visible = c.A.lv === 2;
     M.exportHide().forEach(hide);
     if (!opt.canopy) M.G.traverse(o => { if (o.userData.canopy) hide(o); });
-    S.fog = null; S.background = new THREE.Color(0x101010); R.toneMappingExposure = 0.95; R.toneMapping = THREE.ACESFilmicToneMapping;
+    S.fog = null; S.background = new THREE.Color(0x101010); R.toneMappingExposure = 1.25; R.toneMapping = THREE.ACESFilmicToneMapping; S.environmentIntensity = 0.9;
     hemi.intensity = Math.PI; sun.intensity = 0.5 * Math.PI; sun.position.set(-20, 80, 12); sun.castShadow = !!opt.shadows;
     R.setPixelRatio(1); R.setSize(c.w, c.h, false); R.render(S, oc);
     return cv.toDataURL('image/png');
@@ -40,9 +40,30 @@ export function xrender(c: ReturnType<typeof xcalc>, opt: { canopy?: boolean; sh
     hid.forEach(o => { o.visible = true; });
     M.layers.forEach((l, i) => { l.o.visible = sv.ly[i]; });
     if (M.loft) M.loft.visible = sv.lf!;
-    S.fog = sv.fog; S.background = sv.bg; R.toneMappingExposure = sv.ex; R.toneMapping = sv.tm; hemi.intensity = sv.hi; sun.intensity = sv.si; sun.castShadow = sv.sc; sun.position.copy(sv.sp);
+    S.fog = sv.fog; S.background = sv.bg; R.toneMappingExposure = sv.ex; R.toneMapping = sv.tm; S.environmentIntensity = sv.ei; hemi.intensity = sv.hi; sun.intensity = sv.si; sun.castShadow = sv.sc; sun.position.copy(sv.sp);
     fit();
   }
+}
+
+/** Recorta uma polilinha no retângulo [x0,x1]×[z0,z1] (Liang–Barsky); devolve os trechos que ficam dentro. */
+function clipPolyline(pts: [number, number][], x0: number, x1: number, z0: number, z1: number) {
+  const out: [number, number][][] = []; let cur: [number, number][] = [];
+  const push = (p: [number, number]) => { const l = cur[cur.length - 1]; if (!l || Math.hypot(l[0] - p[0], l[1] - p[1]) > 1e-6) cur.push(p); };
+  for (let i = 0; i < pts.length - 1; i++) {
+    const [ax, az] = pts[i], [bx, bz] = pts[i + 1], dx = bx - ax, dz = bz - az;
+    let t0 = 0, t1 = 1, ok = true;
+    for (const [p, q] of [[-dx, ax - x0], [dx, x1 - ax], [-dz, az - z0], [dz, z1 - az]] as [number, number][]) {
+      if (Math.abs(p) < 1e-12) { if (q < 0) { ok = false; break; } continue; }
+      const r = q / p; if (p < 0) { if (r > t1) { ok = false; break; } if (r > t0) t0 = r; } else { if (r < t0) { ok = false; break; } if (r < t1) t1 = r; }
+    }
+    if (!ok) { if (cur.length > 1) out.push(cur); cur = []; continue; }
+    const A: [number, number] = [ax + dx * t0, az + dz * t0], B: [number, number] = [ax + dx * t1, az + dz * t1];
+    if (t0 > 0 && cur.length) { if (cur.length > 1) out.push(cur); cur = []; }
+    push(A); push(B);
+    if (t1 < 1) { if (cur.length > 1) out.push(cur); cur = []; }
+  }
+  if (cur.length > 1) out.push(cur);
+  return out;
 }
 
 /** Monta o JSON Universal VTT (formato 0.3) para a área calculada. */
@@ -53,11 +74,12 @@ export function dd2vtt(c: ReturnType<typeof xcalc>, png: string) {
   return {
     format: 0.3,
     resolution: { map_origin: { x: 0, y: 0 }, map_size: { x: c.Wd, y: c.Hd }, pixels_per_grid: c.ppg },
-    line_of_sight: VT.walls.filter(w => w.some(inb)).map(w => w.map(P)),
+    line_of_sight: VT.walls.flatMap(w => clipPolyline(w, b[0], b[1], b[2], b[3])).map(w => w.map(P)),
     objects_line_of_sight: [],
     portals: VT.portals.filter(q => inb(q.p)).map(q => ({ position: P(q.p), bounds: [P(q.a), P(q.b)], rotation: 0, closed: true, freestanding: false })),
-    environment: { baked_lighting: false, ambient_light: 'ffffffff' },
-    lights: VT.lights.filter(inb).map(l => ({ position: P(l), range: l[2], intensity: l[3], color: l[4] + 'ff', shadows: true })),
+    environment: { baked_lighting: true, ambient_light: 'ffffffff' },
+    // cores no formato AARRGGBB (o importador do Foundry descarta os 2 primeiros caracteres)
+    lights: VT.lights.filter(inb).map(l => ({ position: P(l), range: l[2], intensity: l[3], color: 'ff' + l[4], shadows: true })),
     image: png.split(',')[1],
   };
 }
