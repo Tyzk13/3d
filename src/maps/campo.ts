@@ -6,6 +6,8 @@ import type { MapRuntime } from '../core/types';
 import { begin, halo } from '../core/kit';
 import { makeTerrain, fbm } from '../core/terrain';
 import { instance, instanceVariants, type Xf } from '../core/models';
+import { grassField } from '../core/grass';
+import { CFG } from '../core/config';
 
 export async function build(M: MapRuntime) {
   begin(M, 11);
@@ -21,6 +23,10 @@ export async function build(M: MapRuntime) {
   });
   G.add(ter.mesh, ter.collider);
   M.walk.push(ter.collider); // onde personagens pisam (malha simples de colisão)
+
+  // gramado procedural (densidade pela qualidade), sem grama em volta da fogueira
+  G.add(grassField({ count: { baixa: 4000, media: 15000, alta: 35000 }[CFG.quality], area: [-22, 22, -22, 22], height,
+    allow: (x, z) => Math.min(1, Math.max(0, (Math.hypot(x, z + 3) - 2.2) / 2)) * (1 - Math.min(1, Math.max(0, (Math.hypot(x, z) - 16) / 8))) }));
 
   // 2) modelos espalhados com instancing
   const trees: Xf[] = [];

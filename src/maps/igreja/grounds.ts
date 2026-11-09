@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { boxUV } from '../../core/pbr';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { makeTerrain, fbm, noise2 } from '../../core/terrain';
+import { grassField } from '../../core/grass';
 import { model, place, instance, instanceVariants, hasModel, modelSize, type Xf } from '../../core/models';
 import type { View } from '../../core/types';
 import { CFG } from '../../core/config';
@@ -42,7 +43,7 @@ export function groundH(x: number, z: number) {
 export async function buildGrounds(G: THREE.Group, F: Flowers, views: View[] = []): Promise<Grounds> {
   sd = 41;
   // densidade por qualidade: mato, floresta (quantidade e distância do LOD), sombra da vegetação
-  const Q = { baixa: { grass: 150, forest: 70, lod: 40, vegShadow: false, ferns: 2 }, media: { grass: 600, forest: 110, lod: 46, vegShadow: true, ferns: 5 }, alta: { grass: 1400, forest: 140, lod: 60, vegShadow: true, ferns: 7 } }[CFG.quality];
+  const Q = { baixa: { grass: 80, blades: 5000, forest: 70, lod: 40, vegShadow: false, ferns: 2 }, media: { grass: 250, blades: 22000, forest: 110, lod: 46, vegShadow: true, ferns: 5 }, alta: { grass: 500, blades: 55000, forest: 140, lod: 60, vegShadow: true, ferns: 7 } }[CFG.quality];
   const solids: THREE.Object3D[] = [], floors: THREE.Object3D[] = [], lightsVtt: Grounds['lightsVtt'] = [];
   const O = new THREE.Group(); O.name = 'exterior'; G.add(O);
   const lights = K.M.lights;
@@ -91,7 +92,10 @@ export async function buildGrounds(G: THREE.Group, F: Flowers, views: View[] = [
   const ter = makeTerrain({
     size: 320, seg: 256, height: groundH,
     base: { id: 'leafy_grass', size: 3.0 }, r: { id: 'forest_ground_04', size: 2.5 }, g: { id: 'brown_mud_leaves_01', size: 2.6 },
-    mask: (x, z) => {
+    mask: (x, z) => groundMask(x, z),
+  });
+  ter.mesh.userData.ns = 1; O.add(ter.mesh); O.add(ter.collider); floors.push(ter.collider);
+  function groundMask(x: number, z: number): [number, number] {
       const n = fbm(x * 0.09, z * 0.09, 3), n2 = noise2(x * 0.5, z * 0.5);
       let dirt = sm(0.62, 0.8, n) * 0.7;
       if (Math.abs(x) < PATH.w / 2 + 1.1 && z > PATH.z0 - 1) dirt = Math.max(dirt, 1 - sm(PATH.w / 2 - 0.2, PATH.w / 2 + 1.1, Math.abs(x)) * (0.6 + 0.4 * n2));
@@ -100,9 +104,20 @@ export async function buildGrounds(G: THREE.Group, F: Flowers, views: View[] = [
       if (Math.hypot(x - SHED.x, z - SHED.z) < 4.5) dirt = Math.max(dirt, 0.9);
       const leaves = Math.min(1, underTree(x, z) * (0.7 + 0.5 * n) + sm(30, 60, Math.hypot(x, z - 8)) * 0.5);
       return [Math.min(1, dirt), leaves];
+  }
+
+  // gramado procedural (touceiras de lâminas com vento), mais ralo na terra e sob as árvores
+  O.add(grassField({
+    count: Q.blades, area: [-FENCE.x + 0.5, FENCE.x - 0.5, FENCE.z0 + 0.5, FENCE.z1 - 0.5], height: groundH,
+    allow: (x, z) => {
+      if (Math.abs(x) < NX + WT + 0.9 && Math.abs(z) < NZ + WT + 0.9) return 0;
+      if (Math.abs(x) < PATH.w / 2 + 0.25 && z > NZ) return 0;
+      if (x > PARK.x0 - 0.5 && x < PARK.x1 + 0.5 && z > PARK.z0 - 0.5 && z < PARK.z1 + 0.5) return 0;
+      if (Math.hypot(x - GAZEBO.x, z - GAZEBO.z) < GAZEBO.r + 0.4) return 0;
+      const [d, l] = groundMask(x, z);
+      return Math.max(0, 1 - d * 0.95 - l * 0.6);
     },
-  });
-  ter.mesh.userData.ns = 1; O.add(ter.mesh); O.add(ter.collider); floors.push(ter.collider);
+  }));
 
   // ---------- escadaria, pórtico e caminho de pedra ----------
   const conD = M.concreteDark(), trim = M.concreteTrim();
