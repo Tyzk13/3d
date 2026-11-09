@@ -6,14 +6,15 @@ const bar = () => document.getElementById('lp') as HTMLElement;
 const txt = () => document.getElementById('lt') as HTMLElement;
 let base = 0, files = { done: 0, total: 0 };
 function draw() {
+  const el = bar(); if (!el) return; // a tela de carregamento já foi removida
   const f = files.total ? files.done / files.total : 1;
-  bar().style.width = Math.round(Math.min(1, base * 0.5 + f * 0.5) * 100) + '%';
+  el.style.width = Math.round(Math.min(1, base * 0.5 + f * 0.5) * 100) + '%';
 }
 const mgr = THREE.DefaultLoadingManager;
 mgr.onProgress = (_u, done, total) => { files = { done, total }; draw(); };
 
 export const loading = {
-  step(label: string, p: number) { base = p; txt().textContent = label; draw(); },
+  step(label: string, p: number) { base = p; const t = txt(); if (t) t.textContent = label; draw(); },
   /** Espera todos os arquivos pendentes (texturas, modelos) e as imagens dos personagens. */
   async waitTextures(timeout = 60000) {
     const t0 = performance.now();
@@ -25,5 +26,5 @@ export const loading = {
     }
   },
   done() { base = 1; draw(); const el = document.getElementById('load')!; el.classList.add('done'); setTimeout(() => el.remove(), 800); },
-  error(msg: string) { txt().textContent = 'Erro: ' + msg; },
+  error(msg: string) { const t = txt(); if (t) t.textContent = 'Erro: ' + msg; else console.error(msg); },
 };

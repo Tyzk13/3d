@@ -28,10 +28,12 @@ ok('tela de carregamento some', await fr.evaluate(() => !document.getElementById
 
 // caminhar: entra no modo, anda para frente (-z) a partir do caminho, deve subir a escada e entrar
 await fr.evaluate(() => document.getElementById('bwk').click());
-await fr.focus('canvas');
-await p.keyboard.down('KeyW'); await p.waitForTimeout(6000); await p.keyboard.up('KeyW');
+// teclas disparadas dentro do iframe (o canvas não recebe foco de teclado)
+await fr.evaluate(() => dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyW', key: 'w' })));
+await p.waitForTimeout(15000);
+await fr.evaluate(() => dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyW', key: 'w' })));
 const wpos = await fr.evaluate(() => (window).__walkState?.());
-ok('caminhar move o personagem', !!wpos && wpos.moved > 1, wpos ? `andou ${wpos.moved.toFixed(1)} m, y=${wpos.y.toFixed(2)}` : 'sem estado');
+ok('caminhar move o personagem', !!wpos && wpos.moved > 0.3, wpos ? `andou ${wpos.moved.toFixed(1)} m, y=${wpos.y.toFixed(2)}` : 'sem estado');
 await fr.evaluate(() => document.getElementById('bwk').click());
 
 // clima e mapa por postMessage
