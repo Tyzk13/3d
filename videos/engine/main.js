@@ -181,7 +181,7 @@ function drawCaptions(T) {
   if (cst.off) return;
   const c = caps.find((c) => T >= c.s && T < c.end);
   if (!c) return;
-  const size = cst.size || 86, yb = cst.y || H * 0.655;
+  const size = cst.size || 86, yb = cst.y || H * 0.668;
   ctx.save();
   ctx.font = `400 ${size}px "Archivo Black", Inter, sans-serif`;
   ctx.textBaseline = 'alphabetic'; ctx.lineJoin = 'round'; ctx.textAlign = 'left';

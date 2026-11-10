@@ -3,11 +3,11 @@
 import { W, H, clamp, lerp, ease, ramp } from '../engine/core.js';
 
 const cast = {
-  you: { id: 1, skin: 'a', hair: { st: 'tuft', c: 'brown' }, shirt: '#d99a2b', style: 'buttons' },
-  boss: { id: 2, skin: 'c', hair: { st: 'bald', c: 'grey' }, shirt: '#2d3350', style: 'suit', tie: '#a3303f', glasses: true, mustache: '#a9a9b4' },
-  seller: { id: 3, skin: 'b', hair: { st: 'short', c: 'black' }, shirt: '#3f8a5a', style: 'apron', hat: 'cap', hatC: '#c23b32' },
-  friend: { id: 4, skin: 'd', hair: { st: 'curly', c: 'black' }, shirt: '#7a58b5', style: 'hoodie' },
-  her: { id: 5, skin: 'e', hair: { st: 'long', c: 'wine' }, shirt: '#c43d5e', style: 'dress' },
+  you: { id: 1, skin: 'a', hair: { st: 'messy', c: 'navy' }, shirt: '#1f9e8f', style: 'hoodie', pants: '#2b3352' },
+  boss: { id: 2, skin: 'c', hair: { st: 'slick', c: 'grey' }, shirt: '#3a3f5c', style: 'suit', tie: '#a3303f', mustache: '#b3b3bd', browC: '#6d6d78' },
+  seller: { id: 3, skin: 'b', hair: { st: 'short', c: 'black' }, shirt: '#e07a3a', style: 'apron', hat: 'cap', hatC: '#2d5da8' },
+  friend: { id: 4, skin: 'd', hair: { st: 'short', c: 'black' }, shirt: '#d94f4f', style: 'tee', print: '#ffe14d', beard: '#2a1d1a', pants: '#3b3f4a' },
+  her: { id: 5, skin: 'e', hair: { st: 'bob', c: 'black' }, shirt: '#d1425f', style: 'dress', earring: '#ffd34d' },
 };
 
 // vibração do celular: dois pulsos
@@ -131,7 +131,7 @@ export default {
           chars: [{ who: 'you', at: [-0.55, 2.9], face: 'joy', pose: 'up', hop: 7 }] },
         { at: 'e', set: 'living', so: { lampK: 0.8 }, cam: { p: [0.2, 1.42, 2.6], t: [-0.3, 1.37, 4.42], f: 40, to: { p: [0.1, 1.42, 2.9] } }, fx: { dof: 7 },
           chars: [{ who: 'you', ...SOFA, face: 'smug', pose: 'hold', look: [0, 0.1] }],
-          ui: (ctx, e) => { for (let i = 0; i < 4; i++) e.ui.moneyPop(ctx, W * [0.3, 0.68, 0.4, 0.62][i], H * (0.25 - (i % 2) * 0.05), '+100.000', e.t - 0.2 - i * 0.4, 0.75); } },
+          ui: (ctx, e) => { for (let i = 0; i < 4; i++) e.ui.moneyPop(ctx, W * [0.26, 0.72, 0.36, 0.68][i], H * [0.29, 0.2, 0.33, 0.25][i], '+100.000', e.t - 0.2 - i * 0.42, 0.72); } },
       ],
     },
     { // 11

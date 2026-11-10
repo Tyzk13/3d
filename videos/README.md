@@ -1,7 +1,7 @@
 # Vídeos de história narrada
 
 Gerador de vídeos verticais (1080×1920, 30 qps) no formato "E se…?": história curta narrada em
-segunda pessoa, bonecos de cabeça redonda em cenários com profundidade, legenda palavra por palavra,
+segunda pessoa, personagens de desenho próprio em cenários com profundidade, legenda palavra por palavra,
 telas de celular, trilha e efeitos. Tudo é desenhado por código — não há imagem, música ou efeito
 sonoro de terceiros.
 
@@ -57,8 +57,10 @@ ou mais planos; o corte de cada plano cai na palavra indicada em `at` (`'ela#2'`
 
 - **Cenários** (`engine/sets.js`): `living`, `bedroom`, `office`, `shop`, `restaurant`, `bathroom`,
   `street`, `void`. Unidades em metros; x para a direita, y para cima, z para o fundo.
-- **Personagens** (`engine/char.js`): expressões em `FACES` (`shock`, `scared`, `smug`, `cry`…),
-  poses em `POSES` (`phone`, `chin`, `up`, `table`…), `back: true` de costas, `sit`, `walk`.
+- **Personagens** (`engine/char.js`): cabeça em quadrado arredondado com orelhas, olhos grandes,
+  nariz, roupa (`hoodie`, `tee`, `suit`, `dress`, `stripe`, `apron`, `shirt`) e cabelo (`messy`,
+  `short`, `slick`, `bob`, `long`, `pony`, `curly`, `bald`). Expressões em `FACES` (`shock`, `scared`,
+  `smug`, `cry`…), poses em `POSES` (`phone`, `chin`, `up`, `table`…), `back: true` de costas, `sit`, `walk`.
 - **Telas e inserções** (`engine/ui.js`): celular com bloqueio/notificação, conversa, banco, app,
   lista de gravações; visão noturna; balões de fala e de pensamento; cartão final.
 

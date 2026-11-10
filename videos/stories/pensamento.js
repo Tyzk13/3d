@@ -3,11 +3,11 @@
 import { W, H, TAU, clamp, lerp, ease, ramp, hash } from '../engine/core.js';
 
 const cast = {
-  you: { id: 1, skin: 'a', hair: { st: 'tuft', c: 'brown' }, shirt: '#d99a2b', style: 'buttons' },
-  boss: { id: 2, skin: 'c', hair: { st: 'bald', c: 'grey' }, shirt: '#2d3350', style: 'suit', tie: '#a3303f', glasses: true, mustache: '#a9a9b4' },
-  seller: { id: 3, skin: 'b', hair: { st: 'short', c: 'black' }, shirt: '#3f8a5a', style: 'apron', hat: 'cap', hatC: '#c23b32' },
-  friend: { id: 4, skin: 'd', hair: { st: 'curly', c: 'black' }, shirt: '#7a58b5', style: 'hoodie' },
-  her: { id: 5, skin: 'e', hair: { st: 'long', c: 'wine' }, shirt: '#c43d5e', style: 'dress' },
+  you: { id: 1, skin: 'a', hair: { st: 'messy', c: 'navy' }, shirt: '#1f9e8f', style: 'hoodie', pants: '#2b3352' },
+  boss: { id: 2, skin: 'c', hair: { st: 'slick', c: 'grey' }, shirt: '#3a3f5c', style: 'suit', tie: '#a3303f', mustache: '#b3b3bd', browC: '#6d6d78' },
+  seller: { id: 3, skin: 'b', hair: { st: 'short', c: 'black' }, shirt: '#e07a3a', style: 'apron', hat: 'cap', hatC: '#2d5da8' },
+  friend: { id: 4, skin: 'd', hair: { st: 'short', c: 'black' }, shirt: '#d94f4f', style: 'tee', print: '#ffe14d', beard: '#2a1d1a', pants: '#3b3f4a' },
+  her: { id: 5, skin: 'e', hair: { st: 'bob', c: 'black' }, shirt: '#d1425f', style: 'dress', earring: '#ffd34d' },
 };
 const YOU = cast.you;
 

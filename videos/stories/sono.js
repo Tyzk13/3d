@@ -3,7 +3,7 @@
 import { W, H, clamp, lerp, ease, ramp } from '../engine/core.js';
 
 const cast = {
-  you: { id: 1, skin: 'c', hair: { st: 'bun', c: 'black' }, shirt: '#8f7ad1', style: 'stripe' },
+  you: { id: 1, skin: 'c', hair: { st: 'pony', c: 'black' }, shirt: '#8f7ad1', style: 'stripe', pants: '#6a5aa8', shoes: '#f1ede4' },
 };
 const YOU = cast.you;
 
@@ -172,7 +172,7 @@ export default {
           chars: [{ who: 'you', at: [DOOR[0], 4.2], back: true, pose: 'down', fill: 1 }] },
         { at: 'vira', set: 'bedroom', so: { ...NVSO, empty: true, door: 1 }, cam: { p: [-1.3, 1.5, 1.5], t: [-1.78, 1.3, 4.2], f: 40, to: { p: [-1.4, 1.46, 2.0] }, shake: 0, punch: 0 }, fx: nv(3, 9, 31, 'ONTEM'),
           chars: (t, u) => [{ who: 'you', at: [DOOR[0], 4.2], face: SLEEP, pose: 'down', look: [lerp(-1.1, 0, ease.io(ramp(u, 0.05, 0.75))), 0], fill: 1 }] },
-        { at: 'e', set: 'bedroom', so: { ...NVSO, empty: true, door: 1 }, cam: { p: [-1.55, 1.42, 2.55], t: [-1.78, 1.3, 4.2], f: 40, to: { p: [-1.6, 1.4, 2.8] }, shake: 0, punch: 0.1, quake: 0.02, quakeDur: 0.5 }, fx: nv(3, 9, 36, 'ONTEM'),
+        { at: 'e', set: 'bedroom', so: { ...NVSO, empty: true, door: 1 }, cam: { p: [-1.55, 1.3, 2.55], t: [-1.78, 1.12, 4.2], f: 40, to: { p: [-1.6, 1.28, 2.8] }, shake: 0, punch: 0.1, quake: 0.02, quakeDur: 0.5 }, fx: nv(3, 9, 36, 'ONTEM'),
           chars: [{ who: 'you', at: [DOOR[0], 4.2], face: 'creepy', pose: 'down', fill: 1 }] },
       ],
     },
@@ -208,10 +208,10 @@ export default {
       say: 'E aí? Você instalaria esse aplicativo?',
       gapBefore: 0.35,
       sfx: [{ n: 'hum', at: -0.2, dur: 5 }, { n: 'sting', at: -0.1 }],
-      set: 'bedroom', so: { ...NVSO, empty: true }, cam: { p: [-0.42, 1.45, 0.45], t: [-0.3, 1.32, 2.3], f: 46, to: { p: [-0.4, 1.42, 0.75] }, shake: 0, punch: 0.08 }, fx: nv(3, 7, 0, 'HOJE'), flash: 0.5, flashC: '#b9ffcc',
+      set: 'bedroom', so: { ...NVSO, empty: true }, cam: { p: [-0.42, 1.3, 0.2], t: [-0.3, 1.1, 2.3], f: 46, to: { p: [-0.4, 1.28, 0.42] }, shake: 0, punch: 0.08 }, fx: nv(3, 7, 0, 'HOJE'), flash: 0.5, flashC: '#b9ffcc',
       chars: [{ who: 'you', at: FOOT, face: 'creepy', pose: 'down', scratch: true, fill: 1 }],
       ui: (ctx, e) => {
-        e.ui.bigText(ctx, [{ s: 'VOCÊ', size: 120 }, { s: 'INSTALARIA?', size: 120, c: '#7dff9c' }], { y: H * 0.205, a: ramp(e.t, 0.25, 0.5), pop: 0.9 + 0.1 * ease.back(ramp(e.t, 0.25, 0.55)) });
+        e.ui.bigText(ctx, [{ s: 'VOCÊ', size: 104 }, { s: 'INSTALARIA?', size: 104, c: '#7dff9c' }], { y: H * 0.18, a: ramp(e.t, 0.25, 0.5), pop: 0.9 + 0.1 * ease.back(ramp(e.t, 0.25, 0.55)) });
         if (e.t > 1.5) { e.ui.bigText(ctx, [{ s: 'comenta aqui', size: 62, c: '#ffe14d' }], { y: H * 0.735, a: ramp(e.t, 1.5, 1.8) }); e.ui.arrowDown(ctx, W / 2, H * 0.785, 0.7, e.T); }
       },
     },
