@@ -416,11 +416,20 @@ export function wardrobe(g, x, z, o = {}) {
     g.box(x, 0, z, w, h, d, { c, ry: o.ry });
     if (!o.ry) {
       const zf = z - d / 2 - 0.004;
-      g.line([x, 0.06, zf], [x, h - 0.04, zf], { stroke: INK, lw: 0.012, raw: true });
       const lt = g.lit([x, 1, zf - 0.2]);
+      if (o.gap) { // fresta escura entre as portas (alguém lá dentro?)
+        const gw = o.gap === true ? 0.1 : o.gap;
+        g.poly([[x - gw / 2, 0.08, zf], [x + gw / 2, 0.08, zf], [x + gw / 2, h - 0.06, zf], [x - gw / 2, h - 0.06, zf]], { fill: '#030208', stroke: INK, lw: 0.012, raw: true });
+        if (o.eyes) g.at([x, 1.42, zf - 0.002], (ctx, sc) => {
+          ctx.globalAlpha = clamp(o.eyes); ctx.fillStyle = '#f4f6ff';
+          for (const sx of [-1, 1]) { ctx.beginPath(); ctx.ellipse(sx * 0.027 * sc, 0, 0.017 * sc, 0.024 * sc, 0, 0, TAU); ctx.fill(); }
+          ctx.fillStyle = '#05040c'; for (const sx of [-1, 1]) { ctx.beginPath(); ctx.arc(sx * 0.027 * sc, 0.004 * sc, 0.008 * sc, 0, TAU); ctx.fill(); }
+          ctx.globalAlpha = 1;
+        });
+      } else g.line([x, 0.06, zf], [x, h - 0.04, zf], { stroke: INK, lw: 0.012, raw: true });
       for (const s of [-1, 1]) {
-        g.poly([[x + s * 0.08, 0.2, zf], [x + s * (w / 2 - 0.08), 0.2, zf], [x + s * (w / 2 - 0.08), h - 0.2, zf], [x + s * 0.08, h - 0.2, zf]], { stroke: mul(shade(c, 0.55), lt), lw: 0.01, raw: true });
-        g.at([x + s * 0.06, 1.05, zf], (ctx, sc) => { ctx.fillStyle = css(mul('#d9b64f', lt)); ctx.strokeStyle = INK; ctx.lineWidth = Math.max(1, 0.008 * sc); ctx.beginPath(); ctx.arc(0, 0, 0.028 * sc, 0, TAU); ctx.fill(); ctx.stroke(); });
+        g.poly([[x + s * 0.1, 0.2, zf], [x + s * (w / 2 - 0.08), 0.2, zf], [x + s * (w / 2 - 0.08), h - 0.2, zf], [x + s * 0.1, h - 0.2, zf]], { stroke: mul(shade(c, 0.55), lt), lw: 0.01, raw: true });
+        g.at([x + s * 0.09, 1.05, zf], (ctx, sc) => { ctx.fillStyle = css(mul('#d9b64f', lt)); ctx.strokeStyle = INK; ctx.lineWidth = Math.max(1, 0.008 * sc); ctx.beginPath(); ctx.arc(0, 0, 0.028 * sc, 0, TAU); ctx.fill(); ctx.stroke(); });
       }
     }
   }, o);
@@ -438,7 +447,7 @@ export function bed(g, x, z, o = {}) {
     if (o.sleeper) drawChar(g, { ...o.sleeper, at: [px, pz + 0.02], y: 0.84, headOnly: true, noShadow: true });
     if (!o.empty) {
       g.box(x, 0.5, z - 0.2, w + 0.04, 0.16, d - 0.72, { c });                      // cobertor
-      if (o.sleeper) g.box(px, 0.66, z - 0.16, 0.5, 0.07, d - 0.95, { c: shade(c, 1.08), stroke: null });
+      if (o.sleeper) g.box(px, 0.66, z - 0.16, 0.5, 0.04, d - 0.95, { c: shade(c, 1.03), stroke: null });
       g.box(x, 0.66, z + d / 2 - 0.68, w + 0.04, 0.03, 0.2, { c: '#f1eee6' });     // dobra do lençol
     } else {
       g.box(x + 0.28, 0.5, z - 0.4, w * 0.55, 0.2, d - 1.1, { c, ry: 0.22 });
@@ -679,7 +688,8 @@ export const SETS = {
     const day = o.time === 'day';
     g.ambient = o.ambient || (day ? [158, 152, 150] : DIM);
     room(g, { w: 4.6, d: 4.8, h: 2.7, floor: { type: 'wood', c: '#8a6242' }, wall: { c: '#b9c0d6', base: '#4a4660' } });
-    win(g, 'back', 1.4, 1.0, 1.0, 1.2, { view: day ? 'dawn' : 'night', curtain: '#5a5f8f', curtainW: 0.18, shaft: day ? { color: [255, 214, 170], blur: 8 } : { color: [48, 60, 120] }, glow: day ? '#ffe2bd' : null });
+    if (o.wardrobe) wardrobe(g, 1.62, 4.5, { w: 1.15, ...o.wardrobe });
+    else win(g, 'back', 1.4, 1.0, 1.0, 1.2, { view: day ? 'dawn' : 'night', curtain: '#5a5f8f', curtainW: 0.18, shaft: day ? { color: [255, 214, 170], blur: 8 } : { color: [48, 60, 120] }, glow: day ? '#ffe2bd' : null });
     door(g, 'back', -1.78, { c: '#6f5340', open: o.door || 0, behind: '#05040b', emit: o.doorLight });
     picture(g, 'back', -0.45, 1.75, 0.6, 0.45, { art: 'abs' });
     rug(g, -0.4, 2.3, 2.2, 1.3, { c: '#3f4b78', c2: '#aab3d9' });
@@ -691,9 +701,11 @@ export const SETS = {
     if (o.dresser) {
       // cômoda aos pés da cama com o celular apoiado, câmera virada para a cama
       g.add([-0.45, 0.4, 0.36], () => {
-        g.box(-0.45, 0, 0.36, 1.2, 0.82, 0.46, { c: '#6a4631' });
+        const dc = '#9a6a45';
+        // caixa virada de costas para a parede: a face visível é a de +z
+        g.box(-0.45, 0, 0.36, 1.2, 0.82, 0.46, { c: dc, ry: Math.PI });
         const zf = 0.36 + 0.234, lt = g.lit([-0.45, 0.5, zf + 0.3]);
-        for (const yy of [0.12, 0.45]) g.poly([[-0.97, yy, zf], [0.07, yy, zf], [0.07, yy + 0.26, zf], [-0.97, yy + 0.26, zf]], { stroke: mul(shade('#6a4631', 0.5), lt), lw: 0.012, raw: true });
+        for (const yy of [0.12, 0.45]) g.poly([[-0.97, yy, zf], [0.07, yy, zf], [0.07, yy + 0.26, zf], [-0.97, yy + 0.26, zf]], { stroke: mul(shade(dc, 0.45), lt), lw: 0.012, raw: true });
         for (const yy of [0.25, 0.58]) g.at([-0.45, yy, zf], (ctx, sc) => { ctx.fillStyle = css(mul('#d9b64f', lt)); ctx.strokeStyle = INK; ctx.lineWidth = Math.max(1, 0.008 * sc); ctx.beginPath(); ctx.arc(0, 0, 0.028 * sc, 0, TAU); ctx.fill(); ctx.stroke(); });
       });
       g.light([-0.45, 1.0, 0.75], 1.4, '#bfe0ff', o.rec ? 0.5 : 0.25);

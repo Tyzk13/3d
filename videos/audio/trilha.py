@@ -343,7 +343,28 @@ def sfx_door(**k):
     return reverb(out, 0.8, 0.3)
 
 
-SFX = {'buzz': sfx_buzz, 'ding': sfx_ding, 'cash': sfx_cash, 'click': sfx_click, 'pop': sfx_pop, 'whoosh': sfx_whoosh, 'hit': sfx_hit,
+def sfx_think(**k):
+    y = np.zeros(int(1.3 * SR))
+    for i, f in enumerate([1568, 2093, 2637]):
+        b = bell(f, 0.9, 4); i0 = int(i * 0.07 * SR); y[i0:i0 + len(b)] += b * (0.8 - 0.2 * i)
+    y = y + 0.6 * y[::-1]
+    return reverb(y / np.abs(y).max() * 0.2, 1.8, 0.5)
+
+
+def sfx_lock(**k):
+    out = np.zeros(int(0.5 * SR))
+    for t0, f in ((0.0, 420), (0.13, 300)):
+        t = tt(0.06); y = (np.sin(TAU * f * t) + 0.7 * bp(rng.standard_normal(len(t)), 900, 3500)) * np.exp(-t * 70)
+        i0 = int(t0 * SR); out[i0:i0 + len(t)] += y
+    return reverb(out / np.abs(out).max() * 0.32, 0.5, 0.25)
+
+
+def sfx_switch(**k):
+    t = tt(0.035); y = (np.sin(TAU * 900 * t) + bp(rng.standard_normal(len(t)), 1500, 5000)) * np.exp(-t * 130)
+    return y / np.abs(y).max() * 0.3
+
+
+SFX = {'think': sfx_think, 'lock': sfx_lock, 'switch': sfx_switch, 'buzz': sfx_buzz, 'ding': sfx_ding, 'cash': sfx_cash, 'click': sfx_click, 'pop': sfx_pop, 'whoosh': sfx_whoosh, 'hit': sfx_hit,
        'sting': sfx_sting, 'riser': sfx_riser, 'heart': sfx_heart, 'count': sfx_count, 'horn': sfx_horn, 'knock': sfx_knock,
        'step': sfx_step, 'steps': sfx_steps, 'hum': sfx_hum, 'tick': sfx_tick, 'door': sfx_door}
 

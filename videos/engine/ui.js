@@ -362,3 +362,45 @@ export function appScreen(c, w, h, o) {
   c.restore();
   if (tap > 0 && o.t < o.tapAt + 0.5) { c.strokeStyle = `rgba(255,255,255,${0.6 * (1 - ramp(o.t, o.tapAt, o.tapAt + 0.45))})`; c.lineWidth = 4; c.beginPath(); c.arc(w / 2, by + 34, 30 + ramp(o.t, o.tapAt, o.tapAt + 0.45) * 90, 0, TAU); c.stroke(); }
 }
+
+/**
+ * Balão de fala ou de pensamento. o: { x, y (centro), text, t, kind:'say'|'think', maxW, size, tail:[x,y], c, ink }
+ */
+export function bubble(ctx, o) {
+  const t = o.t ?? 1;
+  if (t <= 0) return;
+  const a = ease.back(clamp(t / 0.26)), size = o.size || 54, maxW = o.maxW || 620, think = o.kind === 'think';
+  ctx.save();
+  ctx.font = `${think ? 700 : 800} ${size}px ${UI}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const words = o.text.split(' '), lines = []; let line = '';
+  for (const w of words) { const tl = line ? line + ' ' + w : w; if (ctx.measureText(tl).width > maxW && line) { lines.push(line); line = w; } else line = tl; }
+  lines.push(line);
+  const lh = size * 1.2, bw = Math.max(...lines.map((l) => ctx.measureText(l).width)) + size * 1.5, bh = lines.length * lh + size * 1.1;
+  const fl = Math.sin((o.T || 0) * 1.6) * 6;
+  ctx.globalAlpha = clamp(t / 0.12) * (o.alpha ?? 1);
+  const fill = o.c || (think ? '#efe9ff' : '#ffffff'), ink = o.ink || INK;
+  const shapes = (grow) => {
+    ctx.save(); ctx.translate(o.x, o.y + fl); ctx.scale(a, a);
+    if (think) {
+      ctx.beginPath(); ctx.roundRect(-bw / 2 - grow, -bh / 2 - grow, bw + 2 * grow, bh + 2 * grow, bh * 0.42); ctx.fill();
+      const n = Math.max(5, Math.round(bw / 120));
+      for (let i = 0; i < n; i++) { const u = (i + 0.5) / n, r = bh * 0.2 + (i % 2) * bh * 0.07 + grow; for (const sy of [-1, 1]) { ctx.beginPath(); ctx.arc(-bw / 2 + u * bw, sy * bh * 0.46, r, 0, TAU); ctx.fill(); } }
+      for (const sx of [-1, 1]) { ctx.beginPath(); ctx.arc(sx * bw * 0.49, 0, bh * 0.3 + grow, 0, TAU); ctx.fill(); }
+    } else {
+      ctx.beginPath(); ctx.roundRect(-bw / 2 - grow, -bh / 2 - grow, bw + 2 * grow, bh + 2 * grow, 34); ctx.fill();
+    }
+    ctx.restore();
+    if (o.tail) {
+      const [tx, ty] = o.tail, bx = o.x, by = o.y + fl + Math.sign(ty - o.y) * bh * 0.5 * a;
+      if (think) { for (let i = 1; i <= 3; i++) { const u = i / 3.6; ctx.beginPath(); ctx.arc(lerp(bx, tx, u) * 1, lerp(by, ty, u), (26 - i * 6) * a + grow, 0, TAU); ctx.fill(); } }
+      else { const dx = tx > bx ? 1 : -1; ctx.beginPath(); ctx.moveTo(bx - 30 - grow, by - 8 * Math.sign(ty - o.y)); ctx.lineTo(bx + 30 + grow, by - 8 * Math.sign(ty - o.y)); ctx.lineTo(lerp(bx, tx, 0.55) + dx * grow, lerp(by, ty, 0.55) + Math.sign(ty - o.y) * grow * 1.5); ctx.closePath(); ctx.fill(); }
+    }
+  };
+  ctx.fillStyle = ink; shapes(9);
+  ctx.fillStyle = fill; shapes(0);
+  ctx.translate(o.x, o.y + fl); ctx.scale(a, a);
+  ctx.fillStyle = think ? '#3b2a6b' : '#15131f';
+  ctx.font = `${think ? 'italic 700' : 800} ${size}px ${UI}`;
+  lines.forEach((l, i) => ctx.fillText(l, 0, (i - (lines.length - 1) / 2) * lh + 3));
+  ctx.restore();
+}

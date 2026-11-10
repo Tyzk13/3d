@@ -57,7 +57,7 @@ export default {
       sfx: [{ n: 'whoosh', at: 0 }, { n: 'click', at: 'câmera' }],
       set: 'bedroom', so: { lamp: 0.5, dresser: true, rec: true },
       cam: { p: [-0.2, 1.45, 3.3], t: [-0.45, 0.9, 0.36], f: 40, to: { p: [-0.36, 1.25, 1.95] }, e: 'out' }, fx: { dust: 0.4 },
-      props: (g) => g.light([0.3, 1.7, 1.5], 3.0, '#ffc27a', 0.75),
+      props: (g) => g.light([-0.1, 1.5, 1.5], 3.0, '#ffc27a', 1.25),
     },
     { // 2
       say: 'Você acha que é golpe. Mas instala.',

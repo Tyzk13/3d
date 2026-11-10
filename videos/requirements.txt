@@ -1,0 +1,6 @@
+kokoro-onnx
+faster-whisper
+soundfile
+cffi
+numpy
+scipy
