@@ -90,15 +90,17 @@ export function lockScreen(c, w, h, o) {
   const ns = (o.n || []).filter((n) => o.t >= (n.at || 0)).reverse();
   for (const n of ns) {
     const a = ease.back(ramp(o.t, n.at || 0, (n.at || 0) + 0.32));
-    const hh = n.big ? 132 : 104;
+    const hh = n.warn ? 176 : (n.big ? 132 : 104);
     c.save(); c.globalAlpha = clamp(a * 1.5); c.translate(0, (1 - a) * -70);
     card(c, 16, y, w - 32, hh, 24, 'rgba(250,250,255,0.94)');
+    if (n.warn) { c.strokeStyle = '#c0392b'; c.lineWidth = 4; c.beginPath(); c.roundRect(16, y, w - 32, hh, 24); c.stroke(); }
     c.beginPath(); c.roundRect(32, y + 18, 40, 40, 10); c.fillStyle = n.color || '#1faa59'; c.fill();
     txt(c, n.icon || '$', 52, y + 47, 25, { w: 800, align: 'center' });
     txt(c, n.app || 'Banco', 84, y + 34, 15, { w: 600, c: '#6a6a78' });
     txt(c, 'agora', w - 34, y + 34, 14, { w: 500, c: '#8a8a98', align: 'right' });
     txt(c, n.title, 84, y + 58, 18, { w: 700, c: '#15131f' });
-    txt(c, n.body, 32, y + (n.big ? 108 : 88), n.big ? 31 : 17, { w: n.big ? 800 : 500, c: n.big ? '#12833f' : '#3a3a48' });
+    if (n.warn) txt(c, n.body, 32, y + 104, 29, { w: 800, c: '#a61f17', max: w - 70, lh: 36 });
+    else txt(c, n.body, 32, y + (n.big ? 108 : 88), n.big ? 31 : 17, { w: n.big ? 800 : 500, c: n.big ? '#12833f' : '#3a3a48' });
     c.restore();
     y += (hh + 12) * clamp(a);
   }

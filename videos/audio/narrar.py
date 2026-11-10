@@ -120,11 +120,16 @@ def main():
         for c in b.get('sfx', []):
             at = c.get('at', 0)
             if isinstance(at, str):
-                k = norm(at); hit = next((w for w in beats[i]['words'] if norm(w['w']) == k), None)
+                wd, _, nth = at.partition('#'); k = norm(wd); cands = [w for w in beats[i]['words'] if norm(w['w']) == k]
+                hit = cands[min(len(cands), int(nth or 1)) - 1] if cands else None
                 tt = hit['s'] if hit else beats[i]['start']
             else:
                 tt = beats[i]['start'] + at
-            sfx.append({'n': c['n'], 't': round(max(0, tt), 3), **{k: v for k, v in c.items() if k not in ('n', 'at')}})
+            extra = {k: v for k, v in c.items() if k not in ('n', 'at')}
+            if extra.get('dur') == 'beat':
+                nxt = beats[i + 1]['start'] if i + 1 < len(beats) else total
+                extra['dur'] = round(nxt - max(0, tt), 3)
+            sfx.append({'n': c['n'], 't': round(max(0, tt), 3), **extra})
     music = [{'t': (beats[m['beat']]['start'] - 0.25 if m['beat'] else 0), 'mood': m['mood']} for m in sc.get('music', [])]
     json.dump({'duration': round(total, 3), 'beats': beats, 'sfx': sfx, 'music': music},
               open(os.path.join(out, 'timing.json'), 'w'), ensure_ascii=False, indent=1)

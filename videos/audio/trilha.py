@@ -195,7 +195,7 @@ def music_dread(dur):
     return b[:int(dur * SR)]
 
 
-MUSIC = {'tense': (music_tense, 0.20), 'playful': (music_playful, 0.17), 'soft': (music_soft, 0.2), 'sad': (music_sad, 0.25), 'dread': (music_dread, 0.24)}
+MUSIC = {'tense': (music_tense, 0.27), 'playful': (music_playful, 0.24), 'soft': (music_soft, 0.28), 'sad': (music_sad, 0.34), 'dread': (music_dread, 0.32)}
 
 
 # ---------- efeitos ----------

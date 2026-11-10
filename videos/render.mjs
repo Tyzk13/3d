@@ -81,7 +81,7 @@ try {
       const seg = path.join(OUT, `seg_${w}.mp4`); segs[w] = seg;
       const ff = spawn('ffmpeg', ['-v', 'error', '-y', '-f', 'image2pipe', '-framerate', String(fps), '-c:v', 'mjpeg', '-i', '-',
         '-vf', 'scale=in_range=full:in_color_matrix=bt601:out_range=tv:out_color_matrix=bt709,format=yuv420p',
-        '-c:v', 'libx264', '-preset', 'medium', '-crf', String(opt('crf', 17)), '-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'bt709', '-color_range', 'tv',
+        '-c:v', 'libx264', '-preset', 'medium', '-crf', String(opt('crf', 19)), '-maxrate', '12M', '-bufsize', '24M', '-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'bt709', '-color_range', 'tv',
         '-g', '60', seg], { stdio: ['pipe', 'inherit', 'inherit'] });
       const closed = new Promise((res, rej) => ff.on('close', (c) => (c === 0 ? res() : rej(new Error('ffmpeg saiu com ' + c)))));
       for (let i = a; i < b; i++) {

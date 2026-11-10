@@ -2,6 +2,7 @@
 import { W, H, TAU, G, V, makeCam, drawLightmap, css, clamp, lerp, ease, ramp, hash, noise } from './core.js';
 import { drawChar } from './char.js';
 import { SETS } from './sets.js';
+import * as SETMOD from './sets.js';
 import * as ui from './ui.js';
 
 export const FPS = 30;
@@ -38,7 +39,7 @@ function buildTimeline() {
       if (k > 0) {
         let wi = -1;
         if (typeof sp.at === 'number') wi = sp.at;
-        else if (sp.at) { const key = norm(sp.at); wi = tb.words.findIndex((w) => norm(w.w) === key); }
+        else if (sp.at) { const [wd, nth] = sp.at.split('#'); const key = norm(wd); let k = Number(nth || 1); wi = tb.words.findIndex((w) => norm(w.w) === key && --k === 0); }
         if (wi >= 0 && tb.words[wi]) st = tb.words[wi].s; else st = lerp(tb.start, tb.end, k / list.length);
       }
       marks.push({ t: st, spec: sp, beat: i, first: k === 0 });
@@ -68,7 +69,7 @@ function buildTimeline() {
   }
   flush();
   for (const w of words) w.w = w.w.replace(/[.,:;…]+$/g, '').replace(/^[…]+/, '');
-  caps.forEach((c, i) => { const nx = caps[i + 1]; c.end = nx ? Math.min(nx.s, c.e + 0.5) : c.e + 0.6; c.s -= 0.04; });
+  caps.forEach((c, i) => { const nx = caps[i + 1]; c.end = nx ? Math.min(nx.s, c.e + 0.3) : c.e + 0.6; c.s -= 0.04; });
 }
 
 function camAt(spec, u, T, t) {
@@ -168,9 +169,10 @@ function post(g, spec, T) {
   ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
   // granulação
   const fi = Math.floor(T * FPS);
-  ctx.globalCompositeOperation = 'overlay'; ctx.globalAlpha = fx.grain ?? 0.085;
-  const ox = Math.floor(hash(fi * 1.7) * 512), oy = Math.floor(hash(fi * 2.9) * 512);
-  for (let y = -oy; y < H; y += 512) for (let x = -ox; x < W; x += 512) ctx.drawImage(grainC, x, y);
+  ctx.globalCompositeOperation = 'overlay'; ctx.globalAlpha = fx.grain ?? 0.05;
+  const ox = Math.floor(hash(fi * 1.7) * 512) * 2, oy = Math.floor(hash(fi * 2.9) * 512) * 2;
+  ctx.imageSmoothingEnabled = true;
+  for (let y = -oy; y < H; y += 1024) for (let x = -ox; x < W; x += 1024) ctx.drawImage(grainC, x, y, 1024, 1024);
   ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
 }
 
@@ -215,6 +217,9 @@ export function renderFrame(i) {
   const cam = camAt(spec.cam, u, T, t);
   const g = new G(ctx, cam, t, T, dur);
   g.fx = { ...(story.fx || {}), ...(typeof spec.fx === 'function' ? spec.fx(t, u) : (spec.fx || {})) };
+  g.S = SETMOD;
+  // tempo (relativo ao plano) em que uma palavra da fala é dita: 'palavra' ou 'palavra#2'
+  const wt = (key) => { const [wd, nth] = String(key).split('#'); const k0 = norm(wd); let k = Number(nth || 1); const w = timing.beats[sh.beat].words.find((w) => norm(w.raw || w.w) === k0 && --k === 0); return w ? w.s - sh.start : 0; };
   const so = typeof spec.so === 'function' ? spec.so(t, u, T) : (spec.so || {});
   (SETS[spec.set || 'void'])(g, so);
   const chars = typeof spec.chars === 'function' ? spec.chars(t, u, T) : (spec.chars || []);
@@ -228,9 +233,9 @@ export function renderFrame(i) {
   if (spec.props) spec.props(g, t, u, T);
   compose(g, spec);
   post(g, spec, T);
-  if (spec.ui) { ctx.save(); spec.ui(ctx, { t, u, T, dur, g, ui }); ctx.restore(); }
+  if (spec.ui) { ctx.save(); spec.ui(ctx, { t, u, T, dur, g, ui, wt }); ctx.restore(); }
   // transições
-  const fin = spec.fadeIn ?? (sh === shots[0] ? 0.35 : 0);
+  const fin = spec.fadeIn ?? (sh === shots[0] ? 0.12 : 0);
   if (fin && t < fin) { ctx.fillStyle = `rgba(0,0,0,${1 - t / fin})`; ctx.fillRect(0, 0, W, H); }
   if (spec.fadeOut && dur - t < spec.fadeOut) { ctx.fillStyle = `rgba(0,0,0,${1 - (dur - t) / spec.fadeOut})`; ctx.fillRect(0, 0, W, H); }
   if (spec.flash && t < 0.3) { ctx.fillStyle = css(spec.flashC || '#ffffff', spec.flash * (1 - t / 0.3)); ctx.fillRect(0, 0, W, H); }
