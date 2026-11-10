@@ -433,13 +433,13 @@ export function bed(g, x, z, o = {}) {
     g.box(x, 0, z + d / 2 + 0.04, w + 0.1, 1.12, 0.08, { c: fr });               // cabeceira
     g.box(x, 0.12, z, w + 0.06, 0.2, d, { c: fr });
     g.box(x, 0.32, z, w, 0.2, d - 0.04, { c: '#e9e4d8' });                         // colchão
-    const px = x + (o.px ?? 0), pz = z + d / 2 - 0.3;
-    g.box(px, 0.52, pz, 0.82, 0.17, 0.46, { c: '#f6f3ec' });                       // travesseiro
-    if (o.sleeper) drawChar(g, { ...o.sleeper, at: [px, pz - 0.06], y: 0.93, headOnly: true, noShadow: true });
+    const px = x + (o.px ?? 0), pz = z + d / 2 - 0.34;
+    g.box(px, 0.52, pz, 0.95, 0.13, 0.56, { c: '#f6f3ec' });                       // travesseiro
+    if (o.sleeper) drawChar(g, { ...o.sleeper, at: [px, pz + 0.02], y: 0.84, headOnly: true, noShadow: true });
     if (!o.empty) {
-      g.box(x, 0.5, z - 0.16, w + 0.04, 0.16, d - 0.6, { c });                      // cobertor
-      if (o.sleeper) g.box(px, 0.66, z - 0.1, 0.5, 0.07, d - 0.9, { c: shade(c, 1.08), stroke: null });
-      g.box(x, 0.66, z + d / 2 - 0.56, w + 0.04, 0.03, 0.2, { c: '#f1eee6' });     // dobra do lençol
+      g.box(x, 0.5, z - 0.2, w + 0.04, 0.16, d - 0.72, { c });                      // cobertor
+      if (o.sleeper) g.box(px, 0.66, z - 0.16, 0.5, 0.07, d - 0.95, { c: shade(c, 1.08), stroke: null });
+      g.box(x, 0.66, z + d / 2 - 0.68, w + 0.04, 0.03, 0.2, { c: '#f1eee6' });     // dobra do lençol
     } else {
       g.box(x + 0.28, 0.5, z - 0.4, w * 0.55, 0.2, d - 1.1, { c, ry: 0.22 });
     }
@@ -605,6 +605,34 @@ export function car(g, x, z, o = {}) {
   }, o);
 }
 
+/** Par de tênis no chão (o.dirty = com terra). */
+export function sneakers(g, x, z, o = {}) {
+  g.add([x, 0.05, z], () => {
+    const lt = g.lit([x, 0.2, z - 0.2]);
+    for (const [dx, dz, r] of [[-0.11, 0, -0.12], [0.1, 0.05, 0.1]]) g.at([x + dx, 0, z + dz], (ctx, s) => {
+      ctx.save(); ctx.scale(s, s); ctx.rotate(r);
+      ctx.fillStyle = 'rgba(5,5,18,0.35)'; ctx.beginPath(); ctx.ellipse(0, 0.005, 0.14, 0.03, 0, 0, TAU); ctx.fill();
+      ctx.lineJoin = 'round'; ctx.strokeStyle = INK; ctx.lineWidth = 0.012;
+      ctx.fillStyle = css(mul('#f2efe8', lt)); ctx.beginPath(); ctx.roundRect(-0.14, -0.03, 0.28, 0.035, 0.012); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = css(mul(o.c || '#d8443c', lt));
+      ctx.beginPath(); ctx.moveTo(-0.135, -0.03); ctx.lineTo(-0.13, -0.1); ctx.quadraticCurveTo(-0.08, -0.13, -0.03, -0.1); ctx.quadraticCurveTo(0.06, -0.08, 0.13, -0.05); ctx.lineTo(0.135, -0.03); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = css(mul('#f2efe8', lt)); ctx.lineWidth = 0.01; for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.moveTo(-0.03 + i * 0.035, -0.095 + i * 0.012); ctx.lineTo(-0.005 + i * 0.035, -0.07 + i * 0.012); ctx.stroke(); }
+      if (o.dirty) { ctx.fillStyle = css(mul('#4a3220', lt)); for (let i = 0; i < 9; i++) { ctx.beginPath(); ctx.ellipse(-0.12 + hash(i * 3.3 + dx) * 0.25, -0.012 - hash(i * 7.1 + dx) * 0.06, 0.012 + hash(i * 1.7) * 0.02, 0.008 + hash(i * 2.9) * 0.012, 0, 0, TAU); ctx.fill(); } }
+      ctx.restore();
+    });
+  }, o);
+}
+
+/** Pegadas de terra no chão: lista de pontos [x, z]. */
+export function footprints(g, pts, o = {}) {
+  g.shell.push(() => {
+    pts.forEach(([x, z], i) => {
+      const dx = i % 2 ? 0.09 : -0.09, w = 0.07, d = 0.13;
+      g.poly([[x + dx - w, 0.004, z - d], [x + dx + w, 0.004, z - d], [x + dx + w * 0.8, 0.004, z + d], [x + dx - w * 0.8, 0.004, z + d]], { fill: o.c || '#3d2a1c', alpha: 0.75 - i * 0.04 });
+    });
+  });
+}
+
 /** Poste de rua. */
 export function streetLamp(g, x, z, o = {}) {
   const col = o.color || '#ffc77d';
@@ -626,7 +654,7 @@ export function streetLamp(g, x, z, o = {}) {
 }
 
 // ---------- cenários prontos ----------
-const NIGHT = [52, 58, 108], DAY = [160, 156, 152], WARM = [88, 66, 78], DIM = [50, 58, 112];
+const NIGHT = [52, 58, 108], DAY = [160, 156, 152], WARM = [88, 66, 78], DIM = [56, 60, 100];
 
 export const SETS = {
   /** Sala de estar. o: { time:'night'|'day', lamp, tv, door } */
@@ -646,21 +674,41 @@ export const SETS = {
     if (!night) g.light([-1.2, 1.6, 4.6], 4.2, '#fff1d0', 0.5);
   },
 
-  /** Quarto. o: { lamp, sleeper, empty, phone, rec, door, time } */
+  /** Quarto. Porta na parede do fundo, à esquerda da cama. o: { lamp, sleeper, empty, phone, door, time, dresser, rec } */
   bedroom(g, o = {}) {
     const day = o.time === 'day';
     g.ambient = o.ambient || (day ? [158, 152, 150] : DIM);
     room(g, { w: 4.6, d: 4.8, h: 2.7, floor: { type: 'wood', c: '#8a6242' }, wall: { c: '#b9c0d6', base: '#4a4660' } });
-    win(g, 'back', 1.35, 1.0, 1.1, 1.2, { view: day ? 'dawn' : 'night', curtain: '#5a5f8f', curtainW: 0.18, shaft: day ? { color: [255, 214, 170], blur: 8 } : { color: [48, 60, 120] }, glow: day ? '#ffe2bd' : null });
-    door(g, 'left', 1.3, { c: '#6f5340', open: o.door || 0, behind: o.doorLight ? null : '#05040b', emit: o.doorLight });
-    picture(g, 'back', -0.45, 1.7, 0.6, 0.45, { art: 'abs' });
+    win(g, 'back', 1.4, 1.0, 1.0, 1.2, { view: day ? 'dawn' : 'night', curtain: '#5a5f8f', curtainW: 0.18, shaft: day ? { color: [255, 214, 170], blur: 8 } : { color: [48, 60, 120] }, glow: day ? '#ffe2bd' : null });
+    door(g, 'back', -1.78, { c: '#6f5340', open: o.door || 0, behind: '#05040b', emit: o.doorLight });
+    picture(g, 'back', -0.45, 1.75, 0.6, 0.45, { art: 'abs' });
     rug(g, -0.4, 2.3, 2.2, 1.3, { c: '#3f4b78', c2: '#aab3d9' });
     bed(g, -0.45, 3.72, { c: o.blanket || '#4e62a3', sleeper: o.sleeper, empty: o.empty });
     nightstand(g, 0.75, 4.5);
-    wardrobe(g, -1.85, 4.48, { w: 0.8 });
     if (o.lamp) tableLamp(g, 0.86, 0.52, 4.58, { k: o.lamp === true ? 0.8 : o.lamp });
-    if (!day) g.light([0.3, 1.5, 3.6], 2.6, o.moonC || '#8fa6ff', o.moon ?? 0.45);
-    if (o.phone !== false) phoneProp(g, 0.66, 0.52, 4.4, { on: o.phoneOn !== false, front: true, rec: o.rec, k: o.phoneK ?? 0.45, color: o.phoneColor });
+    if (!day && o.moon !== 0) g.light([-0.2, 1.7, 3.5], 2.8, o.moonC || '#b7c2f2', o.moon ?? 0.55);
+    if (o.phone !== false && !o.dresser) phoneProp(g, 0.66, 0.52, 4.4, { on: o.phoneOn !== false, front: true, rec: o.rec, k: o.phoneK ?? 0.45, color: o.phoneColor });
+    if (o.dresser) {
+      // cômoda aos pés da cama com o celular apoiado, câmera virada para a cama
+      g.add([-0.45, 0.4, 0.36], () => {
+        g.box(-0.45, 0, 0.36, 1.2, 0.82, 0.46, { c: '#6a4631' });
+        const zf = 0.36 + 0.234, lt = g.lit([-0.45, 0.5, zf + 0.3]);
+        for (const yy of [0.12, 0.45]) g.poly([[-0.97, yy, zf], [0.07, yy, zf], [0.07, yy + 0.26, zf], [-0.97, yy + 0.26, zf]], { stroke: mul(shade('#6a4631', 0.5), lt), lw: 0.012, raw: true });
+        for (const yy of [0.25, 0.58]) g.at([-0.45, yy, zf], (ctx, sc) => { ctx.fillStyle = css(mul('#d9b64f', lt)); ctx.strokeStyle = INK; ctx.lineWidth = Math.max(1, 0.008 * sc); ctx.beginPath(); ctx.arc(0, 0, 0.028 * sc, 0, TAU); ctx.fill(); ctx.stroke(); });
+      });
+      g.light([-0.45, 1.0, 0.75], 1.4, '#bfe0ff', o.rec ? 0.5 : 0.25);
+      g.add([-0.45, 0.82, 0.4], () => g.at([-0.45, 0.82, 0.4], (ctx, s) => {
+        ctx.fillStyle = '#15131f'; ctx.strokeStyle = INK; ctx.lineWidth = Math.max(1, 0.012 * s); ctx.lineJoin = 'round';
+        ctx.beginPath(); ctx.roundRect(-0.055 * s, -0.23 * s, 0.11 * s, 0.23 * s, 0.018 * s); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = o.rec ? '#0e1a2e' : '#22202c'; ctx.beginPath(); ctx.roundRect(-0.046 * s, -0.22 * s, 0.092 * s, 0.21 * s, 0.012 * s); ctx.fill();
+        ctx.fillStyle = '#2b3550'; ctx.beginPath(); ctx.arc(0, -0.2 * s, 0.012 * s, 0, TAU); ctx.fill();
+        if (o.rec) {
+          ctx.fillStyle = (g.T % 1) < 0.55 ? '#ff3b3b' : '#6a1515'; ctx.beginPath(); ctx.arc(-0.026 * s, -0.035 * s, 0.011 * s, 0, TAU); ctx.fill();
+          ctx.fillStyle = '#e8f0ff'; ctx.font = `700 ${0.026 * s}px Inter`; ctx.textAlign = 'left'; ctx.fillText('REC', -0.008 * s, -0.026 * s);
+        }
+      }), { bias: -0.3 });
+      if (o.rec) g.glows.push(() => g.at([-0.45, 0.95, 0.42], (ctx, s) => { const R = 0.3 * s, gr = ctx.createRadialGradient(0, 0, 0, 0, 0, R); gr.addColorStop(0, 'rgba(255,60,60,0.35)'); gr.addColorStop(1, 'rgba(255,60,60,0)'); ctx.fillStyle = gr; ctx.fillRect(-R, -R, R * 2, R * 2); }));
+    }
   },
 
   /** Escritório de dia. */
@@ -712,7 +760,7 @@ export const SETS = {
     g.ambient = o.ambient || [40, 46, 84];
     room(g, { w: 3.2, d: 3.4, h: 2.6, floor: { type: 'tile', c: '#7f8ea3', c2: '#6f7f96', ts: 0.4 }, wall: { c: '#c5d0d8', tiles: '#dfe8ec', th: 1.25, base: '#5b6a7a' } });
     mirror(g, 0, 0.98, 1.0, 1.02, { reflect: o.reflect });
-    sink(g, 0, 3.12);
+    if (!o.noSink) sink(g, 0, 3.12);
     g.light([0, 2.42, 3.2], 2.9, o.lightC || '#dfeaff', o.k ?? 0.9);
     g.add([0, 2.42, 3.36], () => g.box(0, 2.36, 3.34, 0.8, 0.08, 0.08, { c: '#f6fbff', lit: false }));
     g.glows.push(() => g.at([0, 2.4, 3.3], (ctx, s) => { const R = 0.8 * s, gr = ctx.createRadialGradient(0, 0, 0, 0, 0, R); gr.addColorStop(0, 'rgba(225,238,255,0.5)'); gr.addColorStop(1, 'rgba(225,238,255,0)'); ctx.fillStyle = gr; ctx.fillRect(-R, -R, R * 2, R * 2); }));

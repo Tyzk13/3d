@@ -153,8 +153,8 @@ function drawFace(c, f, look, T, seed, opt) {
     const by = ey - (eyes === 'wide' ? 0.3 : 0.22);
     c.lineWidth = 0.05;
     if (f.brows === 'up') { c.beginPath(); c.moveTo(x - 0.1, by - 0.03); c.quadraticCurveTo(x, by - 0.1, x + 0.1, by - 0.03); c.stroke(); }
-    else if (f.brows === 'worried') { c.beginPath(); c.moveTo(x - s * 0.13, by + 0.04); c.lineTo(x + s * 0.1, by - 0.07); c.stroke(); }
-    else if (f.brows === 'angry') { c.beginPath(); c.moveTo(x - s * 0.13, by - 0.08); c.lineTo(x + s * 0.11, by + 0.05); c.stroke(); }
+    else if (f.brows === 'worried') { c.beginPath(); c.moveTo(x - s * 0.13, by - 0.08); c.lineTo(x + s * 0.11, by + 0.04); c.stroke(); }
+    else if (f.brows === 'angry') { c.beginPath(); c.moveTo(x - s * 0.13, by + 0.05); c.lineTo(x + s * 0.1, by - 0.08); c.stroke(); }
     else if (f.brows === 'low') { c.beginPath(); c.moveTo(x - 0.12, by + 0.07); c.lineTo(x + 0.12, by + 0.07); c.stroke(); }
     else if (f.brows === 'one' && s === 1) { c.beginPath(); c.moveTo(x - 0.1, by - 0.06); c.quadraticCurveTo(x, by - 0.13, x + 0.1, by - 0.05); c.stroke(); }
   }
@@ -181,6 +181,11 @@ function drawFace(c, f, look, T, seed, opt) {
     c.fillStyle = '#fff'; c.fillRect(mx - 0.2, my - 0.08, 0.4, 0.075); c.restore(); c.lineWidth = 0.045; c.stroke();
   }
   if (opt.mustache) { c.fillStyle = opt.mustache; c.beginPath(); c.moveTo(mx, my - 0.17); c.quadraticCurveTo(mx + 0.22, my - 0.2, mx + 0.3, my - 0.04); c.quadraticCurveTo(mx + 0.12, my - 0.08, mx, my - 0.07); c.quadraticCurveTo(mx - 0.12, my - 0.08, mx - 0.3, my - 0.04); c.quadraticCurveTo(mx - 0.22, my - 0.2, mx, my - 0.17); c.closePath(); c.fill(); c.lineWidth = 0.03; c.stroke(); }
+  if (opt.scratch) {
+    c.strokeStyle = '#c0392b'; c.lineWidth = 0.035;
+    for (let i = 0; i < 3; i++) { c.beginPath(); c.moveTo(lx + 0.5 + i * 0.07, 0.02 + ly); c.lineTo(lx + 0.38 + i * 0.07, 0.3 + ly); c.stroke(); }
+    c.strokeStyle = INK;
+  }
   if (f.sweat) {
     const u = ((T * 0.35 + seed) % 1), sx = 0.66, sy = -0.5 + u * 0.22;
     c.globalAlpha = u < 0.85 ? 1 : (1 - u) / 0.15;

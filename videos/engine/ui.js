@@ -315,3 +315,48 @@ export function moneyPop(ctx, x, y, s, t, k = 1) {
   ctx.fillStyle = '#7dff9c'; ctx.fillText(s, 0, 0);
   ctx.restore();
 }
+
+/** "Zzz" flutuando (sono). */
+export function zzz(ctx, x, y, T, k = 1) {
+  ctx.save(); ctx.textAlign = 'center'; ctx.lineJoin = 'round';
+  for (let i = 0; i < 3; i++) {
+    const u = ((T * 0.45 + i / 3) % 1), size = (46 + i * 26) * k;
+    ctx.globalAlpha = Math.sin(Math.PI * u) * 0.95;
+    ctx.font = `400 ${size}px "Archivo Black", ${UI}`;
+    const px = x + u * 110 * k + Math.sin(u * 6 + i) * 14, py = y - u * 230 * k;
+    ctx.strokeStyle = '#08070f'; ctx.lineWidth = size * 0.2; ctx.strokeText('Z', px, py);
+    ctx.fillStyle = '#dfe6ff'; ctx.fillText('Z', px, py);
+  }
+  ctx.restore();
+}
+
+/** Tela de instalação de aplicativo. o: { name, tag, amount, t, tapAt, icon, accent } */
+export function appScreen(c, w, h, o) {
+  const ac = o.accent || '#5b6cff';
+  const gr = c.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#070818'); gr.addColorStop(1, '#141a44');
+  c.fillStyle = gr; c.fillRect(0, 0, w, h);
+  c.fillStyle = '#fff';
+  for (let i = 0; i < 40; i++) { c.globalAlpha = 0.25 + 0.5 * hash(i * 3.3) * (0.6 + 0.4 * Math.sin(o.t * 2 + i)); c.beginPath(); c.arc(hash(i * 7.7) * w, hash(i * 2.9) * h * 0.6, 1 + hash(i) * 1.6, 0, TAU); c.fill(); }
+  c.globalAlpha = 1;
+  statusBar(c, o.time || '23:41');
+  // ícone: lua
+  c.save(); c.translate(w / 2, 230);
+  c.beginPath(); c.roundRect(-78, -78, 156, 156, 38); c.fillStyle = ac; c.fill();
+  c.fillStyle = '#fff3c4'; c.beginPath(); c.arc(4, 0, 46, 0, TAU); c.fill();
+  c.fillStyle = ac; c.beginPath(); c.arc(26, -14, 40, 0, TAU); c.fill();
+  c.restore();
+  txt(c, o.name || 'SonoPago', w / 2, 366, 34, { w: 800, align: 'center' });
+  txt(c, o.tag || 'Durma. A gente paga.', w / 2, 400, 18, { w: 500, align: 'center', c: 'rgba(255,255,255,0.7)' });
+  txt(c, o.amount || 'R$ 5.000', w / 2, 492, 60, { w: 800, align: 'center', c: '#7dffb0' });
+  txt(c, o.per || 'por noite dormida', w / 2, 528, 20, { w: 600, align: 'center', c: 'rgba(255,255,255,0.85)' });
+  if (o.rule) { card(c, 34, 566, w - 68, 84, 18, 'rgba(255,255,255,0.08)', false); txt(c, o.rule, w / 2, 600, 16, { w: 500, align: 'center', c: 'rgba(255,255,255,0.8)', max: w - 100, lh: 23 }); }
+  const tap = o.tapAt != null ? ramp(o.t, o.tapAt, o.tapAt + 0.16) : 0;
+  const prog = o.tapAt != null ? ramp(o.t, o.tapAt + 0.16, o.tapAt + 0.95) : 0;
+  const by = h - 170;
+  c.save(); c.translate(w / 2, by + 34); const bs = tap > 0 && tap < 1 ? 0.95 : 1; c.scale(bs, bs);
+  card(c, -150, -34, 300, 68, 34, prog >= 1 ? '#1faa59' : (tap >= 1 ? 'rgba(255,255,255,0.14)' : ac));
+  if (tap >= 1 && prog < 1) { c.save(); c.beginPath(); c.roundRect(-150, -34, 300, 68, 34); c.clip(); c.fillStyle = ac; c.fillRect(-150, -34, 300 * prog, 68); c.restore(); }
+  txt(c, prog >= 1 ? 'INSTALADO' : (tap >= 1 ? `${Math.round(prog * 100)}%` : (o.btn || 'INSTALAR')), 0, 9, 24, { w: 800, align: 'center' });
+  c.restore();
+  if (tap > 0 && o.t < o.tapAt + 0.5) { c.strokeStyle = `rgba(255,255,255,${0.6 * (1 - ramp(o.t, o.tapAt, o.tapAt + 0.45))})`; c.lineWidth = 4; c.beginPath(); c.arc(w / 2, by + 34, 30 + ramp(o.t, o.tapAt, o.tapAt + 0.45) * 90, 0, TAU); c.stroke(); }
+}

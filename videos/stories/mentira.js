@@ -28,7 +28,7 @@ const REST = { youAt: [-0.6, 4.6], herAt: [0.6, 4.6], y: 0.11 };
 
 export default {
   title: 'Cada mentira vale 100 mil',
-  voice: 'pm_alex', speed: 1.0, gap: 0.24, tail: 1.5,
+  voice: 'pm_alex', speed: 0.96, gap: 0.26, tail: 1.6,
   cast,
   hl: ['cem', 'mil', 'milhões', 'dinheiro', 'reais'],
   fx: { grade: 'cool' },
@@ -95,12 +95,13 @@ export default {
       set: 'shop', cam: { p: [-0.5, 1.5, 0.7], t: [0.2, 1.22, 3.75], f: 42, to: { p: [-0.35, 1.5, 1.0] } }, fx: { grade: 'warm', dust: 0.2 },
       chars: [{ who: 'seller', at: [0.2, 3.78], face: 'sweet', pose: 'heart', look: [-0.1, 0] }],
       props: (g) => {
-        g.add([0.95, 1.0, 3.0], () => {
-          g.box(0.95, 0.84, 3.0, 0.5, 0.34, 0.3, { c: '#2d5da8' });
-          g.at([0.95, 1.36, 2.9], (ctx, s) => {
-            ctx.rotate(-0.08); ctx.fillStyle = '#ffe14d'; ctx.strokeStyle = '#17122b'; ctx.lineWidth = Math.max(2, 0.012 * s);
-            ctx.beginPath(); ctx.roundRect(-0.3 * s, -0.16 * s, 0.6 * s, 0.32 * s, 0.03 * s); ctx.fill(); ctx.stroke();
-            ctx.fillStyle = '#b3201c'; ctx.textAlign = 'center'; ctx.font = `800 ${0.1 * s}px Inter`; ctx.fillText('ÚLTIMO', 0, -0.03 * s); ctx.fillText('PREÇO!!', 0, 0.09 * s);
+        g.add([-0.85, 1.0, 3.0], () => {
+          g.box(-0.85, 0.84, 3.0, 0.42, 0.3, 0.3, { c: '#2d5da8' });
+          g.box(-0.85, 1.14, 3.0, 0.03, 0.2, 0.03, { c: '#22212c', stroke: null });
+          g.at([-0.85, 1.5, 2.95], (ctx, s) => {
+            ctx.rotate(-0.07); ctx.fillStyle = '#ffe14d'; ctx.strokeStyle = '#17122b'; ctx.lineWidth = Math.max(2, 0.014 * s); ctx.lineJoin = 'round';
+            ctx.beginPath(); ctx.roundRect(-0.34 * s, -0.19 * s, 0.68 * s, 0.38 * s, 0.03 * s); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = '#b3201c'; ctx.textAlign = 'center'; ctx.font = `800 ${0.12 * s}px Inter`; ctx.fillText('ÚLTIMO', 0, -0.03 * s); ctx.fillText('PREÇO!!', 0, 0.11 * s);
           });
         }, { bias: -0.4 });
       },
@@ -126,7 +127,7 @@ export default {
         { set: 'office', cam: { p: [-1.1, 1.55, 0.6], t: [0.1, 1.15, 3.6], f: 52, to: { p: [-0.9, 1.55, 0.9] } }, fx: { grade: 'day', dust: 0.2 },
           chars: (t) => [{ who: 'boss', at: [0, 4.1], y: 0.11, sit: true, face: 'shock', pose: 'shock' }, { who: 'you', at: [lerp(0.5, 0.95, clamp(t / 1.6)), 2.2], face: 'joy', pose: 'wave', walk: 1 }] },
         { at: 'compra', set: 'street', so: { view: 'dusk', car: { x: 0.5, z: 4.3, c: '#c8332c', bow: true, lights: true } }, cam: { p: [0.2, 1.5, -3.2], t: [0.3, 1.0, 4.3], f: 55, to: { p: [0.2, 1.45, -2.5] } }, fx: { grade: 'warm', dust: 0.4 },
-          chars: [{ who: 'you', at: [-1.25, 3.3], face: 'joy', pose: 'up', hop: 7 }] },
+          chars: [{ who: 'you', at: [-0.95, 3.2], face: 'joy', pose: 'up', hop: 7 }] },
         { at: 'e', set: 'living', so: { lampK: 0.8 }, cam: { p: [0.2, 1.42, 2.6], t: [-0.3, 1.37, 4.42], f: 40, to: { p: [0.1, 1.42, 2.9] } }, fx: { dof: 7 },
           chars: [{ who: 'you', ...SOFA, face: 'smug', pose: 'hold', look: [0, 0.1] }],
           ui: (ctx, e) => { for (let i = 0; i < 4; i++) e.ui.moneyPop(ctx, W * (0.2 + 0.2 * i), H * (0.3 - (i % 2) * 0.07), '+100.000', e.t - 0.25 - i * 0.42, 0.7); } },
@@ -197,7 +198,7 @@ export default {
         { set: 'bathroom', so: { reflect: { ...cast.you, at: [0.05, 2.62], face: 'tired', look: [0, 0.1] }, phone: true, phoneOn: false },
           cam: { p: [1.0, 1.62, 0.3], t: [0.1, 1.25, 3.4], f: 55, to: { p: [0.9, 1.58, 0.6] } }, fx: { grade: 'cold', dust: 0.3 },
           chars: [{ who: 'you', at: [0.05, 2.62], back: true, pose: 'down' }] },
-        { at: 'tá', set: 'bathroom', so: (t, u) => ({ reflect: { ...cast.you, at: [0.05, 2.5], face: { eyes: 'dot', mouth: 'smile', brows: 'worried', bags: true }, look: [0.1, 0] }, phone: true, phoneOn: false }),
+        { at: 'tá', set: 'bathroom', so: (t, u) => ({ reflect: { ...cast.you, at: [0.05, 2.62], face: { eyes: 'dot', mouth: 'smile', brows: 'worried', bags: true }, look: [0.1, 0] }, noSink: true }),
           cam: { p: [0.2, 1.4, 2.45], t: [0.05, 1.3, 3.4], f: 46, to: { p: [0.17, 1.38, 2.62] } }, fx: { grade: 'cold', dust: 0.3 } },
       ],
     },
@@ -210,7 +211,7 @@ export default {
     },
     { // 20
       say: 'Porque a mentira que você conta pra si mesmo... também paga.',
-      set: 'bathroom', so: { reflect: { ...cast.you, at: [0.05, 2.5], face: 'cry', look: [0, 0.35] }, phone: true, phoneOn: true },
+      set: 'bathroom', so: { reflect: { ...cast.you, at: [0.05, 2.62], face: 'cry', look: [0, 0.35] }, noSink: true },
       cam: { p: [0.17, 1.38, 2.5], t: [0.05, 1.3, 3.4], f: 46, to: { p: [0.12, 1.36, 2.75] }, e: 'lin', punch: 0 }, fx: { grade: 'cold', dust: 0.3, vig: 0.75 },
     },
     { // 21
