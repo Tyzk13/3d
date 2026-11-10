@@ -6,6 +6,7 @@ import { R, S } from './engine';
 import { st } from './state';
 import type { Grade } from './post';
 import { litGlass } from './models';
+import { fetchBinary } from './binario';
 
 export interface Preset {
   n: string;
@@ -44,7 +45,10 @@ function loadHdr(id: string) {
   return (cache[id] ||= (async () => {
     const url = hdrUrl(id);
     if (!url) throw new Error('HDRI não encontrado: ' + id);
-    const tex = await new HDRLoader().setDataType(THREE.HalfFloatType).loadAsync(url);
+    const d: any = new HDRLoader().setDataType(THREE.HalfFloatType).parse(await fetchBinary(url));
+    const tex = new THREE.DataTexture(d.data, d.width, d.height, THREE.RGBAFormat, d.type);
+    tex.colorSpace = THREE.LinearSRGBColorSpace; tex.minFilter = tex.magFilter = THREE.LinearFilter;
+    tex.generateMipmaps = false; tex.flipY = true; tex.needsUpdate = true;
     tex.mapping = THREE.EquirectangularReflectionMapping;
     const env = pmrem.fromEquirectangular(tex).texture;
     return { tex, env, horizon: horizonColor(tex) };

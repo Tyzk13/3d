@@ -12,6 +12,12 @@ npm run build:single   # gera dist-single/index.html — um arquivo só (maior; 
 (caminhos relativos, sem configuração). Prefira `dist/` (os assets ficam em cache no navegador);
 use o HTML único só quando não puder subir uma pasta.
 
+### Versão leve (celular / páginas que só aceitam tipos padrão da web)
+
+`npm run build:leve` gera `dist-lite/` com texturas de 512 px e árvores simplificadas, e empacota os modelos
+(`.glb`) e céus (`.hdr`) como módulos `.js` — útil em hospedagens que recusam esses tipos de arquivo
+(é o caso da página hospedada no claude.ai).
+
 ## 2. Incorporar por iframe
 
 ```html

@@ -8,6 +8,7 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "build:single": "node tools/assets-leves.mjs && vite build --mode single",
+    "build:leve": "node tools/assets-leves.mjs && vite build --mode lite",
     "preview": "vite preview",
     "capturas": "node tools/capturas.mjs",
     "assets": "NODE_USE_ENV_PROXY=1 node tools/baixar-assets.mjs",
