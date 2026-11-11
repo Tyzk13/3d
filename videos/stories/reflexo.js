@@ -15,7 +15,7 @@ const title = (ctx, e) => e.ui.bigText(ctx, [{ s: 'SEU REFLEXO', size: 100 }, { 
 
 export default {
   title: 'O reflexo atrasado',
-  voice: 'pm_alex', speed: 0.94, gap: 0.3, tail: 1.8,
+  voice: 'pm_alex', speed: 0.94, gap: 0.3, tail: 3.2,
   cast, hl: [],
   fx: { grade: 'cold' },
   music: [{ beat: 0, mood: 'tense' }, { beat: 6, mood: 'playful' }, { beat: 7, mood: 'dread' }, { beat: 12, mood: 'none' }, { beat: 14, mood: 'dread' }],
