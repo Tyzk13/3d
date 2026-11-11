@@ -404,3 +404,20 @@ export function bubble(ctx, o) {
   lines.forEach((l, i) => ctx.fillText(l, 0, (i - (lines.length - 1) / 2) * lh + 3));
   ctx.restore();
 }
+
+/** Contador flutuando sobre a cabeça de alguém. o: { c, size, t (entrada), T } */
+export function timer(ctx, x, y, text, o = {}) {
+  const a = ease.back(clamp((o.t ?? 1) / 0.25)), size = (o.size || 64) * 1.35;
+  if ((o.t ?? 1) <= 0) return;
+  ctx.save();
+  ctx.translate(x, y + Math.sin((o.T || 0) * 2 + x) * 6); ctx.scale(a, a);
+  ctx.font = `700 ${size}px "DejaVu Sans Mono", monospace`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const w = ctx.measureText(text).width + size * 0.9, h = size * 1.5, col = o.c || '#7dff9c';
+  ctx.shadowColor = col; ctx.shadowBlur = 28;
+  ctx.beginPath(); ctx.roundRect(-w / 2, -h / 2, w, h, h * 0.3); ctx.fillStyle = 'rgba(10,9,22,0.88)'; ctx.fill();
+  ctx.shadowColor = 'transparent';
+  ctx.strokeStyle = col; ctx.lineWidth = 5; ctx.stroke();
+  ctx.fillStyle = col; ctx.fillText(text, 0, 3);
+  ctx.beginPath(); ctx.moveTo(-14, h / 2); ctx.lineTo(14, h / 2); ctx.lineTo(0, h / 2 + 20); ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
