@@ -1,0 +1,14 @@
+{
+  "name": "videos-historia",
+  "private": true,
+  "type": "module",
+  "description": "Gerador de vídeos verticais de história narrada (animação 2.5D em canvas + narração neural)",
+  "scripts": {
+    "render": "node render.mjs"
+  },
+  "devDependencies": {
+    "@fontsource/archivo-black": "^5.0.0",
+    "@fontsource/caveat": "^5.0.0",
+    "@fontsource/inter": "^5.0.0"
+  }
+}
