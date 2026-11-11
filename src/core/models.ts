@@ -4,6 +4,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { addWind, windDepth, type WindOpts } from './anim';
+import { fetchBinary } from './binario';
 
 const FILES = import.meta.glob('@assets/models/*.glb', { query: '?url', import: 'default', eager: true }) as Record<string, string>;
 const fileFor = (id: string) => Object.entries(FILES).find(([k]) => k.endsWith(`/models/${id}.glb`))?.[1];
@@ -33,7 +34,7 @@ function fixMaterials(root: THREE.Object3D, id: string) {
         return;
       }
       if (/flame|chama/.test(n)) { o.castShadow = false; m.emissiveIntensity = 2.5; m.toneMapped = true; return; }
-      if (/lamp|bulb/.test(n) && LIT.test(id)) { if (!seen.has(m)) { seen.add(m); m.emissive.set(0xffc27a); m.emissiveIntensity = 2.2; m.userData.litBase = 2.2; litGlass.push(m); } return; }
+      if (/(_lamp$|bulb)/.test(n) && LIT.test(id)) { if (!seen.has(m)) { seen.add(m); m.emissive.set(0xffc27a); m.emissiveIntensity = 2.2; m.userData.litBase = 2.2; litGlass.push(m); } return; }
       if (m.transparent || m.alphaTest > 0) {
         m.transparent = false; m.depthWrite = true; m.alphaTest = 0.45; m.side = THREE.DoubleSide;
         m.alphaToCoverage = true;
@@ -49,7 +50,8 @@ export function model(id: string): Promise<THREE.Group> {
   return (cache[id] ||= (async () => {
     const url = fileFor(id);
     if (!url) throw new Error('Modelo não encontrado: ' + id);
-    const g = await loader.loadAsync(url);
+    const buf = await fetchBinary(url);
+    const g: any = await new Promise((ok, no) => loader.parse(buf, '', ok, no));
     const root = g.scene;
     root.updateMatrixWorld(true);
     fixMaterials(root, id);

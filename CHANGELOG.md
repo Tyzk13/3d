@@ -87,3 +87,9 @@
 - `tools/testar-funcoes.mjs`: teste automático (iframe/ready, carregamento, caminhar, clima e mapa por
   postMessage, erros de página) — passando.
 - VTT: paredes recortadas na área exportada e tamanho arredondado; todas as áreas validadas.
+
+## Versão para celular / página hospedada
+
+- `npm run build:leve` → `dist-lite/`: assets leves e modelos/céus empacotados como `.js` (algumas hospedagens,
+  como a do claude.ai, recusam `.glb` e `.hdr`). Carregadores passam por `core/binario.ts`.
+- Publicada como página privada no claude.ai e conferida no visualizador real (carrega sem erros).

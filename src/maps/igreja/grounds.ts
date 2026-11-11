@@ -43,7 +43,7 @@ export function groundH(x: number, z: number) {
 export async function buildGrounds(G: THREE.Group, F: Flowers, views: View[] = []): Promise<Grounds> {
   sd = 41;
   // densidade por qualidade: mato, floresta (quantidade e distância do LOD), sombra da vegetação
-  const Q = { baixa: { grass: 80, blades: 5000, forest: 70, lod: 40, vegShadow: false, ferns: 2 }, media: { grass: 250, blades: 22000, forest: 110, lod: 46, vegShadow: true, ferns: 5 }, alta: { grass: 500, blades: 55000, forest: 140, lod: 60, vegShadow: true, ferns: 7 } }[CFG.quality];
+  const Q = { baixa: { grass: 80, blades: 7000, forest: 70, lod: 40, vegShadow: false, ferns: 2 }, media: { grass: 250, blades: 32000, forest: 110, lod: 46, vegShadow: true, ferns: 5 }, alta: { grass: 500, blades: 80000, forest: 140, lod: 60, vegShadow: true, ferns: 7 } }[CFG.quality];
   const solids: THREE.Object3D[] = [], floors: THREE.Object3D[] = [], lightsVtt: Grounds['lightsVtt'] = [];
   const O = new THREE.Group(); O.name = 'exterior'; G.add(O);
   const lights = K.M.lights;
@@ -98,26 +98,27 @@ export async function buildGrounds(G: THREE.Group, F: Flowers, views: View[] = [
   function groundMask(x: number, z: number): [number, number] {
       const n = fbm(x * 0.09, z * 0.09, 3), n2 = noise2(x * 0.5, z * 0.5);
       let dirt = sm(0.62, 0.8, n) * 0.7;
-      if (Math.abs(x) < PATH.w / 2 + 1.1 && z > PATH.z0 - 1) dirt = Math.max(dirt, 1 - sm(PATH.w / 2 - 0.2, PATH.w / 2 + 1.1, Math.abs(x)) * (0.6 + 0.4 * n2));
-      if (Math.abs(x) < NX + 1.6 && Math.abs(z) < NZ + 1.6) dirt = Math.max(dirt, 0.6);
+      if (Math.abs(x) < PATH.w / 2 + 0.7 && z > PATH.z0 - 1) dirt = Math.max(dirt, 0.55 * (1 - sm(PATH.w / 2 - 0.1, PATH.w / 2 + 0.7, Math.abs(x))) * (0.6 + 0.4 * n2));
+      if (Math.abs(x) < NX + 1.2 && Math.abs(z) < NZ + 1.2) dirt = Math.max(dirt, 0.45);
       if (x > PARK.x0 - 1.5 && x < PARK.x1 + 1.5 && z > PARK.z0 - 1.5 && z < PARK.z1 + 1.5) dirt = 1;
       if (Math.hypot(x - SHED.x, z - SHED.z) < 4.5) dirt = Math.max(dirt, 0.9);
       const leaves = Math.min(1, underTree(x, z) * (0.7 + 0.5 * n) + sm(30, 60, Math.hypot(x, z - 8)) * 0.5);
       return [Math.min(1, dirt), leaves];
   }
 
-  // gramado procedural (touceiras de lâminas com vento), mais ralo na terra e sob as árvores
-  O.add(grassField({
-    count: Q.blades, area: [-FENCE.x + 0.5, FENCE.x - 0.5, FENCE.z0 + 0.5, FENCE.z1 - 0.5], height: groundH,
-    allow: (x, z) => {
-      if (Math.abs(x) < NX + WT + 0.9 && Math.abs(z) < NZ + WT + 0.9) return 0;
-      if (Math.abs(x) < PATH.w / 2 + 0.25 && z > NZ) return 0;
-      if (x > PARK.x0 - 0.5 && x < PARK.x1 + 0.5 && z > PARK.z0 - 0.5 && z < PARK.z1 + 0.5) return 0;
-      if (Math.hypot(x - GAZEBO.x, z - GAZEBO.z) < GAZEBO.r + 0.4) return 0;
-      const [d, l] = groundMask(x, z);
-      return Math.max(0, 1 - d * 0.95 - l * 0.6);
-    },
-  }));
+  // gramado procedural (touceiras de lâminas com vento), mais ralo na terra e sob as árvores:
+  // uma camada densa em volta da igreja e do caminho e outra mais esparsa no resto do terreno
+  const grassAllow = (x: number, z: number) => {
+    if (Math.abs(x) < NX + WT + 0.9 && Math.abs(z) < NZ + WT + 0.9) return 0;
+    if (Math.abs(x) < PATH.w / 2 + 0.25 && z > NZ) return 0;
+    if (x > PARK.x0 - 0.5 && x < PARK.x1 + 0.5 && z > PARK.z0 - 0.5 && z < PARK.z1 + 0.5) return 0;
+    if (Math.hypot(x - GAZEBO.x, z - GAZEBO.z) < GAZEBO.r + 0.4) return 0;
+    const [d, l] = groundMask(x, z);
+    return Math.max(0, 1 - d * 0.9 - l * 0.6);
+  };
+  const grassTall = (x: number, z: number) => { const d = Math.min(Math.abs(Math.abs(x) - FENCE.x), Math.abs(z - FENCE.z0)); const g = x > GRAVE.x0 - 1 && x < GRAVE.x1 + 1 && z > GRAVE.z0 - 1 && z < GRAVE.z1 + 1; return g ? 2.2 : 1 + 1.4 * (1 - sm(1, 7, d)); };
+  O.add(grassField({ count: Math.round(Q.blades * 0.6), area: [-13, 13, -18, FENCE.z1 - 0.5], height: groundH, allow: grassAllow, tall: grassTall }));
+  O.add(grassField({ count: Math.round(Q.blades * 0.4), area: [-FENCE.x + 0.5, FENCE.x - 0.5, FENCE.z0 + 0.5, FENCE.z1 - 0.5], height: groundH, allow: (x, z) => (Math.abs(x) < 13 && z > -18 ? 0 : grassAllow(x, z)), tall: grassTall }));
 
   // ---------- escadaria, pórtico e caminho de pedra ----------
   const conD = M.concreteDark(), trim = M.concreteTrim();

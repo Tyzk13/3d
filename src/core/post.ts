@@ -18,8 +18,9 @@ export interface Grade { exposure: number; contrast: number; brightness: number;
 export const DEFAULT_GRADE: Grade = { exposure: 1, contrast: 0.12, brightness: -0.02, saturation: -0.22, hue: 0, bloom: 0.55, vignette: 0.55, tint: [1, 1, 1] };
 
 const QP = {
-  baixa: { pr: 1, shadow: 1024, ao: false, aoHalf: true, aoQ: 'Performance', smaa: SMAAPreset.LOW, dof: false, grain: false },
-  media: { pr: 1.5, shadow: 2048, ao: true, aoHalf: true, aoQ: 'Medium', smaa: SMAAPreset.MEDIUM, dof: false, grain: true },
+  baixa: { pr: 1, shadow: 1024, ao: false, aoHalf: false, aoQ: 'Performance', smaa: SMAAPreset.LOW, dof: false, grain: false },
+  // (meia resolução do N8AO não funciona com o three r187 — usa render target múltiplo removido)
+  media: { pr: 1.5, shadow: 2048, ao: true, aoHalf: false, aoQ: 'Low', smaa: SMAAPreset.MEDIUM, dof: false, grain: true },
   alta: { pr: 2, shadow: 4096, ao: true, aoHalf: false, aoQ: 'High', smaa: SMAAPreset.HIGH, dof: true, grain: true },
 } as const;
 
