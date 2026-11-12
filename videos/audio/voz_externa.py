@@ -12,6 +12,12 @@ from narrar import norm, align, ROOT, MODELS, SR
 
 def main():
     name, src = sys.argv[1], sys.argv[2]
+    if not os.path.exists(os.path.join(MODELS, 'whisper', 'model.bin')):
+        # sem Whisper (ex.: huggingface bloqueado): alinhamento acústico por frases com a voz-guia Piper
+        import sem_hf
+        print('Whisper não encontrado: usando o alinhamento por frases (audio/sem_hf.py)')
+        sem_hf.externa(name, src)
+        return
     out = os.path.join(ROOT, 'out', name)
     sc = json.load(open(os.path.join(out, 'script.json')))
     tmp = os.path.join(tempfile.mkdtemp(), 'v.wav')

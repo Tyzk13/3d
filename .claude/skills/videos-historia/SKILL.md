@@ -17,8 +17,10 @@ python3 -m venv ~/venv && ~/venv/bin/pip install -r requirements.txt
 export PY=~/venv/bin/python
 ```
 
-Instale os pacotes Python um por vez se o `pip` travar. Se o download for bloqueado, peça ao
-usuário para liberar os dois hosts no ambiente.
+Instale os pacotes Python um por vez se o `pip` travar. Se o huggingface estiver bloqueado, não pare:
+`pip install piper-tts librosa soundfile scipy` e `./baixar-modelos.sh --piper` (voz-guia do GitHub).
+Sem Kokoro, `fazer.sh` narra com a voz-guia Piper (serve para prévia e ritmo; o usuário costuma mandar a
+narração do ElevenLabs depois). Sem Whisper, `voz_externa.py` usa `audio/sem_hf.py` (alinhamento por frases).
 
 ## Fluxo de um vídeo novo
 
@@ -29,7 +31,8 @@ usuário para liberar os dois hosts no ambiente.
 4. `./fazer.sh <nome>` gera `out/<nome>/<nome>.mp4` (≈ 4 min). Confira uma folha tirada do mp4.
 5. Envie o mp4 ao usuário; não versione `out/`. Faça commit e push do roteiro e do código.
 
-**Voz gravada pelo usuário** (ex.: ElevenLabs): entregue o roteiro em texto, um bloco por vídeo;
+**Voz gravada pelo usuário** (ex.: ElevenLabs): entregue o roteiro em texto, um bloco por vídeo, só o
+texto (sem tempos);
 ao receber o áudio (um arquivo com o texto inteiro), rode
 `$PY audio/voz_externa.py <nome> <arquivo>`, depois `$PY audio/trilha.py <nome>` e
 `node render.mjs <nome>`. Descubra qual áudio é de qual vídeo pela duração ou pela transcrição.

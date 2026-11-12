@@ -4,3 +4,5 @@ soundfile
 cffi
 numpy
 scipy
+piper-tts
+librosa

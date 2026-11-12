@@ -18,6 +18,21 @@ Precisa de Node com Playwright/Chromium, `ffmpeg` e Python 3.10+. Se o Python co
 estiver num ambiente virtual, passe `PY=/caminho/do/python ./fazer.sh …`; se os modelos estiverem
 em outra pasta, `MODELOS=/caminho`.
 
+### Sem acesso ao huggingface (voz-guia Piper)
+
+Se o Kokoro e o Whisper não puderem ser baixados, o gerador usa `audio/sem_hf.py`:
+
+```bash
+pip install piper-tts librosa soundfile scipy numpy
+./baixar-modelos.sh --piper            # só a voz-guia pt-BR (GitHub, ≈ 60 MB)
+./fazer.sh mentira                     # sem Kokoro: narra com a voz-guia Piper (para prévia e ritmo)
+VOZ=narracao.mp3 ./fazer.sh mentira    # narração gravada (ElevenLabs etc.)
+```
+
+Com a narração gravada e sem Whisper, `audio/voz_externa.py` casa o áudio com o roteiro frase por frase:
+compara o som da gravação com a voz-guia (alinhamento acústico com `librosa`) e corta nas pausas entre as
+frases. Grave o texto exatamente como está no roteiro, com uma pequena pausa entre as frases.
+
 Para revisar sem renderizar tudo:
 
 ```bash
@@ -34,6 +49,7 @@ node render.mjs mentira --from 30 --to 40  # só um trecho
 | Roteiro | `stories/<nome>.js` | Falas, planos, personagens, efeitos e trilha de cada batida |
 | Exportação | `export.mjs` | Passa falas e marcações de som para `out/<nome>/script.json` |
 | Narração | `audio/narrar.py` | Voz neural pt-BR (Kokoro) fala cada batida; o Whisper mede o tempo de cada palavra → `narr.wav`, `timing.json` |
+| Narração (sem huggingface) | `audio/sem_hf.py`, `audio/alinhamento.py` | Voz-guia Piper ou narração gravada alinhada por frases → `narr.wav`, `timing.json` |
 | Trilha | `audio/trilha.py` | Sintetiza música por clima (`tense`, `playful`, `soft`, `sad`, `dread`) e efeitos, abaixa a trilha sob a voz e normaliza em −15 LUFS → `audio.wav` |
 | Imagem | `render.mjs` + `engine/` | Desenha cada quadro num canvas (Chromium), em paralelo, e codifica com `ffmpeg` |
 
