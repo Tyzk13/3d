@@ -24,6 +24,7 @@ Para ler uma função: Read com `offset` = linha e `limit` ≈ 40–80. Não lei
 | `index.html` | 42 | 3 KB |
 | `legacy/igreja-3d-site.html` | 620 | 899 KB |
 | `legacy/servidor-sync.js` | 26 | 1 KB |
+| `scripts/mapa_do_codigo.py` | 78 | 5 KB |
 | `server/servidor-sync.mjs` | 114 | 6 KB |
 | `src/core/anim.ts` | 124 | 7 KB |
 | `src/core/binario.ts` | 21 | 1 KB |

@@ -1,0 +1,130 @@
+// Peças de interface reaproveitadas: escape, avisos, janelas, barras, resultados de dados, fotos.
+(function (HB) {
+  const R = HB.R;
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+  const $ = (s, el = document) => el.querySelector(s);
+
+  function aviso(msg, tipo = 'erro') {
+    const box = $('#avisos'); if (!box) return;
+    const el = document.createElement('div');
+    el.className = 'aviso ' + tipo; el.textContent = msg; el.setAttribute('role', 'status');
+    box.appendChild(el);
+    setTimeout(() => el.remove(), tipo === 'erro' ? 6000 : 2600);
+  }
+
+  // Janela modal simples. corpo = html; botoes = [{rotulo, acao(fechar, raiz), classe}]
+  function janela(titulo, corpo, botoes = []) {
+    fechar();
+    const fundo = document.createElement('div');
+    fundo.className = 'janela-fundo'; fundo.id = 'janela';
+    fundo.innerHTML = `<div class="janela" role="dialog" aria-modal="true" aria-label="${esc(titulo)}">
+      <div class="janela-topo"><h2>${esc(titulo)}</h2><button class="icone" data-fechar aria-label="Fechar">✕</button></div>
+      <div class="janela-corpo">${corpo}</div>
+      <div class="janela-botoes">${botoes.map((b, i) => `<button class="btn ${b.classe || ''}" data-b="${i}">${esc(b.rotulo)}</button>`).join('')}</div></div>`;
+    document.body.appendChild(fundo);
+    fundo.addEventListener('click', e => {
+      if (e.target === fundo || e.target.closest('[data-fechar]')) return fechar();
+      const b = e.target.closest('[data-b]');
+      if (b) botoes[+b.dataset.b].acao(fechar, fundo);
+    });
+    const primeiro = fundo.querySelector('input,select,textarea,button.primario');
+    if (primeiro) primeiro.focus();
+    return fundo;
+  }
+  function fechar() { const j = $('#janela'); if (j) j.remove(); }
+  function confirmar(titulo, texto, rotulo, acao) {
+    janela(titulo, `<p>${esc(texto)}</p>`, [
+      { rotulo: 'Cancelar', acao: f => f() },
+      { rotulo, classe: 'perigo', acao: f => { f(); acao(); } },
+    ]);
+  }
+
+  // Barra de recurso com << < valor > >>  (data-recurso="pv|mana")
+  function barra(tipo, atual, max, alvo) {
+    const pct = max > 0 ? Math.max(0, Math.min(100, (atual / max) * 100)) : 0;
+    const a = `data-alvo="${esc(alvo)}" data-recurso="${tipo}"`;
+    return `<div class="barra ${tipo}">
+      <button class="seta" data-act="recurso" data-d="-5" ${a} aria-label="−5">«</button>
+      <button class="seta" data-act="recurso" data-d="-1" ${a} aria-label="−1">‹</button>
+      <div class="barra-trilho"><div class="barra-cheia" style="width:${pct}%"></div><span class="barra-num">${atual} / ${max}</span></div>
+      <button class="seta" data-act="recurso" data-d="1" ${a} aria-label="+1">›</button>
+      <button class="seta" data-act="recurso" data-d="5" ${a} aria-label="+5">»</button></div>`;
+  }
+  function barraMini(tipo, atual, max) {
+    const pct = max > 0 ? Math.max(0, Math.min(100, (atual / max) * 100)) : 0;
+    return `<div class="barra-mini ${tipo}"><div style="width:${pct}%"></div><span>${atual}/${max}</span></div>`;
+  }
+
+  function foto(src, nome, classe = '') {
+    if (src) return `<img class="foto ${classe}" src="${esc(src)}" alt="">`;
+    const ini = String(nome || '?').trim().split(/\s+/).slice(0, 2).map(p => p[0] || '').join('').toUpperCase();
+    return `<div class="foto vazia ${classe}" aria-hidden="true">${esc(ini || '?')}</div>`;
+  }
+
+  // Reduz a imagem para caber na base (≈ 15 KB).
+  function lerFoto(arquivo, lado = 220) {
+    return new Promise((ok, falha) => {
+      const fr = new FileReader();
+      fr.onerror = falha;
+      fr.onload = () => {
+        const img = new Image();
+        img.onerror = () => falha(new Error('imagem inválida'));
+        img.onload = () => {
+          const s = Math.min(1, lado / Math.max(img.width, img.height));
+          const c = document.createElement('canvas');
+          c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+          c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+          ok(c.toDataURL('image/jpeg', 0.8));
+        };
+        img.src = fr.result;
+      };
+      fr.readAsDataURL(arquivo);
+    });
+  }
+
+  // ---------- Resultados de rolagens ----------
+  const sessao = []; // resultados desta visita (fora de campanha)
+  function dadosHtml(ds) {
+    return ds.map(x => `<span class="dado d${x.l}${x.neg ? ' neg' : ''}" title="d${x.l}">${x.v}</span>`).join('');
+  }
+  function cartaoResultado(r) {
+    const quando = new Date(r.em || Date.now()).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    const acerto = r.acertou == null ? '' : `<span class="selo ${r.acertou ? 'ok' : 'falha'}">${r.acertou ? 'Acertou' : 'Errou'} (Def ${r.alvoDef})</span>`;
+    const dano = r.dano ? `<div class="res-col"><b>${r.dano.total}</b><small>dano</small></div>` : '';
+    return `<div class="res ${r.tipo}">
+      <div class="res-quem">${esc(r.quem || '')}</div>
+      <div class="res-linha"><div class="res-titulo">${esc(r.titulo)}</div>
+        <div class="res-col"><b>${r.total}</b><small>${r.dano ? 'ataque' : 'total'}</small></div>${dano}</div>
+      <div class="res-det">${dadosHtml(r.dados)}${r.bonus ? `<span class="bonus">${r.bonus > 0 ? '+' : ''}${r.bonus}</span>` : ''}
+        ${r.dano ? `<span class="sep">dano</span>${dadosHtml(r.dano.dados)}` : ''}</div>
+      <div class="res-rodape"><span>${esc(r.formula)}${r.dano ? ' · ' + esc(r.dano.formula) : ''}${r.nota ? ' · ' + esc(r.nota) : ''}</span>${acerto}<span>${quando}</span></div></div>`;
+  }
+  // Mostra o resultado e guarda no histórico (da campanha, se houver).
+  function resultado(r, campanhaId) {
+    r.em = Date.now();
+    if (campanhaId) {
+      const c = HB.S.pegar('campanhas', campanhaId);
+      if (c) { c.rolagens = [r].concat(c.rolagens || []).slice(0, 40); HB.S.salvar('campanhas', c, 300); }
+    } else sessao.unshift(r), sessao.splice(30);
+    const lista = $('#resultados-lista');
+    if (lista) { lista.insertAdjacentHTML('afterbegin', cartaoResultado(r)); const v = lista.querySelector('.vazio'); if (v) v.remove(); }
+    const pop = $('#rolagem-pop');
+    if (pop) {
+      pop.innerHTML = cartaoResultado(r);
+      pop.hidden = false; pop.classList.remove('entra'); void pop.offsetWidth; pop.classList.add('entra');
+      clearTimeout(resultado.t); resultado.t = setTimeout(() => (pop.hidden = true), 5200);
+    }
+  }
+  function painelResultados(lista) {
+    return `<aside class="resultados" aria-label="Resultados">
+      <div class="resultados-topo"><h3>Resultados</h3></div>
+      <div id="resultados-lista">${lista.length ? lista.map(cartaoResultado).join('') : '<p class="vazio">As rolagens aparecem aqui.</p>'}</div></aside>`;
+  }
+
+  // Seleciona uma das opções de um atributo como <select>
+  function opcoesAttr(lista, atual, vazio = 'Escolha…') {
+    return `<option value="">${esc(vazio)}</option>` + lista.map(a => `<option value="${a}" ${a === atual ? 'selected' : ''}>${esc(R.nomeAttr(a))}</option>`).join('');
+  }
+
+  HB.UI = { esc, $, aviso, janela, fechar, confirmar, barra, barraMini, foto, lerFoto, resultado, cartaoResultado, painelResultados, sessao, opcoesAttr };
+})(window.HB);

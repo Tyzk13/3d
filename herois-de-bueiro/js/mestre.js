@@ -1,0 +1,191 @@
+// Campanhas e a Mesa do Mestre: heróis da campanha, combates com iniciativa, ganchos de cena, dados e anotações.
+(function (HB) {
+  const R = HB.R, UI = HB.UI, S = HB.S, F = HB.F, esc = UI.esc;
+
+  // ---------- Lista de campanhas ----------
+  function paginaCampanhas() {
+    const cs = S.lista('campanhas').sort((a, b) => (b.criada || 0) - (a.criada || 0));
+    return `<section class="pagina">
+      <div class="pagina-topo"><div><h1 class="titulo-hq">Campanhas</h1><p class="sub">${cs.length} campanha${cs.length === 1 ? '' : 's'}</p></div>
+        <button class="btn primario" data-act="nova-campanha">Nova campanha</button></div>
+      ${cs.length ? `<div class="grade-campanhas">${cs.map(c => `<article class="cartao-campanha">
+          <div class="cc-capa" ${c.capa ? `style="background-image:url('${c.capa}')"` : ''}><span class="cc-num" title="Heróis">${(c.herois || []).length} heróis</span>
+            <button class="icone cc-apagar" data-act="apagar-campanha" data-id="${c.id}" aria-label="Apagar campanha">✕</button></div>
+          <div class="cc-info"><div><h3>${esc(c.nome)}</h3><small>Iniciada em ${new Date(c.criada || Date.now()).toLocaleDateString('pt-BR')}</small></div>
+            <a class="btn pequeno primario" href="#mesa-${c.id}">Acessar</a></div></article>`).join('')}</div>`
+        : `<div class="vazio-grande"><p class="titulo-hq">Nenhuma campanha</p><p>Uma campanha junta os heróis da mesa, os combates, os ganchos de cena e o histórico de rolagens.</p><button class="btn primario" data-act="nova-campanha">Criar campanha</button></div>`}
+    </section>`;
+  }
+
+  // ---------- Mesa ----------
+  const ABAS = [['herois', 'Heróis'], ['combates', 'Combates'], ['ganchos', 'Ganchos'], ['dados', 'Dados'], ['anotacoes', 'Anotações']];
+  function mesa(c, estado) {
+    const aba = estado.abaMesa || 'herois';
+    let corpo = '';
+    if (aba === 'herois') corpo = abaHerois(c);
+    else if (aba === 'combates') corpo = abaCombates(c, estado);
+    else if (aba === 'ganchos') corpo = abaGanchos(c);
+    else if (aba === 'dados') corpo = abaDados();
+    else corpo = `<label class="campo"><span>Anotações do Mestre</span><textarea id="m-notas" rows="18" data-f="anotacoes" placeholder="NPCs, pistas, o que cada herói deve a quem…">${esc(c.anotacoes || '')}</textarea></label>`;
+    return `<section class="pagina mesa" data-doc="campanhas:${c.id}" data-campanha="${c.id}">
+      <div class="mesa-capa" ${c.capa ? `style="background-image:url('${c.capa}')"` : ''}>
+        <input id="m-nome" class="mesa-nome" data-f="nome" value="${esc(c.nome)}" aria-label="Nome da campanha">
+        <label class="btn pequeno">Foto de capa<input type="file" accept="image/*" data-capa hidden></label></div>
+      <div class="mesa-grade">
+        ${UI.painelResultados(c.rolagens || [])}
+        <div class="mesa-corpo">
+          <div class="abas" role="tablist">${ABAS.map(([k, n]) => `<button role="tab" aria-selected="${aba === k}" class="aba ${aba === k ? 'ativa' : ''}" data-act="aba-mesa" data-aba="${k}">${n}</button>`).join('')}</div>
+          ${corpo}
+        </div>
+      </div></section>`;
+  }
+
+  function heroisDa(c) { return (c.herois || []).map(id => S.pegar('herois', id)).filter(Boolean); }
+
+  function abaHerois(c) {
+    const hs = heroisDa(c);
+    return `<div class="barra-acoes"><button class="btn" data-act="mesa-add-herois">Adicionar heróis</button></div>
+      ${hs.length ? `<div class="grade-escudo">${hs.map(h => cartaoEscudo(h)).join('')}</div>`
+        : '<div class="vazio-grande"><p>Nenhum herói nesta campanha.</p><button class="btn primario" data-act="mesa-add-herois">Adicionar heróis</button></div>'}`;
+  }
+  function cartaoEscudo(h) {
+    const d = R.derivados(h), rep = R.REPUTACAO.estado(h.reputacao | 0);
+    return `<article class="escudo-heroi">
+      <div class="eh-topo">${UI.foto(h.foto, h.nome)}<div><h3>${esc(h.nome)}</h3><p>${esc(F.nomeClasse(h))}</p>
+        <p class="rep-mini ${rep.id}">Reputação ${esc(rep.nome)} (${(h.reputacao | 0) > 0 ? '+' : ''}${h.reputacao | 0})</p></div>
+        <button class="icone" data-act="mesa-tirar-heroi" data-id="${h.id}" aria-label="Tirar da campanha">✕</button></div>
+      <div class="eh-attrs">${R.TODOS.map(a => `<button class="eh-attr" data-act="mesa-rolar-attr" data-heroi="${h.id}" data-attr="${a}" title="Rolar ${R.nomeAttr(a)}"><small>${a}</small><b>${R.dadoTexto(d.niv[a]).replace('—', '0')}</b></button>`).join('')}</div>
+      <h4>Vida</h4>${UI.barra('pv', F.pvAtual(h, d), d.pvMax, 'heroi:' + h.id)}
+      <h4>Mana</h4>${UI.barra('mana', F.manaAtual(h, d), d.manaMax, 'heroi:' + h.id)}
+      <div class="eh-rodape"><span><small>Defesa</small><b>${d.defesa}</b></span>${R.MAESTRIAS.map(m => `<span><small>${esc(m.curto)}</small><b>+${R.bonusMaestria(d.maestria[m.id])}</b></span>`).join('')}
+        <a href="#heroi-${h.id}">Ficha</a></div></article>`;
+  }
+
+  // ---------- Combates ----------
+  function participante(c, p) {
+    if (p.tipo === 'heroi') {
+      const h = S.pegar('herois', p.ref); if (!h) return null;
+      const d = R.derivados(h);
+      return { ...p, nome: h.nome, foto: h.foto, classe: h.classe, agi: d.niv.AGI, pv: F.pvAtual(h, d), pvMax: d.pvMax, mana: F.manaAtual(h, d), manaMax: d.manaMax, def: d.defesa, d, fonte: h };
+    }
+    const d = F.derivVilao(p.v);
+    return { ...p, nome: p.nome || p.v.nome, foto: p.v.foto, classe: '', agi: d.niv.AGI, pvMax: d.pvMax, manaMax: d.manaMax, def: d.defesa, d, fonte: p.v };
+  }
+  // Iniciativa: maior Agilidade; empate pela ordem das classes (Atirador → Tanker); depois o ajuste manual.
+  function ordenar(c, cb) {
+    return (cb.parts || []).map(p => participante(c, p)).filter(Boolean)
+      .sort((a, b) => b.agi - a.agi || R.ordemClasse(a.classe) - R.ordemClasse(b.classe) || (a.desempate | 0) - (b.desempate | 0));
+  }
+
+  function abaCombates(c, estado) {
+    const cbs = c.combates || [];
+    const cb = cbs.find(x => x.id === estado.combate) || cbs[cbs.length - 1];
+    const sel = `<div class="barra-acoes">
+      ${cbs.length ? `<label class="campo"><span>Combate</span><select id="m-combate" data-act-change="escolher-combate">${cbs.map(x => `<option value="${x.id}" ${cb && x.id === cb.id ? 'selected' : ''}>${esc(x.nome)}</option>`).join('')}</select></label>` : ''}
+      <button class="btn primario" data-act="novo-combate">Novo combate</button>
+      ${cb ? '<button class="btn perigo-txt" data-act="encerrar-combate">Encerrar</button>' : ''}</div>`;
+    if (!cb) return sel + '<div class="vazio-grande"><p>Nenhum combate. Crie um, adicione heróis e vilões, e a ordem de iniciativa se monta sozinha.</p></div>';
+    const ord = ordenar(c, cb);
+    const vez = ord.length ? ord[(cb.turno | 0) % ord.length] : null;
+    const selId = estado.sel && ord.some(p => p.uid === estado.sel) ? estado.sel : vez && vez.uid;
+    const ps = ord.find(p => p.uid === selId);
+    return sel + `<div class="combate" data-combate="${cb.id}">
+      <div class="iniciativa">
+        <div class="ini-topo"><div><b>Iniciativa</b><small>Rodada ${cb.rodada | 0}</small></div>
+          <div class="ini-botoes"><button class="btn pequeno" data-act="turno" data-d="-1">Voltar turno</button><button class="btn pequeno primario" data-act="turno" data-d="1">Próximo turno</button></div></div>
+        <ol class="ini-lista">${ord.map((p, i) => `<li class="ini-item ${vez && p.uid === vez.uid ? 'vez' : ''} ${p.uid === selId ? 'sel' : ''} ${p.pv <= 0 ? 'caido' : ''}">
+          <button class="ini-btn" data-act="sel-part" data-uid="${p.uid}">${UI.foto(p.foto, p.nome)}
+            <span class="ini-nome">${esc(p.nome)}${p.tipo === 'vilao' ? ' <small class="selo vil">vilão</small>' : ''}</span>
+            ${UI.barraMini('pv', p.pv, p.pvMax)}<span class="ini-agi" title="Nível de Agilidade">${p.agi}</span></button>
+          <span class="ini-mover"><button class="icone" data-act="mover-part" data-uid="${p.uid}" data-d="-1" aria-label="Subir">▲</button><button class="icone" data-act="mover-part" data-uid="${p.uid}" data-d="1" aria-label="Descer">▼</button></span></li>`).join('') || '<li class="vazio">Adicione participantes.</li>'}</ol>
+        <div class="ini-add"><button class="btn largo" data-act="combate-add-herois">Adicionar heróis</button><button class="btn largo" data-act="combate-add-viloes">Adicionar vilões</button></div>
+        <p class="dica">Ordem: maior nível de Agilidade. Empate: Atirador, Lutador, Mago, Curandeiro, Tanker (Estrategista e vilões depois). As setas desfazem empates.</p>
+      </div>
+      <div class="painel-part">${ps ? painelParticipante(c, cb, ps, ord, estado) : '<p class="vazio">Escolha alguém na iniciativa.</p>'}</div></div>`;
+  }
+
+  function painelParticipante(c, cb, p, ord, estado) {
+    const alvo = `part:${c.id}:${cb.id}:${p.uid}`;
+    const alvos = ord.filter(o => o.uid !== p.uid);
+    const ult = estado.ultimo && estado.ultimo.de === p.uid ? estado.ultimo : null;
+    const alvoAtual = estado.alvo && alvos.some(a => a.uid === estado.alvo) ? estado.alvo : (alvos.find(a => a.tipo !== p.tipo) || {}).uid;
+    return `<div class="pp-topo">${UI.foto(p.foto, p.nome, 'grande')}<div><h3>${esc(p.nome)}</h3>
+        <p>${p.tipo === 'heroi' ? esc(F.nomeClasse(p.fonte)) : esc((p.fonte.categoria || 'Vilão') + ' · Ameaça ' + (p.fonte.ameaca | 0))}</p>
+        <a href="#${p.tipo === 'heroi' ? 'heroi-' + p.ref : 'vilao-' + (p.v.id || '')}" ${p.tipo === 'vilao' && !p.v.id ? 'hidden' : ''}>Abrir ficha</a></div>
+        <button class="icone" data-act="tirar-part" data-uid="${p.uid}" aria-label="Tirar do combate">✕</button></div>
+      ${p.tipo === 'vilao' ? `<label class="campo linha"><span>Nome no combate</span><input id="pp-nome-${p.uid}" data-f-part="${p.uid}" value="${esc(p.nome)}"></label>` : ''}
+      <h4>Vida</h4>${UI.barra('pv', p.pv, p.pvMax, alvo)}
+      <h4>Mana</h4>${UI.barra('mana', p.mana, p.manaMax, alvo)}
+      <div class="pp-numeros"><span><small>Defesa</small><b>${p.def}</b></span>${R.MAESTRIAS.map(m => `<span><small>${esc(m.curto)}</small><b>+${R.bonusMaestria(p.d.maestria[m.id])}</b></span>`).join('')}</div>
+      <div class="pp-attrs">${R.TODOS.map(a => `<button class="eh-attr" data-act="part-rolar-attr" data-uid="${p.uid}" data-attr="${a}"><small>${esc(R.nomeAttr(a))}</small><b>1d10${p.d.niv[a] ? '+' + R.dadoTexto(p.d.niv[a]) : ''}</b></button>`).join('')}</div>
+      <div class="pp-ataques"><div class="bloco-topo"><h3>Ataques</h3>
+        ${alvos.length ? `<label class="campo"><span>Alvo</span><select id="pp-alvo" data-act-change="escolher-alvo">${alvos.map(a => `<option value="${a.uid}" ${a.uid === alvoAtual ? 'selected' : ''}>${esc(a.nome)} (Def ${a.def})</option>`).join('')}</select></label>` : ''}</div>
+        ${(p.fonte.ataques || []).map((a, i) => {
+          const bm = R.bonusMaestria(p.d.maestria[a.maestria]), na = p.d.niv[a.attr] | 0;
+          return `<div class="pp-ataque"><div><b>${esc(a.nome || 'Ataque')}</b><small>1d10 + ${bm} · dano ${na ? R.dadoTexto(na) + ' + ' : ''}${bm + (a.bonus | 0)}${a.obs ? ' · ' + esc(a.obs) : ''}</small></div>
+            <button class="btn pequeno primario" data-act="part-atacar" data-uid="${p.uid}" data-i="${i}">Atacar</button></div>`;
+        }).join('') || '<p class="vazio">Sem ataques na ficha.</p>'}
+        ${ult ? `<div class="pp-ultimo"><span>${esc(ult.texto)}</span><button class="btn pequeno perigo" data-act="aplicar-dano">Aplicar ${ult.dano} de dano em ${esc(ult.alvoNome)}</button></div>` : ''}
+      </div>
+      ${(p.fonte.poderes || []).length ? `<div class="pp-poderes"><h3>Poderes</h3>${p.fonte.poderes.map((x, i) => `<div class="pp-ataque"><div><b>${esc(x.nome)}</b><small>${x.custo | 0} Mana${x.desc ? ' · ' + esc(x.desc) : ''}</small></div><button class="btn pequeno" data-act="part-poder" data-uid="${p.uid}" data-i="${i}">Usar</button></div>`).join('')}</div>` : ''}`;
+  }
+
+  // ---------- Ganchos ----------
+  function abaGanchos(c) {
+    const gs = c.ganchos || [];
+    return `<div class="barra-acoes">
+        <button class="btn" data-act="novo-gancho" data-tipo="conflito">Gancho de Conflito</button>
+        <button class="btn" data-act="novo-gancho" data-tipo="reputacao">Gancho de Reputação</button>
+        <button class="btn" data-act="novo-gancho" data-tipo="invasao">Gancho de Invasão</button></div>
+      <p class="dica">As cenas se ligam por ganchos, como numa HQ. Conflito inicia uma disputa física, mental ou argumentativa; Reputação mexe na fama de um herói; Invasão segue as etapas de Preparação, Tocaia e Ação.</p>
+      <div class="ganchos">${gs.map((g, i) => cartaoGancho(c, g, i)).reverse().join('') || '<p class="vazio">Nenhum gancho nesta campanha.</p>'}</div>`;
+  }
+  function cartaoGancho(c, g, i) {
+    const f = k => `ganchos.${i}.${k}`;
+    const topo = `<div class="g-topo"><span class="g-tipo ${g.tipo}">${{ conflito: 'Conflito', reputacao: 'Reputação', invasao: 'Invasão' }[g.tipo]}</span>
+      <input id="g-t-${i}" class="item-nome" data-f="${f('titulo')}" value="${esc(g.titulo)}" placeholder="Título da cena">
+      <button class="icone" data-act="apagar-gancho" data-i="${i}" aria-label="Apagar gancho">✕</button></div>`;
+    let corpo = '';
+    if (g.tipo === 'conflito') {
+      corpo = `<div class="g-linha"><label class="campo"><span>Tipo de conflito</span><select id="g-s-${i}" data-f="${f('sub')}">${R.CONFLITOS.map(x => `<option ${x === g.sub ? 'selected' : ''}>${x}</option>`).join('')}</select></label>
+        <button class="btn pequeno" data-act="gancho-combate" data-i="${i}">Abrir combate desta cena</button></div>`;
+    } else if (g.tipo === 'reputacao') {
+      const hs = heroisDa(c);
+      corpo = `<div class="g-linha">
+        <label class="campo"><span>Herói</span><select id="g-h-${i}">${hs.map(h => `<option value="${h.id}">${esc(h.nome)}</option>`).join('')}</select></label>
+        <label class="campo"><span>Ação</span><select id="g-a-${i}"><option value="1">Benéfica (+)</option><option value="0">Neutra</option><option value="-1">Maléfica (−)</option></select></label>
+        <label class="campo"><span>Grau</span><select id="g-g-${i}"><option value="1">1 · 10 pts</option><option value="2">2 · 20 pts</option><option value="3">3 · 30 pts</option></select></label>
+        <button class="btn pequeno primario" data-act="gancho-rep" data-i="${i}" ${hs.length ? '' : 'disabled'}>Registrar</button></div>
+        <ul class="rep-hist">${(g.log || []).map(l => `<li><b class="${l.pts > 0 ? 'mais' : l.pts < 0 ? 'menos' : ''}">${l.pts > 0 ? '+' : ''}${l.pts}</b> ${esc(l.nome)}</li>`).join('')}</ul>`;
+    } else {
+      const sp = g.sucessos | 0, arm = g.armadilhas | 0;
+      const vi = (g.vInv | 0), vd = (g.vDef | 0), dif = vi - vd;
+      const cont = (k, rot) => `<div class="contador"><small>${rot}</small><button class="seta" data-act="gancho-cont" data-i="${i}" data-k="${k}" data-d="-1" aria-label="Menos">−</button><b>${g[k] | 0}</b><button class="seta" data-act="gancho-cont" data-i="${i}" data-k="${k}" data-d="1" aria-label="Mais">+</button></div>`;
+      const hs = heroisDa(c);
+      corpo = `<div class="g-linha"><label class="campo"><span>Invasores</span><input id="g-inv-${i}" data-f="${f('invasores')}" value="${esc(g.invasores || '')}"></label>
+          <label class="campo"><span>Invadidos</span><input id="g-def-${i}" data-f="${f('invadidos')}" value="${esc(g.invadidos || '')}"></label></div>
+        <div class="etapa"><h4>1 · Preparação</h4><p class="dica">Teste de Intelecto contínuo. O plano funciona com mais sucessos do que armadilhas na base.</p>
+          <div class="g-linha">${cont('armadilhas', 'Armadilhas')}${cont('acoes', 'Ações do plano')}
+            <label class="campo mini"><span>Dificuldade</span><input id="g-dt-${i}" type="number" data-f="${f('dt')}" value="${g.dt == null ? 8 : g.dt}"></label>
+            <label class="campo"><span>Quem testa</span><select id="g-q-${i}">${hs.map(h => `<option value="${h.id}">${esc(h.nome)}</option>`).join('')}</select></label>
+            <button class="btn pequeno" data-act="gancho-teste" data-i="${i}" data-attr="INT" data-k="sucessos" ${hs.length ? '' : 'disabled'}>Rolar Intelecto</button></div>
+          <p class="g-status ${sp > arm ? 'ok' : ''}">${sp} sucesso${sp === 1 ? '' : 's'} · ${g.usadas | 0}/${g.acoes | 0} ações usadas · ${sp > arm ? 'plano pronto' : `precisa de ${arm + 1 - sp} a mais`}</p></div>
+        <div class="etapa"><h4>2 · Tocaia</h4><p class="dica">Agilidade dos invasores contra a Percepção dos invadidos. Cada sucesso vale um sucesso garantido contra armadilhas.</p>
+          <div class="g-linha"><label class="campo mini"><span>Percepção</span><input id="g-pe-${i}" type="number" data-f="${f('percepcao')}" value="${g.percepcao == null ? 8 : g.percepcao}"></label>
+            <button class="btn pequeno" data-act="gancho-teste" data-i="${i}" data-attr="AGI" data-k="tocaia" ${hs.length ? '' : 'disabled'}>Rolar Agilidade</button>${cont('tocaia', 'Sucessos garantidos')}</div></div>
+        <div class="etapa"><h4>3 · Ação</h4><div class="g-linha">${cont('vInv', 'Vantagens invasores')}${cont('vDef', 'Vantagens invadidos')}</div>
+          <p class="g-status ${dif ? 'ok' : ''}">${dif > 0 ? `Invasores agem ${dif} ação${dif > 1 ? 'ões' : ''} antes do combate.` : dif < 0 ? `Invadidos agem ${-dif} ação${dif < -1 ? 'ões' : ''} antes do combate.` : 'Sem ações extras: combate normal.'}</p>
+          <button class="btn pequeno" data-act="gancho-combate" data-i="${i}">Abrir combate da invasão</button></div>`;
+    }
+    return `<article class="gancho">${topo}${corpo}<textarea id="g-n-${i}" rows="2" data-f="${f('notas')}" placeholder="Notas da cena">${esc(g.notas || '')}</textarea></article>`;
+  }
+
+  function abaDados() {
+    return `<div class="bloco"><form class="rolar-livre" data-act-submit="rolar-livre"><label class="sr" for="dados-expr">Expressão</label>
+      <input id="dados-expr" name="expr" placeholder="1d10+1d6, 2d6+4…" autocomplete="off"><button class="btn primario">Rolar</button></form>
+      <div class="dados-rapidos">${[4, 6, 8, 10, 12, 20, 100].map(l => `<button class="btn" data-act="rolar-rapido" data-expr="1d${l}">d${l}</button>`).join('')}</div>
+      <h3>Teste por nível</h3><div class="dados-rapidos">${R.NIVEIS.map((n, i) => `<button class="btn" data-act="rolar-rapido" data-expr="1d10${n.dados.map(x => '+1d' + x).join('')}">${esc(n.nome)}<small>1d10${i ? '+' + R.dadoTexto(i) : ''}</small></button>`).join('')}</div></div>`;
+  }
+
+  HB.M = { paginaCampanhas, mesa, ordenar, participante, heroisDa };
+})(window.HB);
