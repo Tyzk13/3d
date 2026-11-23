@@ -101,6 +101,12 @@
     get modo() { return modo; },
     get usuario() { return usuario; },
     get uid() { return usuario ? usuario.uid : null; },
-    get firestore() { return fb ? fb.firestore() : null; },
+    // Cache no navegador: recarregar a página só baixa o que mudou (mais rápido e menos leituras).
+    get firestore() {
+      if (!fb) return null;
+      const f = fb.firestore();
+      if (!HB.A._cache) { HB.A._cache = true; f.enablePersistence({ synchronizeTabs: true }).catch(() => { /* navegador sem suporte: segue sem cache */ }); }
+      return f;
+    },
   };
 })(window.HB);

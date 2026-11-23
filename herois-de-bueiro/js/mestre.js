@@ -48,7 +48,7 @@
         ${mestre ? '<button class="btn" data-act="convidar">Convidar jogadores</button>' : ''}
       </div>
       <div class="mesa-grade">
-        ${UI.painelResultados(c.rolagens || [])}
+        ${UI.painelResultados(c.rolagens || [], HB.P.temEscudo(c))}
         <div class="mesa-corpo">
           <div class="abas" role="tablist">${[['herois', nomeR(c, 'personagens')], ['jogadores', 'Jogadores'], ['combate', 'Combate']].map(([k, n]) => `<button role="tab" aria-selected="${aba === k}" class="aba ${aba === k ? 'ativa' : ''}" data-act="aba-camp" data-aba="${k}">${n}</button>`).join('')}</div>
           ${corpo}
@@ -106,7 +106,7 @@
     return `<section class="pagina mesa" data-doc="campanhas:${c.id}" data-campanha="${c.id}">
       <div class="escudo-topo"><a class="voltar" href="#campanha-${c.id}">← ${esc(c.nome)}</a><span class="selo-escudo">Escudo do Mestre${HB.P.ehMestre(c) ? '' : ' · liberado pelo mestre'}</span></div>
       <div class="mesa-grade">
-        ${UI.painelResultados(c.rolagens || [])}
+        ${UI.painelResultados(c.rolagens || [], true, `<label class="interruptor secreto"><input id="m-secreta" type="checkbox" data-act-change="rolagem-secreta" ${HB.rolagemSecreta ? 'checked' : ''}><span>Rolar em segredo</span></label>`)}
         <div class="mesa-corpo">
           <div class="abas" role="tablist">${ABAS.map(([k, n]) => `<button role="tab" aria-selected="${aba === k}" class="aba ${aba === k ? 'ativa' : ''}" data-act="aba-mesa" data-aba="${k}">${n}</button>`).join('')}</div>
           ${corpo}
@@ -180,7 +180,7 @@
           <div class="ini-botoes"><button class="btn pequeno" data-act="turno" data-d="-1">Voltar turno</button><button class="btn pequeno primario" data-act="turno" data-d="1">Próximo turno</button></div></div>
         <ol class="ini-lista">${ord.map(p => `<li class="ini-item ${vez && p.uid === vez.uid ? 'vez' : ''} ${p.uid === selId ? 'sel' : ''} ${p.pv <= 0 ? 'caido' : ''}">
           <button class="ini-btn" data-act="sel-part" data-uid="${p.uid}">${UI.foto(p.foto, p.nome)}
-            <span class="ini-nome">${esc(p.nome)}${p.tipo === 'vilao' ? ` <small class="selo vil">${esc(sis.rotulos.ameaca)}</small>` : ''}${p.tipo === 'heroi' && (p.fonte.condicoes || []).length ? ` <small class="cond-mini">${esc(p.fonte.condicoes.join(', '))}</small>` : ''}</span>
+            <span class="ini-nome">${esc(p.nome)}${p.tipo === 'vilao' ? ` <small class="selo vil">${esc(sis.rotulos.ameaca)}</small>` : ''}${(p.tipo === 'heroi' ? p.fonte.condicoes || [] : p.condicoes || []).length ? ` <small class="cond-mini">${esc((p.tipo === 'heroi' ? p.fonte.condicoes : p.condicoes).join(', '))}</small>` : ''}</span>
             ${UI.barraMini('pv', p.pv, p.pvMax)}<span class="ini-agi" title="${rolada ? 'Iniciativa' : 'Nível de Agilidade'}">${valorIni(c, p)}</span></button>
           <span class="ini-mover"><button class="icone" data-act="mover-part" data-uid="${p.uid}" data-d="-1" aria-label="Subir">▲</button><button class="icone" data-act="mover-part" data-uid="${p.uid}" data-d="1" aria-label="Descer">▼</button></span></li>`).join('') || '<li class="vazio">Adicione participantes.</li>'}</ol>
         <div class="ini-add"><button class="btn largo" data-act="combate-add-herois">Adicionar ${esc(sis.rotulos.personagens.toLowerCase())}</button><button class="btn largo" data-act="combate-add-viloes">Adicionar ${esc(sis.rotulos.ameacas.toLowerCase())}</button></div>
@@ -203,6 +203,7 @@
       ${p.tipo === 'vilao' ? `<label class="campo linha"><span>Nome no combate</span><input id="pp-nome-${p.uid}" data-f-part="${p.uid}" value="${esc(p.nome)}"></label>` : ''}
       <h4>Vida</h4>${UI.barra('pv', p.pv, p.pvMax, alvo)}
       <h4>${esc(sis.rotulos.recurso)}</h4>${UI.barra('mana', p.mana, p.manaMax, alvo)}
+      ${p.tipo === 'vilao' ? `<div class="condicoes pp-conds">${sis.condicoes.map(x => `<button class="cond ${(p.condicoes || []).includes(x) ? 'on' : ''}" data-act="cond-part" data-uid="${p.uid}" data-v="${esc(x)}">${esc(x)}</button>`).join('')}</div>` : ''}
       <div class="pp-numeros">${k.numeros.map(([r, v]) => `<span><small>${esc(r)}</small><b>${esc(v)}</b></span>`).join('')}</div>
       <div class="pp-attrs ${k.testes.length > 6 ? 'muitos' : ''}">${k.testes.map(t => `<button class="eh-attr" data-act="part-rolar-attr" data-uid="${p.uid}" data-attr="${t.id}"><small>${esc(t.rotulo)}</small><b>${esc(t.texto)}</b></button>`).join('')}</div>
       <div class="pp-ataques"><div class="bloco-topo"><h3>Ataques</h3>

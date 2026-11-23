@@ -11,6 +11,7 @@
     const r = rota();
     if (r !== estado.rota) { const mesmaFamilia = r.split('-')[0] === estado.rota.split('-')[0]; estado.rota = r; if (!mesmaFamilia) { estado.busca = ''; estado.filtro = 'todos'; } estado.aba = 'combate'; estado.ajuste = 0; estado.ultimo = null; window.scrollTo(0, 0); }
     const [nome, ...resto] = r.split('-'), id = resto.join('-');
+    if (nome !== 'escudo' && nome !== 'mesa') HB.rolagemSecreta = false;
     let html;
     // Abrir uma ficha, ameaça ou campanha de outro livro troca o livro ativo.
     const doc = nome === 'heroi' ? S.pegar('herois', id) : nome === 'vilao' ? F.pegarVilao(id) : (nome === 'campanha' || nome === 'escudo' || nome === 'mesa') ? S.pegar('campanhas', id) : null;
@@ -246,6 +247,25 @@
       S.salvar('herois', h); render();
     },
     recurso(el) { mudarRecurso(el.dataset.alvo, el.dataset.recurso, +el.dataset.d); },
+    // Clicar no número da barra: digita o valor de uma vez (dano/cura, gasto/recuperação).
+    'recurso-valor'(el) {
+      if (el.closest('.leitura')) return;
+      const pv = el.dataset.recurso === 'pv', alvo = el.dataset.alvo, rec = el.dataset.recurso;
+      const nome = pv ? 'Vida' : ((SI.ativo || SI.de(null)).rotulos.recurso);
+      const aplicar = (j, sinal) => { const v = Math.abs(parseInt(j.querySelector('#rv-valor').value, 10) || 0); if (v) mudarRecurso(alvo, rec, sinal * v); };
+      const jan = UI.janela(nome, `<label class="campo"><span>Quanto?</span><input id="rv-valor" type="number" min="0" inputmode="numeric" placeholder="12"></label>
+        <p class="dica">Enter aplica ${pv ? 'dano' : 'gasto'}.</p>`, [
+        { rotulo: pv ? 'Cura' : 'Recuperar', acao: (f, j) => { aplicar(j, 1); f(); } },
+        { rotulo: pv ? 'Dano' : 'Gastar', classe: 'primario', acao: (f, j) => { aplicar(j, -1); f(); } },
+      ]);
+      const inp = jan.querySelector('#rv-valor'); inp.focus();
+      inp.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); aplicar(jan, -1); UI.fechar(); } });
+    },
+    'cond-part'(el) {
+      const c = campanhaAtual(), cb = combateAtual(c), p = cb.parts.find(x => x.uid === el.dataset.uid), v = el.dataset.v;
+      p.condicoes = (p.condicoes || []).includes(v) ? p.condicoes.filter(x => x !== v) : (p.condicoes || []).concat(v);
+      S.salvar('campanhas', c, 300); render();
+    },
     filtro(el) { estado.filtro = el.dataset.v; render(); },
     'novo-vilao'() { const v = SI.ativo.novoVilao(); v.sistema = SI.ativo.id; v.dono = P.eu(); S.salvar('viloes', v, 0); location.hash = '#vilao-' + v.id; },
     'duplicar-vilao'() {
@@ -483,6 +503,7 @@
   const CHANGES = {
     'escolher-combate'(el) { estado.combate = el.value; estado.sel = null; estado.ultimo = null; render(); },
     'escolher-alvo'(el) { estado.alvo = el.value; },
+    'rolagem-secreta'(el) { HB.rolagemSecreta = el.checked; UI.aviso(el.checked ? 'Rolagens em segredo: só quem tem o escudo vê.' : 'Rolagens visíveis para a mesa.', 'info'); },
   };
 
   // ---------- Eventos ----------
@@ -524,7 +545,7 @@
       if (el.matches('[data-f]') && (el.type === 'number' || el.tagName === 'SELECT' || el.type === 'checkbox')) gravarCampo(el, true);
       if (el.matches('[data-foto], [data-capa]') && el.files[0]) {
         const x = docDe(el), ehCapa = el.matches('[data-capa]'), arq = el.files[0]; el.value = '';
-        UI.recortarFoto(arq, ehCapa ? { w: 1200, h: 400 } : { w: 360, h: 360 }).then(url => { if (!url) return; x.o[ehCapa ? 'capa' : 'foto'] = url; S.salvar(x.col, x.o, 0); render(); })
+        UI.recortarFoto(arq, ehCapa ? { w: 960, h: 320 } : { w: 360, h: 360 }).then(url => { if (!url) return; x.o[ehCapa ? 'capa' : 'foto'] = url; S.salvar(x.col, x.o, 0); render(); })
           .catch(() => UI.aviso('Não consegui abrir essa imagem. Tente um JPG ou PNG.'));
       }
       if (el.matches('[data-f-part]')) render();

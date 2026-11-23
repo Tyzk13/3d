@@ -8,6 +8,7 @@ Para ler uma função: Read com `offset` = linha e `limit` ≈ 40–80. Não lei
 | Pasta | Arquivos | Tamanho |
 |---|---|---|
 | `src/assets/` | 104 | 73.2 MB |
+| `herois-de-bueiro/` | 2 | 16.7 MB |
 | `capturas/` | 78 | 12.7 MB |
 | `referencias/` | 5 | 2.4 MB |
 
@@ -24,23 +25,23 @@ Para ler uma função: Read com `offset` = linha e `limit` ≈ 40–80. Não lei
 
 | Arquivo | Linhas | Tamanho |
 |---|---|---|
-| `herois-de-bueiro/css/app.css` | 575 | 49 KB |
-| `herois-de-bueiro/gerar-index-unico.py` | 26 | 2 KB |
+| `herois-de-bueiro/css/app.css` | 591 | 50 KB |
+| `herois-de-bueiro/gerar-index-unico.py` | 32 | 2 KB |
 | `herois-de-bueiro/index.html` | 42 | 2 KB |
-| `herois-de-bueiro/js/app.js` | 644 | 48 KB |
-| `herois-de-bueiro/js/auth.js` | 107 | 5 KB |
+| `herois-de-bueiro/js/app.js` | 665 | 50 KB |
+| `herois-de-bueiro/js/auth.js` | 113 | 6 KB |
 | `herois-de-bueiro/js/dados.js` | 51 | 2 KB |
-| `herois-de-bueiro/js/ficha.js` | 365 | 32 KB |
+| `herois-de-bueiro/js/ficha.js` | 366 | 33 KB |
 | `herois-de-bueiro/js/firebase-config.js` | 12 | 1 KB |
-| `herois-de-bueiro/js/mestre.js` | 277 | 26 KB |
+| `herois-de-bueiro/js/mestre.js` | 278 | 27 KB |
 | `herois-de-bueiro/js/permissoes.js` | 47 | 2 KB |
 | `herois-de-bueiro/js/regras.js` | 238 | 11 KB |
-| `herois-de-bueiro/js/sh-ficha.js` | 385 | 45 KB |
+| `herois-de-bueiro/js/sh-ficha.js` | 386 | 45 KB |
 | `herois-de-bueiro/js/sh-regras.js` | 172 | 15 KB |
 | `herois-de-bueiro/js/sistema-hb.js` | 58 | 3 KB |
 | `herois-de-bueiro/js/sistemas.js` | 28 | 1 KB |
 | `herois-de-bueiro/js/store.js` | 107 | 5 KB |
-| `herois-de-bueiro/js/ui.js` | 162 | 10 KB |
+| `herois-de-bueiro/js/ui.js` | 165 | 10 KB |
 | `herois-de-bueiro/vendor/firebase/firebase-app-compat.js` | 9 | 31 KB |
 | `herois-de-bueiro/vendor/firebase/firebase-auth-compat.js` | 3 | 136 KB |
 | `herois-de-bueiro/vendor/firebase/firebase-firestore-compat.js` | 3 | 333 KB |
@@ -120,22 +121,22 @@ Outros textos: `.claude/skills/mapa-3d/CATALOGO.md`, `.claude/skills/mapa-3d/SKI
 ## Funções, classes e exports (linha)
 
 ### `herois-de-bueiro/gerar-index-unico.py`
-`troca` 13
+`mini` 9 · `troca` 19
 
 ### `herois-de-bueiro/js/app.js`
-`raiz` 4 · `rota` 9 · `render` 10 · `secao` 36 · `naoAchou` 37 · `travarLeitura` 41 · `paginaLogin` 48 · `paginaInicio` 72 · `conta` 74 · `paginaRegras` 89 · `t` 90 · `docDe` 113 · `setCaminho` 118 · `campanhaAtual` 123 · `combateAtual` 124 · `nomeQuem` 125 · `fonteAtual` 128 · `mudarRecurso` 136 · `campanhaDaFicha` 158 · `rolarAttrDe` 163 · `iniDe` 172 · `escolherHerois` 174 · `novoCombate` 180 · `base()` 205 · `convidar()` 278 · `turno()` 335 · `abrirEscolhaViloes` 464 · `ligar` 489 · `gravarCampo` 536 · `aoMudarRemoto` 551 · `backup` 558 · `entrarNa` 585 · `erroLogin` 590 · `desenharTopo` 601 · `desenharConta` 610 · `carregarNomes` 621 · `depoisDoLogin` 629 · `iniciar` 631
+`raiz` 4 · `rota` 9 · `render` 10 · `secao` 37 · `naoAchou` 38 · `travarLeitura` 42 · `paginaLogin` 49 · `paginaInicio` 73 · `conta` 75 · `paginaRegras` 90 · `t` 91 · `docDe` 114 · `setCaminho` 119 · `campanhaAtual` 124 · `combateAtual` 125 · `nomeQuem` 126 · `fonteAtual` 129 · `mudarRecurso` 137 · `campanhaDaFicha` 159 · `rolarAttrDe` 164 · `iniDe` 173 · `escolherHerois` 175 · `novoCombate` 181 · `base()` 206 · `aplicar` 255 · `convidar()` 298 · `turno()` 355 · `abrirEscolhaViloes` 484 · `ligar` 510 · `gravarCampo` 557 · `aoMudarRemoto` 572 · `backup` 579 · `entrarNa` 606 · `erroLogin` 611 · `desenharTopo` 622 · `desenharConta` 631 · `carregarNomes` 642 · `depoisDoLogin` 650 · `iniciar` 652
 
 ### `herois-de-bueiro/js/auth.js`
-`carregar` 11 · `iniciar` 13 · `entrarGoogle` 43 · `entrarEmail` 48 · `entrarLocal` 54 · `contasLocais` 62 · `sair` 63 · `perfis` 70 · `nome` 85 · `publicarPerfil` 93
+`carregar` 11 · `iniciar` 13 · `entrarGoogle` 43 · `entrarEmail` 48 · `entrarLocal` 54 · `contasLocais` 62 · `sair` 63 · `perfis` 70 · `nome` 85 · `publicarPerfil` 93 · `firestore()` 105
 
 ### `herois-de-bueiro/js/dados.js`
 `d` 4 · `rolar` 5 · `soma` 6 · `teste` 9 · `ataque` 20 · `livre` 35
 
 ### `herois-de-bueiro/js/ficha.js`
-`novoHeroi` 5 · `pvAtual` 14 · `manaAtual` 15 · `nomeClasse` 16 · `listaHerois` 19 · `grade` 24 · `vazioHerois` 34 · `cartaoHeroi` 41 · `hexagono` 52 · `blocoEscolhas` 65 · `ficha` 79 · `blocoElementos` 166 · `ajusteBarra` 180 · `linhaAttr` 193 · `sinal` 195 · `abaHeroi` 205 · `listaEditavel` 222 · `abaCombate` 230 · `cartaoAtaque` 237 · `abaReputacao` 252 · `viloes` 278 · `pegarVilao` 279 · `derivVilao` 280 · `novoVilao` 285 · `listaViloes` 289 · `cartaoVilao` 298 · `paginaViloes` 307 · `fichaVilao` 315
+`novoHeroi` 5 · `pvAtual` 14 · `manaAtual` 15 · `nomeClasse` 16 · `listaHerois` 19 · `grade` 24 · `vazioHerois` 34 · `cartaoHeroi` 41 · `hexagono` 52 · `blocoEscolhas` 65 · `ficha` 79 · `blocoElementos` 167 · `ajusteBarra` 181 · `linhaAttr` 194 · `sinal` 196 · `abaHeroi` 206 · `listaEditavel` 223 · `abaCombate` 231 · `cartaoAtaque` 238 · `abaReputacao` 253 · `viloes` 279 · `pegarVilao` 280 · `derivVilao` 281 · `novoVilao` 286 · `listaViloes` 290 · `cartaoVilao` 299 · `paginaViloes` 308 · `fichaVilao` 316
 
 ### `herois-de-bueiro/js/mestre.js`
-`paginaCampanhas` 6 · `capa` 24 · `paginaCampanha` 29 · `cartaoHeroiCampanha` 57 · `abaJogadores` 65 · `estadoVida` 80 · `combateJogador` 84 · `mesa` 97 · `heroisDa` 117 · `nomeR` 120 · `abaHerois` 121 · `cartaoEscudo` 126 · `participante` 143 · `ordenar` 154 · `valorIni` 160 · `abaCombates` 162 · `painelParticipante` 193 · `abaGanchos` 219 · `cartaoGancho` 228 · `f` 229 · `cont` 248 · `abaDados` 268
+`paginaCampanhas` 6 · `capa` 24 · `paginaCampanha` 29 · `cartaoHeroiCampanha` 57 · `abaJogadores` 65 · `estadoVida` 80 · `combateJogador` 84 · `mesa` 97 · `heroisDa` 117 · `nomeR` 120 · `abaHerois` 121 · `cartaoEscudo` 126 · `participante` 143 · `ordenar` 154 · `valorIni` 160 · `abaCombates` 162 · `painelParticipante` 193 · `abaGanchos` 220 · `cartaoGancho` 229 · `f` 230 · `cont` 249 · `abaDados` 269
 
 ### `herois-de-bueiro/js/permissoes.js`
 `eu` 5 · `ehMestre` 6 · `temEscudo` 7 · `ehMembro` 8 · `campanhasDoHeroi` 9 · `minhasCampanhas` 10 · `podeEditarHeroi` 12 · `podeEditarVilao` 17 · `heroiVisivel` 19 · `mestresDe` 25 · `sincronizarHerois` 26 · `assumirCampanhaSemMestre` 36 · `novoCodigo` 39
@@ -144,7 +145,7 @@ Outros textos: `.claude/skills/mapa-3d/CATALOGO.md`, `.claude/skills/mapa-3d/SKI
 `bonusMaestria` 26 · `perdePara` 73 · `estado()` 140 · `modsDe` 150 · `add` 152 · `ap` 153 · `nivelBruto` 170 · `limitar` 175 · `nivel` 176 · `maestrias` 178 · `pontosGastos` 189 · `derivados` 191 · `situacoes` 209 · `ordemClasse` 228
 
 ### `herois-de-bueiro/js/sh-ficha.js`
-`novoPersonagem` 5 · `nomeClasse` 16 · `ehVilao` 17 · `pvAtual` 18 · `manaAtual` 19 · `ataqueZanpakuto` 22 · `ataquesDe` 31 · `penalidade` 39 · `teste` 42 · `ataque` 59 · `combatente` 65 · `bonusDe` 68 · `hexagono` 90 · `passo` 101 · `selGrau` 102 · `ficha` 104 · `seletorMulti` 195 · `lista` 199 · `abaFicha` 205 · `atr` 260 · `novoVilao` 275 · `aplicarGuia` 279 · `viloes` 289 · `listaViloes` 290 · `paginaViloes` 300 · `fichaVilao` 304 · `num` 306 · `regras` 342 · `t` 343 · `aoMudarCampo()` 376
+`novoPersonagem` 5 · `nomeClasse` 16 · `ehVilao` 17 · `pvAtual` 18 · `manaAtual` 19 · `ataqueZanpakuto` 22 · `ataquesDe` 31 · `penalidade` 39 · `teste` 42 · `ataque` 59 · `combatente` 65 · `bonusDe` 68 · `hexagono` 90 · `passo` 101 · `selGrau` 102 · `ficha` 104 · `seletorMulti` 196 · `lista` 200 · `abaFicha` 206 · `atr` 261 · `novoVilao` 276 · `aplicarGuia` 280 · `viloes` 290 · `listaViloes` 291 · `paginaViloes` 301 · `fichaVilao` 305 · `num` 307 · `regras` 343 · `t` 344 · `aoMudarCampo()` 377
 
 ### `herois-de-bueiro/js/sh-regras.js`
 `nomeAttr` 8 · `graduacao` 23 · `nomeDivisao` 51 · `bonusTreino` 65 · `pvPorNivel` 68 · `limiteAttr` 69 · `marcosAte` 70 · `aumentosAte` 71 · `mestrias` 72 · `val` 74 · `bonusPericia` 75 · `bonusTR` 81 · `derivados` 87 · `d` 111 · `rolarExpr` 112 · `testeD20` 124 · `jogadaAtaque` 130 · `limiteInimigo` 163
@@ -159,7 +160,7 @@ Outros textos: `.claude/skills/mapa-3d/CATALOGO.md`, `.claude/skills/mapa-3d/SKI
 `novoId` 10 · `clone` 11 · `lerLocal` 13 · `gravarLocal` 19 · `iniciar` 26 · `escrever` 60 · `agendar` 79 · `importar()` 98
 
 ### `herois-de-bueiro/js/ui.js`
-`esc` 4 · `aviso` 7 · `janela` 16 · `fechar` 34 · `confirmar` 35 · `barra` 43 · `barraMini` 53 · `foto` 58 · `carregarImagem` 66 · `recortarFoto` 73 · `limitar` 86 · `desenhar` 90 · `exportar` 95 · `dadosHtml` 117 · `cartaoResultado` 120 · `resultado` 134 · `painelResultados` 149 · `opcoesAttr` 156
+`esc` 4 · `aviso` 7 · `janela` 16 · `fechar` 34 · `confirmar` 35 · `barra` 43 · `barraMini` 53 · `foto` 58 · `carregarImagem` 66 · `recortarFoto` 73 · `limitar` 86 · `desenhar` 90 · `exportar` 95 · `dadosHtml` 117 · `cartaoResultado` 120 · `resultado` 134 · `painelResultados` 151 · `opcoesAttr` 159
 
 ### `legacy/igreja-3d-site.html`
 `fit` 82 · `mat` 87 · `box` 88 · `cyl` 89 · `jit` 90 · `tex` 91 · `cl` 92 · `sm` 106 · `glass` 107 · `arch` 111 · `inst` 112 · `updEnv` 118 · `setTime` 132 · `buildIgreja` 139 · `haloT` 141 · `halo` 142 · `flat` 149 · `step` 177 · `pewM` 203 · `lace` 246 · `veil` 248 · `roofG` 280 · `car` 282 · `bench` 290 · `dead` 300 · `aoT` 312 · `mistT` 321 · `buildCampo` 352 · `K` 381 · `sizeT` 384 · `placeT` 385 · `makeToken` 389 · `dropT` 399 · `selT` 400 · `setTarget` 401 · `loadMap` 404 · `onPos` 419 · `onChar` 420 · `save` 421 · `netDb` 422 · `netWs` 429 · `snd` 430 · `open` 431 · `wk` 440 · `setM` 443 · `freeSpot` 444 · `end` 455 · `cutBg` 463 · `push` 464 · `prep` 467 · `spawn` 470 · `addChar` 471 · `resz` 475 · `focusT` 487 · `placeWalkCam` 494 · `togV` 495 · `startWalk` 496 · `setWalk` 500 · `walkStep` 502 · `jmove` 515 · `jend` 517 · `fillAreas` 521 · `xcalc` 522 · `xinfo` 523 · `xrender` 524 · `dl` 532 · `setC` 540 · `haloG` 545 · `dressSite` 546 · `fl2` 547 · `mt` 563 · `loadScript` 568 · `buildGlb` 569 · `importGlb` 590 · `importHdr` 595 · `noHdr` 600

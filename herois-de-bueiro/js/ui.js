@@ -46,7 +46,7 @@
     return `<div class="barra ${tipo}">
       <button class="seta" data-act="recurso" data-d="-5" ${a} aria-label="−5">«</button>
       <button class="seta" data-act="recurso" data-d="-1" ${a} aria-label="−1">‹</button>
-      <div class="barra-trilho"><div class="barra-cheia" style="width:${pct}%"></div><span class="barra-num">${atual} / ${max}</span></div>
+      <div class="barra-trilho"><div class="barra-cheia" style="width:${pct}%"></div><button class="barra-num" data-act="recurso-valor" ${a} title="Digitar dano ou cura">${atual} / ${max}</button></div>
       <button class="seta" data-act="recurso" data-d="1" ${a} aria-label="+1">›</button>
       <button class="seta" data-act="recurso" data-d="5" ${a} aria-label="+5">»</button></div>`;
   }
@@ -122,7 +122,7 @@
     const acerto = (r.acertou == null ? '' : `<span class="selo ${r.acertou ? 'ok' : 'falha'}">${r.acertou ? 'Acertou' : 'Errou'} (${r.tipo === 'ataque' ? 'Def' : 'CD'} ${r.alvoDef})</span>`)
       + (r.critico ? '<span class="selo ok">Crítico</span>' : '') + (r.desastre ? '<span class="selo falha">Desastre</span>' : '');
     const dano = r.dano ? `<div class="res-col"><b>${r.dano.total}</b><small>dano</small></div>` : '';
-    return `<div class="res ${r.tipo}">
+    return `<div class="res ${r.tipo} ${r.secreta ? 'secreta' : ''}">${r.secreta ? '<span class="selo-secreta">Secreta</span>' : ''}
       <div class="res-quem">${esc(r.quem || '')}</div>
       <div class="res-linha"><div class="res-titulo">${esc(r.titulo)}</div>
         <div class="res-col"><b>${r.total}</b><small>${r.dano ? 'ataque' : 'total'}</small></div>${dano}</div>
@@ -133,9 +133,10 @@
   // Mostra o resultado e guarda no histórico (da campanha, se houver).
   function resultado(r, campanhaId) {
     r.em = Date.now();
+    if (campanhaId && HB.rolagemSecreta) r.secreta = true;
     if (campanhaId) {
       const c = HB.S.pegar('campanhas', campanhaId);
-      if (c) { c.rolagens = [r].concat(c.rolagens || []).slice(0, 40); HB.S.salvar('campanhas', c, 300); }
+      if (c) { c.rolagens = [r].concat(c.rolagens || []).slice(0, 30); HB.S.salvar('campanhas', c, 300); }
     } else sessao.unshift(r), sessao.splice(30);
     const lista = $('#resultados-lista');
     if (lista) { lista.insertAdjacentHTML('afterbegin', cartaoResultado(r)); const v = lista.querySelector('.vazio'); if (v) v.remove(); }
@@ -146,9 +147,11 @@
       clearTimeout(resultado.t); resultado.t = setTimeout(() => (pop.hidden = true), 5200);
     }
   }
-  function painelResultados(lista) {
+  // Rolagens secretas do mestre só aparecem para quem tem o escudo.
+  function painelResultados(lista, verSecretas, extra = '') {
+    lista = verSecretas ? lista : lista.filter(r => !r.secreta);
     return `<aside class="resultados" aria-label="Resultados">
-      <div class="resultados-topo"><h3>Resultados</h3></div>
+      <div class="resultados-topo"><h3>Resultados</h3>${extra}</div>
       <div id="resultados-lista">${lista.length ? lista.map(cartaoResultado).join('') : '<p class="vazio">As rolagens aparecem aqui.</p>'}</div></aside>`;
   }
 

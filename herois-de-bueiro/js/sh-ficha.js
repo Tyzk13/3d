@@ -131,6 +131,7 @@
         <div class="ficha-acoes">${camps.map(c => `<a class="chip-link" href="#campanha-${c.id}">${esc(c.nome)}</a>`).join('')}
           ${dono || !h.dono ? '<button class="btn pequeno" data-act="duplicar-heroi">Duplicar</button><button class="btn pequeno perigo-txt" data-act="apagar-heroi">Apagar</button>' : ''}</div>
       </div>
+      <div class="ficha-fixa" aria-hidden="true"><b>${esc(h.nome)}</b>${UI.barraMini('pv', pvAtual(h, d), d.pvMax)}${UI.barraMini('mana', manaAtual(h, d), d.manaMax)}<span>Def ${d.defesa}</span></div>
       ${pend.length ? `<p class="pendente">Para fechar a ficha: ${esc(pend.join(' · '))}.</p>` : ''}
       <div class="ficha-grade">
         <div class="col-esq">
