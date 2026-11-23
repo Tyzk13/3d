@@ -15,6 +15,9 @@ Para ler uma função: Read com `offset` = linha e `limit` ≈ 40–80. Não lei
 
 | Arquivo | Linha | Tamanho | Início |
 |---|---|---|---|
+| `herois-de-bueiro/vendor/firebase/firebase-app-compat.js` | 1 | 30 KB | !function(e,t){"object"==typeof exports& |
+| `herois-de-bueiro/vendor/firebase/firebase-auth-compat.js` | 1 | 136 KB | !function(e,t){"object"==typeof exports& |
+| `herois-de-bueiro/vendor/firebase/firebase-firestore-compat.js` | 1 | 333 KB | !function(e,t){"object"==typeof exports& |
 | `legacy/igreja-3d-site.html` | 74 | 823 KB | const IMGS={"dante": "data:image/png;bas |
 
 ## Arquivos de texto/código
@@ -33,6 +36,9 @@ Para ler uma função: Read com `offset` = linha e `limit` ≈ 40–80. Não lei
 | `herois-de-bueiro/js/regras.js` | 238 | 11 KB |
 | `herois-de-bueiro/js/store.js` | 107 | 5 KB |
 | `herois-de-bueiro/js/ui.js` | 161 | 9 KB |
+| `herois-de-bueiro/vendor/firebase/firebase-app-compat.js` | 9 | 31 KB |
+| `herois-de-bueiro/vendor/firebase/firebase-auth-compat.js` | 3 | 136 KB |
+| `herois-de-bueiro/vendor/firebase/firebase-firestore-compat.js` | 3 | 333 KB |
 | `index.html` | 42 | 3 KB |
 | `legacy/igreja-3d-site.html` | 620 | 899 KB |
 | `legacy/servidor-sync.js` | 26 | 1 KB |
@@ -104,7 +110,7 @@ Para ler uma função: Read com `offset` = linha e `limit` ≈ 40–80. Não lei
 | `videos/stories/tempo.js` | 94 | 10 KB |
 | `vite.config.ts` | 39 | 2 KB |
 
-Outros textos: `.claude/skills/mapa-3d/CATALOGO.md`, `.claude/skills/mapa-3d/SKILL.md`, `.claude/skills/videos-historia/SKILL.md`, `CHANGELOG.md`, `CLAUDE.md`, `CREDITS.md`, `README.md`, `capturas/README.md`, `docs/BRIEFING.md`, `docs/HOSPEDAGEM.md`, `docs/NOVO-MAPA.md`, `docs/PROMPT-NOVO-MAPA.md`, `herois-de-bueiro/FIREBASE.md`, `herois-de-bueiro/README.md`, `package.json`, `server/package-lock.json`, `server/package.json`, `tools/assets.json`, `tsconfig.json`, `videos/README.md`, `videos/package-lock.json`, `videos/package.json`, `videos/requirements.txt`
+Outros textos: `.claude/skills/mapa-3d/CATALOGO.md`, `.claude/skills/mapa-3d/SKILL.md`, `.claude/skills/videos-historia/SKILL.md`, `CHANGELOG.md`, `CLAUDE.md`, `CREDITS.md`, `README.md`, `capturas/README.md`, `docs/BRIEFING.md`, `docs/HOSPEDAGEM.md`, `docs/NOVO-MAPA.md`, `docs/PROMPT-NOVO-MAPA.md`, `herois-de-bueiro/FIREBASE.md`, `herois-de-bueiro/README.md`, `herois-de-bueiro/netlify.toml`, `package.json`, `server/package-lock.json`, `server/package.json`, `tools/assets.json`, `tsconfig.json`, `videos/README.md`, `videos/package-lock.json`, `videos/package.json`, `videos/requirements.txt`
 
 ## Funções, classes e exports (linha)
 
