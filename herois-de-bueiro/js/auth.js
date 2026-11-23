@@ -47,10 +47,12 @@
 
   async function entrarGoogle() {
     const p = new window.firebase.auth.GoogleAuthProvider();
+    p.setCustomParameters({ prompt: 'select_account' });
+    // Só pela janela do Google: o modo de redirecionamento falha no Chrome do celular ("falta do estado inicial").
+    // Com o login pelo próprio site (HB_LOGIN_NO_SITE), o redirecionamento volta a ser seguro.
     try { await fb.auth().signInWithPopup(p); }
     catch (e) {
-      // Celular ou navegador que bloqueia a janela: entra pela própria página.
-      if (/popup-blocked|operation-not-supported/.test((e && e.code) || '')) return fb.auth().signInWithRedirect(p);
+      if (window.HB_LOGIN_NO_SITE && /popup-blocked|operation-not-supported/.test((e && e.code) || '')) return fb.auth().signInWithRedirect(p);
       throw e;
     }
     location.reload();

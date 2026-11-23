@@ -1,11 +1,12 @@
 // Login com Google (site próprio). Configuração do projeto Firebase "heroisdebueiro-dbd51".
 // Não é segredo: quem protege os dados são as regras em firestore.rules (Console > Firestore > Regras).
 // Na página publicada no claude.ai o Firebase não carrega (a página bloqueia sites de fora) e o app usa a conta claude.ai.
+// true só depois de liberar https://SEU-SITE/__/auth/handler no Google Cloud (FIREBASE.md).
+window.HB_LOGIN_NO_SITE = false;
 window.HB_FIREBASE = {
   apiKey: "AIzaSyB-0K0_nDysaF47Z3vKk21x4T0A_DXojXk",
-  // No Netlify o login passa pelo próprio site (/__/auth, repassado ao Firebase pelo arquivo _redirects):
-  // sem isso, o Chrome do celular perde o "estado inicial" do login ao voltar do Google.
-  authDomain: /\.netlify\.app$/.test(location.hostname) ? location.host : "heroisdebueiro-dbd51.firebaseapp.com",
+  // Domínio padrão do Firebase (já liberado no Google). Para o login passar pelo próprio site, veja FIREBASE.md.
+  authDomain: window.HB_LOGIN_NO_SITE && /\.netlify\.app$/.test(location.hostname) ? location.host : "heroisdebueiro-dbd51.firebaseapp.com",
   projectId: "heroisdebueiro-dbd51",
   storageBucket: "heroisdebueiro-dbd51.firebasestorage.app",
   messagingSenderId: "824146013577",

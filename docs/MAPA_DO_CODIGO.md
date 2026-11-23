@@ -30,11 +30,11 @@ Para ler uma função: Read com `offset` = linha e `limit` ≈ 40–80. Não lei
 | `herois-de-bueiro/css/app.css` | 634 | 54 KB |
 | `herois-de-bueiro/gerar-index-unico.py` | 69 | 5 KB |
 | `herois-de-bueiro/index.html` | 43 | 2 KB |
-| `herois-de-bueiro/js/app.js` | 692 | 52 KB |
-| `herois-de-bueiro/js/auth.js` | 123 | 6 KB |
+| `herois-de-bueiro/js/app.js` | 693 | 52 KB |
+| `herois-de-bueiro/js/auth.js` | 125 | 7 KB |
 | `herois-de-bueiro/js/dados.js` | 51 | 2 KB |
 | `herois-de-bueiro/js/ficha.js` | 366 | 33 KB |
-| `herois-de-bueiro/js/firebase-config.js` | 18 | 1 KB |
+| `herois-de-bueiro/js/firebase-config.js` | 19 | 1 KB |
 | `herois-de-bueiro/js/mestre.js` | 278 | 27 KB |
 | `herois-de-bueiro/js/op2.js` | 347 | 40 KB |
 | `herois-de-bueiro/js/permissoes.js` | 47 | 2 KB |
@@ -129,10 +129,10 @@ Outros textos: `.claude/skills/mapa-3d/CATALOGO.md`, `.claude/skills/mapa-3d/SKI
 `mini` 9 · `troca` 19
 
 ### `herois-de-bueiro/js/app.js`
-`raiz` 4 · `rota` 9 · `render` 10 · `secao` 39 · `naoAchou` 40 · `travarLeitura` 44 · `paginaLogin` 51 · `paginaInicio` 76 · `conta` 78 · `paginaRegras` 93 · `t` 94 · `docDe` 117 · `setCaminho` 122 · `campanhaAtual` 127 · `combateAtual` 128 · `nomeQuem` 129 · `fonteAtual` 132 · `mudarRecurso` 140 · `campanhaDaFicha` 162 · `rolarAttrDe` 167 · `iniDe` 176 · `escolherHerois` 178 · `novoCombate` 184 · `base()` 209 · `aplicar` 263 · `convidar()` 306 · `turno()` 368 · `abrirEscolhaViloes` 507 · `ligar` 533 · `gravarCampo` 582 · `aoMudarRemoto` 597 · `backup` 604 · `entrarNa` 631 · `erroLogin` 636 · `desenharTopo` 649 · `desenharConta` 658 · `carregarNomes` 669 · `depoisDoLogin` 677 · `iniciar` 679
+`raiz` 4 · `rota` 9 · `render` 10 · `secao` 39 · `naoAchou` 40 · `travarLeitura` 44 · `paginaLogin` 51 · `paginaInicio` 76 · `conta` 78 · `paginaRegras` 93 · `t` 94 · `docDe` 117 · `setCaminho` 122 · `campanhaAtual` 127 · `combateAtual` 128 · `nomeQuem` 129 · `fonteAtual` 132 · `mudarRecurso` 140 · `campanhaDaFicha` 162 · `rolarAttrDe` 167 · `iniDe` 176 · `escolherHerois` 178 · `novoCombate` 184 · `base()` 209 · `aplicar` 263 · `convidar()` 306 · `turno()` 368 · `abrirEscolhaViloes` 507 · `ligar` 533 · `gravarCampo` 582 · `aoMudarRemoto` 597 · `backup` 604 · `entrarNa` 631 · `erroLogin` 636 · `desenharTopo` 650 · `desenharConta` 659 · `carregarNomes` 670 · `depoisDoLogin` 678 · `iniciar` 680
 
 ### `herois-de-bueiro/js/auth.js`
-`carregar` 11 · `iniciar` 13 · `entrarGoogle` 48 · `entrarEmail` 58 · `entrarLocal` 64 · `contasLocais` 72 · `sair` 73 · `perfis` 80 · `nome` 95 · `publicarPerfil` 103 · `firestore()` 115
+`carregar` 11 · `iniciar` 13 · `entrarGoogle` 48 · `entrarEmail` 60 · `entrarLocal` 66 · `contasLocais` 74 · `sair` 75 · `perfis` 82 · `nome` 97 · `publicarPerfil` 105 · `firestore()` 117
 
 ### `herois-de-bueiro/js/dados.js`
 `d` 4 · `rolar` 5 · `soma` 6 · `teste` 9 · `ataque` 20 · `livre` 35

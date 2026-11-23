@@ -636,6 +636,7 @@
   function erroLogin(e) {
     const c = (e && e.code) || '';
     if (/popup-closed|cancelled-popup/.test(c)) return 'Login cancelado.';
+    if (/popup-blocked|operation-not-supported/.test(c)) return 'O navegador bloqueou a janela do Google. Abra o site direto no Chrome (não pelo link do WhatsApp) ou permita pop-ups para este site.';
     if (/disallowed-useragent|web-storage-unsupported/.test(c)) return 'Este navegador não permite o login do Google. Abra o site no Chrome ou no Safari.';
     if (/wrong-password|invalid-credential|user-not-found/.test(c)) return 'E-mail ou senha não conferem.';
     if (/email-already-in-use/.test(c)) return 'Esse e-mail já tem conta. Use Entrar.';
