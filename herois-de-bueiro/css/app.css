@@ -588,3 +588,24 @@ button.barra-num:hover { text-decoration: underline; }
 .resultados-topo { display: flex; justify-content: space-between; align-items: center; gap: .4rem; flex-wrap: wrap; }
 .interruptor.secreto { margin: 0 0 .4rem; font-size: .74rem; }
 .pp-conds { margin-top: .5rem; }
+
+/* ---------- Rolagem: dado girando e botão de fechar ---------- */
+.rolagem-pop { padding-top: 0; }
+.pop-fechar { position: absolute; top: -12px; right: -10px; z-index: 2; width: 30px; height: 30px; border-radius: 50%; border: 2px solid #000; background: var(--giz); color: var(--asfalto);
+  font-weight: 900; cursor: pointer; box-shadow: 2px 2px 0 #000; line-height: 1; }
+.pop-fechar:hover { background: var(--faixa); color: var(--faixa-tinta); }
+.rolando-caixa { display: flex; align-items: center; gap: .9rem; min-height: 96px; }
+.rolando-caixa > div:last-child { display: grid; min-width: 0; }
+.dado-giro { width: 64px; height: 64px; flex: none; display: grid; place-items: center; background: var(--faixa); color: var(--faixa-tinta);
+  animation: giro .62s cubic-bezier(.3, .7, .4, 1); filter: drop-shadow(3px 3px 0 #000); }
+.dado-giro span { font-family: var(--f-hq); font-size: 1.7rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.dado-giro.d20 { clip-path: polygon(50% 0, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%); }
+.dado-giro.d10 { clip-path: polygon(50% 0, 100% 45%, 50% 100%, 0 45%); }
+.dado-giro.d6 { border-radius: 10px; }
+.dado-giro.d4 { clip-path: polygon(50% 0, 100% 92%, 0 92%); }
+.dado-giro.d4 span { margin-top: 18px; font-size: 1.3rem; }
+@keyframes giro {
+  0% { transform: translate(-40px, 30px) rotate(-260deg) scale(.6); }
+  60% { transform: translate(6px, -6px) rotate(20deg) scale(1.08); }
+  100% { transform: none; }
+}

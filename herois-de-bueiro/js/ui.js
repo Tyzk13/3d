@@ -140,13 +140,38 @@
     } else sessao.unshift(r), sessao.splice(30);
     const lista = $('#resultados-lista');
     if (lista) { lista.insertAdjacentHTML('afterbegin', cartaoResultado(r)); const v = lista.querySelector('.vazio'); if (v) v.remove(); }
-    const pop = $('#rolagem-pop');
-    if (pop) {
-      pop.innerHTML = cartaoResultado(r);
-      pop.hidden = false; pop.classList.remove('entra'); void pop.offsetWidth; pop.classList.add('entra');
-      clearTimeout(resultado.t); resultado.t = setTimeout(() => (pop.hidden = true), 5200);
-    }
+    mostrarRolagem(r);
   }
+
+  // Quadro da rolagem: dado girando por ~0,6 s, depois o resultado. Fecha no ✕, no Esc ou sozinho depois de 6 s
+  // (não some enquanto o mouse estiver em cima).
+  const semMovimento = () => window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function fecharRolagem() {
+    const pop = $('#rolagem-pop'); if (!pop) return;
+    clearTimeout(mostrarRolagem.t); clearInterval(mostrarRolagem.giro); pop.hidden = true;
+  }
+  function agendarFechar(pop) { clearTimeout(mostrarRolagem.t); mostrarRolagem.t = setTimeout(() => { if (!pop.matches(':hover')) fecharRolagem(); else agendarFechar(pop); }, 6000); }
+  function mostrarRolagem(r) {
+    const pop = $('#rolagem-pop'); if (!pop) return;
+    clearTimeout(mostrarRolagem.t); clearInterval(mostrarRolagem.giro);
+    const fechar = '<button class="pop-fechar" type="button" aria-label="Fechar resultado">✕</button>';
+    const mostrar = () => {
+      pop.innerHTML = fechar + cartaoResultado(r);
+      pop.classList.remove('entra', 'rolando'); void pop.offsetWidth; pop.classList.add('entra');
+      agendarFechar(pop);
+    };
+    pop.hidden = false;
+    if (semMovimento()) return mostrar();
+    const lados = ((r.dados || [])[0] || {}).l || 20;
+    const forma = lados === 20 ? 'd20' : lados === 6 ? 'd6' : lados === 4 ? 'd4' : 'd10';
+    pop.innerHTML = fechar + `<div class="res rolando-caixa"><div class="dado-giro ${forma}" aria-hidden="true"><span>?</span></div><div><b>${esc(r.quem || '')}</b><small>${esc(r.titulo)} · rolando…</small></div></div>`;
+    pop.classList.remove('entra'); pop.classList.add('rolando');
+    const num = pop.querySelector('.dado-giro span');
+    mostrarRolagem.giro = setInterval(() => { num.textContent = 1 + Math.floor(Math.random() * lados); }, 55);
+    mostrarRolagem.t = setTimeout(() => { clearInterval(mostrarRolagem.giro); mostrar(); }, 620);
+  }
+  document.addEventListener('click', e => { if (e.target.closest('.pop-fechar')) fecharRolagem(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharRolagem(); });
   // Rolagens secretas do mestre só aparecem para quem tem o escudo.
   function painelResultados(lista, verSecretas, extra = '') {
     lista = verSecretas ? lista : lista.filter(r => !r.secreta);
@@ -160,5 +185,5 @@
     return `<option value="">${esc(vazio)}</option>` + lista.map(a => `<option value="${a}" ${a === atual ? 'selected' : ''}>${esc(R.nomeAttr(a))}</option>`).join('');
   }
 
-  HB.UI = { esc, $, aviso, janela, fechar, confirmar, barra, barraMini, foto, recortarFoto, resultado, cartaoResultado, painelResultados, sessao, opcoesAttr };
+  HB.UI = { esc, $, aviso, janela, fechar, confirmar, barra, barraMini, foto, recortarFoto, resultado, cartaoResultado, painelResultados, fecharRolagem, sessao, opcoesAttr };
 })(window.HB);

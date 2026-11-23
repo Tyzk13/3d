@@ -25,7 +25,7 @@ Para ler uma função: Read com `offset` = linha e `limit` ≈ 40–80. Não lei
 
 | Arquivo | Linhas | Tamanho |
 |---|---|---|
-| `herois-de-bueiro/css/app.css` | 591 | 50 KB |
+| `herois-de-bueiro/css/app.css` | 612 | 51 KB |
 | `herois-de-bueiro/gerar-index-unico.py` | 32 | 2 KB |
 | `herois-de-bueiro/index.html` | 42 | 2 KB |
 | `herois-de-bueiro/js/app.js` | 665 | 50 KB |
@@ -41,7 +41,7 @@ Para ler uma função: Read com `offset` = linha e `limit` ≈ 40–80. Não lei
 | `herois-de-bueiro/js/sistema-hb.js` | 58 | 3 KB |
 | `herois-de-bueiro/js/sistemas.js` | 28 | 1 KB |
 | `herois-de-bueiro/js/store.js` | 107 | 5 KB |
-| `herois-de-bueiro/js/ui.js` | 165 | 10 KB |
+| `herois-de-bueiro/js/ui.js` | 190 | 12 KB |
 | `herois-de-bueiro/vendor/firebase/firebase-app-compat.js` | 9 | 31 KB |
 | `herois-de-bueiro/vendor/firebase/firebase-auth-compat.js` | 3 | 136 KB |
 | `herois-de-bueiro/vendor/firebase/firebase-firestore-compat.js` | 3 | 333 KB |
@@ -160,7 +160,7 @@ Outros textos: `.claude/skills/mapa-3d/CATALOGO.md`, `.claude/skills/mapa-3d/SKI
 `novoId` 10 · `clone` 11 · `lerLocal` 13 · `gravarLocal` 19 · `iniciar` 26 · `escrever` 60 · `agendar` 79 · `importar()` 98
 
 ### `herois-de-bueiro/js/ui.js`
-`esc` 4 · `aviso` 7 · `janela` 16 · `fechar` 34 · `confirmar` 35 · `barra` 43 · `barraMini` 53 · `foto` 58 · `carregarImagem` 66 · `recortarFoto` 73 · `limitar` 86 · `desenhar` 90 · `exportar` 95 · `dadosHtml` 117 · `cartaoResultado` 120 · `resultado` 134 · `painelResultados` 151 · `opcoesAttr` 159
+`esc` 4 · `aviso` 7 · `janela` 16 · `fechar` 34 · `confirmar` 35 · `barra` 43 · `barraMini` 53 · `foto` 58 · `carregarImagem` 66 · `recortarFoto` 73 · `limitar` 86 · `desenhar` 90 · `exportar` 95 · `dadosHtml` 117 · `cartaoResultado` 120 · `resultado` 134 · `semMovimento` 148 · `fecharRolagem` 149 · `agendarFechar` 153 · `mostrarRolagem` 154 · `mostrar` 158 · `painelResultados` 176 · `opcoesAttr` 184
 
 ### `legacy/igreja-3d-site.html`
 `fit` 82 · `mat` 87 · `box` 88 · `cyl` 89 · `jit` 90 · `tex` 91 · `cl` 92 · `sm` 106 · `glass` 107 · `arch` 111 · `inst` 112 · `updEnv` 118 · `setTime` 132 · `buildIgreja` 139 · `haloT` 141 · `halo` 142 · `flat` 149 · `step` 177 · `pewM` 203 · `lace` 246 · `veil` 248 · `roofG` 280 · `car` 282 · `bench` 290 · `dead` 300 · `aoT` 312 · `mistT` 321 · `buildCampo` 352 · `K` 381 · `sizeT` 384 · `placeT` 385 · `makeToken` 389 · `dropT` 399 · `selT` 400 · `setTarget` 401 · `loadMap` 404 · `onPos` 419 · `onChar` 420 · `save` 421 · `netDb` 422 · `netWs` 429 · `snd` 430 · `open` 431 · `wk` 440 · `setM` 443 · `freeSpot` 444 · `end` 455 · `cutBg` 463 · `push` 464 · `prep` 467 · `spawn` 470 · `addChar` 471 · `resz` 475 · `focusT` 487 · `placeWalkCam` 494 · `togV` 495 · `startWalk` 496 · `setWalk` 500 · `walkStep` 502 · `jmove` 515 · `jend` 517 · `fillAreas` 521 · `xcalc` 522 · `xinfo` 523 · `xrender` 524 · `dl` 532 · `setC` 540 · `haloG` 545 · `dressSite` 546 · `fl2` 547 · `mt` 563 · `loadScript` 568 · `buildGlb` 569 · `importGlb` 590 · `importHdr` 595 · `noHdr` 600
