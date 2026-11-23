@@ -1,7 +1,7 @@
-// Armazenamento: base compartilhada da página publicada (capability `db`) quando existe,
-// senão o localStorage deste navegador. A interface é a mesma nos dois casos.
+// Armazenamento: Firestore (site próprio com login Google), base compartilhada da página publicada
+// (capability `db`) ou o localStorage deste navegador. As duas bases remotas têm a mesma interface.
 (function (HB) {
-  const COLS = ['herois', 'viloes', 'campanhas'];
+  const COLS = ['herois', 'viloes', 'campanhas', 'perfis'];
   const CHAVE = 'herois-de-bueiro:v1';
   const cache = {}; COLS.forEach(c => (cache[c] = new Map()));
   let db = null, modo = 'carregando', aoMudar = () => {};
@@ -26,7 +26,8 @@
   async function iniciar(cb) {
     aoMudar = cb;
     let ns = null;
-    if (window.claude && typeof window.claude.use === 'function') {
+    if (HB.A.modo === 'firebase') ns = HB.A.firestore;
+    else if (HB.A.modo === 'claude' && window.claude && typeof window.claude.use === 'function') {
       try { ns = await window.claude.use('db'); } catch (e) { ns = null; }
     }
     if (!ns) { modo = 'local'; lerLocal(); return; }
@@ -38,7 +39,7 @@
         let primeiro = true;
         db.collection(c).onSnapshot(snap => {
           let mudou = false;
-          snap.docChanges().forEach(ch => {
+          (typeof snap.docChanges === 'function' ? snap.docChanges() : snap.docChanges).forEach(ch => {
             const id = ch.doc.id;
             if (pend.has(c + '/' + id)) return; // edição local em andamento vence
             if (ch.type === 'removed') { if (cache[c].delete(id)) mudou = true; return; }
@@ -66,7 +67,7 @@
       if (o) { const corpo = clone(o); delete corpo.id; await db.collection(c).doc(id).set(corpo); }
       else await db.collection(c).doc(id).delete();
     } catch (e) {
-      if (e && e.code === 'invalid_argument') HB.UI.aviso('Você não tem permissão de edição nesta página, então a mudança não foi salva.');
+      if (e && (e.code === 'invalid_argument' || e.code === 'permission-denied')) HB.UI.aviso('Você não tem permissão para mudar isso, então a mudança não foi salva.');
       else if (e && e.code === 'quota_exceeded') HB.UI.aviso('A base está cheia. Apague fichas antigas para liberar espaço.');
       else HB.UI.aviso('Falha ao salvar (' + ((e && e.code) || 'erro') + '). Tente de novo.');
     }
@@ -98,7 +99,7 @@
       const s = JSON.parse(txt);
       if (!s || s.sistema !== 'herois-de-bueiro') throw new Error('Esse texto não é um backup do Heróis de Bueiro.');
       let n = 0;
-      COLS.forEach(c => (s[c] || []).forEach(o => { if (o && o.id) { cache[c].set(o.id, o); agendar(c, o.id, 50 + n * 120); n++; } }));
+      COLS.filter(c => c !== 'perfis').forEach(c => (s[c] || []).forEach(o => { if (o && o.id) { cache[c].set(o.id, o); agendar(c, o.id, 50 + n * 120); n++; } }));
       return n;
     },
   };

@@ -61,25 +61,55 @@
     return `<div class="foto vazia ${classe}" aria-hidden="true">${esc(ini || '?')}</div>`;
   }
 
-  // Reduz a imagem para caber na base (≈ 15 KB).
-  function lerFoto(arquivo, lado = 220) {
+  // Recorte de foto: a pessoa arrasta e dá zoom dentro da moldura; sai sempre no tamanho certo,
+  // não importa se a foto é em pé, deitada ou pequena.
+  function carregarImagem(arquivo) {
     return new Promise((ok, falha) => {
-      const fr = new FileReader();
-      fr.onerror = falha;
-      fr.onload = () => {
-        const img = new Image();
-        img.onerror = () => falha(new Error('imagem inválida'));
-        img.onload = () => {
-          const s = Math.min(1, lado / Math.max(img.width, img.height));
-          const c = document.createElement('canvas');
-          c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
-          c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-          ok(c.toDataURL('image/jpeg', 0.8));
-        };
-        img.src = fr.result;
-      };
-      fr.readAsDataURL(arquivo);
+      if (!arquivo || !/^image\//.test(arquivo.type)) return falha(new Error('tipo'));
+      const url = URL.createObjectURL(arquivo), img = new Image();
+      img.onload = () => ok(img); img.onerror = () => falha(new Error('imagem inválida')); img.src = url;
     });
+  }
+  function recortarFoto(arquivo, saida = { w: 320, h: 320 }) {
+    return carregarImagem(arquivo).then(img => new Promise(ok => {
+      const vw = 300, vh = Math.round(300 * saida.h / saida.w);
+      const j = janela('Ajustar foto', `<div class="recorte"><canvas width="${vw * 2}" height="${vh * 2}" style="aspect-ratio:${saida.w}/${saida.h}" aria-label="Arraste para posicionar"></canvas></div>
+        <label class="campo"><span>Zoom</span><input id="recorte-zoom" type="range" min="1" max="4" step="0.01" value="1"></label>
+        <p class="dica">Arraste a imagem para enquadrar. A parte dentro da moldura é a que fica na ficha.</p>`, [
+        { rotulo: 'Cancelar', acao: f => { f(); ok(null); } },
+        { rotulo: 'Usar foto', classe: 'primario', acao: f => { f(); ok(exportar()); } },
+      ]);
+      const cv = j.querySelector('canvas'), ctx = cv.getContext('2d'), zoom = j.querySelector('#recorte-zoom');
+      const W = cv.width, H = cv.height;
+      const base = Math.max(W / img.width, H / img.height); // cobre a moldura inteira
+      let z = 1, cx = img.width / 2, cy = img.height / 2;   // centro visível, em pixels da imagem
+      function limitar() {
+        const s = base * z, mw = W / s / 2, mh = H / s / 2;
+        cx = Math.min(img.width - mw, Math.max(mw, cx)); cy = Math.min(img.height - mh, Math.max(mh, cy));
+      }
+      function desenhar() {
+        limitar(); const s = base * z;
+        ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+        ctx.drawImage(img, W / 2 - cx * s, H / 2 - cy * s, img.width * s, img.height * s);
+      }
+      function exportar() {
+        const c = document.createElement('canvas'); c.width = saida.w; c.height = saida.h;
+        const s = base * z * (saida.w / W);
+        c.getContext('2d').drawImage(img, saida.w / 2 - cx * s, saida.h / 2 - cy * s, img.width * s, img.height * s);
+        return c.toDataURL('image/jpeg', 0.82);
+      }
+      let arr = null;
+      cv.addEventListener('pointerdown', e => { arr = { x: e.clientX, y: e.clientY }; cv.setPointerCapture(e.pointerId); });
+      cv.addEventListener('pointermove', e => {
+        if (!arr) return;
+        const k = (W / cv.clientWidth) / (base * z);
+        cx -= (e.clientX - arr.x) * k; cy -= (e.clientY - arr.y) * k; arr = { x: e.clientX, y: e.clientY }; desenhar();
+      });
+      cv.addEventListener('pointerup', () => (arr = null));
+      cv.addEventListener('wheel', e => { e.preventDefault(); z = Math.min(4, Math.max(1, z * (e.deltaY < 0 ? 1.08 : 1 / 1.08))); zoom.value = z; desenhar(); }, { passive: false });
+      zoom.addEventListener('input', () => { z = +zoom.value; desenhar(); });
+      desenhar();
+    }));
   }
 
   // ---------- Resultados de rolagens ----------
@@ -126,5 +156,5 @@
     return `<option value="">${esc(vazio)}</option>` + lista.map(a => `<option value="${a}" ${a === atual ? 'selected' : ''}>${esc(R.nomeAttr(a))}</option>`).join('');
   }
 
-  HB.UI = { esc, $, aviso, janela, fechar, confirmar, barra, barraMini, foto, lerFoto, resultado, cartaoResultado, painelResultados, sessao, opcoesAttr };
+  HB.UI = { esc, $, aviso, janela, fechar, confirmar, barra, barraMini, foto, recortarFoto, resultado, cartaoResultado, painelResultados, sessao, opcoesAttr };
 })(window.HB);

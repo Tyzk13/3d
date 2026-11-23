@@ -10,20 +10,25 @@
       reputacao: 0, repHist: [], ataques: [], poderes: [], inventario: [], desc: {}, criado: Date.now(),
     };
   }
+  const CONDICOES = ['Caído', 'Atordoado', 'Sangrando', 'Envenenado', 'Agarrado', 'Cego', 'Amedrontado', 'Inconsciente'];
   const pvAtual = (h, d) => (h.pv == null ? d.pvMax : h.pv);
   const manaAtual = (h, d) => (h.mana == null ? d.manaMax : h.mana);
   const nomeClasse = h => [(R.CLASSES[h.classe] || {}).nome, (R.ORIGENS[h.origem] || {}).nome].filter(Boolean).join(' · ') || 'Sem classe';
 
   // ---------- Lista de heróis ----------
   function listaHerois(estado) {
-    const busca = (estado.busca || '').toLowerCase();
-    const hs = S.lista('herois').filter(h => !busca || (h.nome + ' ' + h.jogador).toLowerCase().includes(busca))
+    const busca = (estado.busca || '').toLowerCase(), eu = HB.P.eu();
+    const todos = S.lista('herois').filter(HB.P.heroiVisivel).filter(h => !busca || (h.nome + ' ' + (h.jogador || '')).toLowerCase().includes(busca))
       .sort((a, b) => (b.criado || 0) - (a.criado || 0));
+    const meus = todos.filter(h => h.dono === eu), semDono = todos.filter(h => !h.dono), mesa = todos.filter(h => h.dono && h.dono !== eu);
+    const grade = (xs, extra) => `<div class="grade-cartoes">${xs.map(h => cartaoHeroi(h, extra)).join('')}</div>`;
     return `<section class="pagina">
-      <div class="pagina-topo"><div><h1 class="titulo-hq">Heróis</h1><p class="sub">${S.lista('herois').length} fichas salvas</p></div>
+      <div class="pagina-topo"><div><h1 class="titulo-hq">Heróis</h1><p class="sub">${meus.length} ficha${meus.length === 1 ? '' : 's'} sua${meus.length === 1 ? '' : 's'}</p></div>
         <button class="btn primario" data-act="novo-heroi">Novo herói</button></div>
       <label class="busca"><span class="sr">Buscar</span><input id="busca-herois" data-busca placeholder="Buscar por nome ou jogador" value="${esc(estado.busca || '')}"></label>
-      ${hs.length ? `<div class="grade-cartoes">${hs.map(cartaoHeroi).join('')}</div>` : vazioHerois()}
+      ${meus.length ? grade(meus) : vazioHerois()}
+      ${mesa.length ? `<h2 class="secao">Heróis das suas campanhas</h2>${grade(mesa)}` : ''}
+      ${semDono.length ? `<h2 class="secao">Fichas sem dono</h2><p class="dica">Criadas antes do login. Assuma as que são suas.</p>${grade(semDono, 'assumir')}` : ''}
     </section>`;
   }
   function vazioHerois() {
@@ -31,14 +36,14 @@
       <p>Crie a primeira ficha: escolha classe e origem, distribua os 20 pontos de atributo e o resto se calcula sozinho.</p>
       <button class="btn primario" data-act="novo-heroi">Criar herói</button></div>`;
   }
-  function cartaoHeroi(h) {
+  function cartaoHeroi(h, extra) {
     const d = R.derivados(h);
     return `<article class="cartao-heroi">
       ${UI.foto(h.foto, h.nome)}
       <div class="ch-info"><h3>${esc(h.nome)}</h3><p class="ch-classe">${esc(nomeClasse(h))}</p>
-        <p class="ch-meta">${h.jogador ? 'Jogador: ' + esc(h.jogador) : 'Sem jogador'}</p>
+        <p class="ch-meta">${h.dono ? 'Conta: ' + esc(HB.A.nome(h.dono)) : 'Sem dono'}${(h.condicoes || []).length ? ' · ' + esc(h.condicoes.join(', ')) : ''}</p>
         <div class="ch-barras">${UI.barraMini('pv', pvAtual(h, d), d.pvMax)}${UI.barraMini('mana', manaAtual(h, d), d.manaMax)}</div></div>
-      <div class="ch-acoes"><a class="btn pequeno primario" href="#heroi-${h.id}">Abrir ficha</a></div></article>`;
+      <div class="ch-acoes">${extra === 'assumir' ? `<button class="btn pequeno" data-act="assumir-heroi" data-id="${h.id}">É meu</button>` : ''}<a class="btn pequeno primario" href="#heroi-${h.id}">Abrir ficha</a></div></article>`;
   }
 
   // ---------- Ficha do herói ----------
@@ -83,9 +88,12 @@
     if (sobra > 0) pend.push(`distribua ${sobra} pontos de atributo`);
     if (sobra < 0) pend.push(`${-sobra} pontos acima do limite`);
 
-    return `<section class="pagina ficha" data-doc="herois:${h.id}">
+    const pode = HB.P.podeEditarHeroi(h), dono = h.dono === HB.P.eu();
+    const camps = HB.P.campanhasDoHeroi(h).filter(HB.P.ehMembro);
+    return `<section class="pagina ficha ${pode ? '' : 'leitura'}" data-doc="herois:${h.id}">
+      ${pode ? '' : `<p class="faixa">Ficha de ${esc(HB.A.nome(h.dono))}. Você pode ver e rolar, mas só o dono e o mestre da campanha mudam os números.</p>`}
       <div class="ficha-topo">
-        <label class="foto-troca" title="Trocar foto">${UI.foto(h.foto, h.nome, 'grande')}<input type="file" accept="image/*" data-foto hidden><span>Foto</span></label>
+        <label class="foto-troca" title="Trocar foto">${UI.foto(h.foto, h.nome, 'grande')}<input type="file" accept="image/*" data-foto hidden><span>Trocar foto</span></label>
         <div class="ficha-ident">
           <label class="campo linha"><span>Herói</span><input id="h-nome" data-f="nome" value="${esc(h.nome)}"></label>
           <label class="campo linha"><span>Jogador</span><input id="h-jogador" data-f="jogador" value="${esc(h.jogador)}"></label>
@@ -94,7 +102,8 @@
             <label class="campo"><span>Origem</span><select id="h-origem" data-f="origem" data-re><option value="">Escolha…</option>${Object.entries(R.ORIGENS).map(([k, v]) => `<option value="${k}" ${k === h.origem ? 'selected' : ''}>${esc(v.nome)}</option>`).join('')}</select></label>
           </div>
         </div>
-        <div class="ficha-acoes"><button class="btn pequeno" data-act="duplicar-heroi">Duplicar</button><button class="btn pequeno perigo-txt" data-act="apagar-heroi">Apagar</button></div>
+        <div class="ficha-acoes">${camps.map(c => `<a class="chip-link" href="#campanha-${c.id}">${esc(c.nome)}</a>`).join('')}
+          ${dono || !h.dono ? '<button class="btn pequeno" data-act="duplicar-heroi">Duplicar</button><button class="btn pequeno perigo-txt" data-act="apagar-heroi">Apagar</button>' : ''}</div>
       </div>
       ${pend.length ? `<p class="pendente">Para fechar a ficha: ${esc(pend.join(' · '))}.</p>` : ''}
 
@@ -110,6 +119,7 @@
             <div class="defesa-conta">${c ? c.def + ' base' : 'base da classe'} + ${d.niv.AGI} Agi${h.defExtra ? ` + ${h.defExtra} outros` : ''}
               <label class="campo mini"><span>Outros</span><input id="h-defextra" type="number" data-f="defExtra" data-re value="${h.defExtra | 0}"></label></div>
           </div>
+          <div class="condicoes" aria-label="Condições">${CONDICOES.map(x => `<button class="cond ${(h.condicoes || []).includes(x) ? 'on' : ''}" data-act="condicao" data-v="${x}" aria-pressed="${(h.condicoes || []).includes(x)}">${x}</button>`).join('')}</div>
           ${og && og.forma ? `<button class="btn ${h.formaBestial ? 'primario' : ''} largo" data-act="forma-bestial">${h.formaBestial ? 'Sair da Forma Bestial' : 'Assumir Forma Bestial (−5 Mana)'}</button>` : ''}
         </div>
 
@@ -277,7 +287,7 @@
   function listaViloes(estado, modoEscolha) {
     const busca = (estado.busca || '').toLowerCase(), filtro = estado.filtro || 'todos';
     const xs = viloes().filter(v => (!busca || v.nome.toLowerCase().includes(busca)) &&
-      (filtro === 'todos' || (filtro === 'meus' ? !v.base : filtro === 'base' ? v.base : v.elemento === filtro)));
+      (filtro === 'todos' || (filtro === 'meus' ? !v.base && v.dono === HB.P.eu() : filtro === 'base' ? v.base : v.elemento === filtro)));
     const filtros = [['todos', 'Todos'], ['base', 'Bestiário base'], ['meus', 'Meus vilões']].concat(Object.keys(R.ELEMENTOS).map(e => [e, e]));
     return `<div class="filtros" role="tablist">${filtros.map(([k, n]) => `<button class="aba ${filtro === k ? 'ativa' : ''}" data-act="filtro" data-v="${esc(k)}">${esc(n)}</button>`).join('')}</div>
       <label class="busca"><span class="sr">Buscar vilão</span><input id="busca-viloes" data-busca placeholder="Buscar vilão" value="${esc(estado.busca || '')}"></label>
@@ -296,14 +306,14 @@
     return `<section class="pagina">
       <div class="pagina-topo"><div><h1 class="titulo-hq">Vilões</h1><p class="sub">Bestiário base e os vilões criados pela mesa</p></div>
         <button class="btn primario" data-act="novo-vilao">Novo vilão</button></div>
-      <p class="faixa">Esta página é para consulta. Para usar um vilão em jogo, abra a campanha, crie um combate e adicione o vilão a ele.</p>
+      <p class="faixa">Esta página é para consulta. Para usar um vilão em jogo, abra o Escudo do Mestre da campanha, crie um combate e adicione o vilão.</p>
       ${listaViloes(estado)}</section>`;
   }
 
   function fichaVilao(v, estado) {
-    const d = derivVilao(v), so = v.base;
+    const d = derivVilao(v), so = !HB.P.podeEditarVilao(v);
     const dis = so ? 'disabled' : '';
-    return `<section class="pagina ficha vilao" ${so ? '' : `data-doc="viloes:${v.id}"`}>
+    return `<section class="pagina ficha vilao ${so ? 'leitura' : ''}" ${so ? '' : `data-doc="viloes:${v.id}"`}>
       <div class="ficha-topo">
         <label class="foto-troca">${UI.foto(v.foto, v.nome, 'grande')}${so ? '' : '<input type="file" accept="image/*" data-foto hidden><span>Foto</span>'}</label>
         <div class="ficha-ident">
@@ -313,9 +323,9 @@
             <label class="campo"><span>Nível de ameaça</span><input id="v-ameaca" type="number" data-f="ameaca" value="${v.ameaca | 0}" ${dis}></label>
             <label class="campo"><span>Elemento</span><select id="v-el" data-f="elemento" data-re ${dis}><option value="">Nenhum</option>${Object.keys(R.ELEMENTOS).map(e => `<option ${e === v.elemento ? 'selected' : ''}>${e}</option>`).join('')}</select></label>
           </div></div>
-        <div class="ficha-acoes">${so ? '<button class="btn pequeno primario" data-act="duplicar-vilao">Duplicar para editar</button>' : '<button class="btn pequeno" data-act="duplicar-vilao">Duplicar</button><button class="btn pequeno perigo-txt" data-act="apagar-vilao">Apagar</button>'}</div>
+        <div class="ficha-acoes">${so ? `<button class="btn pequeno primario" data-act="duplicar-vilao">${v.base ? 'Duplicar para editar' : 'Duplicar'}</button>` : '<button class="btn pequeno" data-act="duplicar-vilao">Duplicar</button><button class="btn pequeno perigo-txt" data-act="apagar-vilao">Apagar</button>'}</div>
       </div>
-      ${so ? '<p class="faixa">Vilão do bestiário base. Duplique para mudar os números.</p>' : ''}
+      ${so ? `<p class="faixa">${v.base ? 'Vilão do bestiário base.' : 'Vilão criado por ' + esc(HB.A.nome(v.dono)) + '.'} Duplique para mudar os números.</p>` : ''}
       <div class="ficha-grade">
         <div class="col-esq">
           ${hexagono(v, d)}
@@ -347,6 +357,6 @@
         </div></div></section>`;
   }
 
-  HB.F = { novoHeroi, listaHerois, ficha, pvAtual, manaAtual, nomeClasse, abaCombate, cartaoAtaque,
+  HB.F = { CONDICOES, novoHeroi, listaHerois, ficha, pvAtual, manaAtual, nomeClasse, abaCombate, cartaoAtaque,
     BESTIARIO, viloes, pegarVilao, derivVilao, novoVilao, listaViloes, paginaViloes, fichaVilao, hexagono };
 })(window.HB);

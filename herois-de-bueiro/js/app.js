@@ -2,7 +2,8 @@
 (function (HB) {
   const R = HB.R, UI = HB.UI, S = HB.S, F = HB.F, M = HB.M, D = HB.D, esc = UI.esc;
   const raiz = () => UI.$('#app');
-  const estado = { rota: '', busca: '', filtro: 'todos', aba: 'combate', abaMesa: 'herois', ajuste: 0 };
+  const estado = { rota: '', busca: '', filtro: 'todos', aba: 'combate', abaMesa: 'herois', abaCamp: 'herois', ajuste: 0 };
+  const P = HB.P, AU = HB.A;
 
   // ---------- Rotas ----------
   function rota() { return (location.hash || '#inicio').slice(1); }
@@ -11,24 +12,58 @@
     if (r !== estado.rota) { const mesmaFamilia = r.split('-')[0] === estado.rota.split('-')[0]; estado.rota = r; if (!mesmaFamilia) { estado.busca = ''; estado.filtro = 'todos'; } estado.aba = 'combate'; estado.ajuste = 0; estado.ultimo = null; window.scrollTo(0, 0); }
     const [nome, ...resto] = r.split('-'), id = resto.join('-');
     let html;
-    if (nome === 'herois') html = F.listaHerois(estado);
+    if (!AU.usuario && nome !== 'regras') html = paginaLogin();
+    else if (nome === 'herois') html = F.listaHerois(estado);
     else if (nome === 'heroi') { const h = S.pegar('herois', id); html = h ? F.ficha(h, estado) : naoAchou('Esse herói não existe mais.', '#herois'); }
     else if (nome === 'campanhas') html = M.paginaCampanhas();
-    else if (nome === 'mesa') { const c = S.pegar('campanhas', id); html = c ? M.mesa(c, estado) : naoAchou('Essa campanha não existe mais.', '#campanhas'); }
+    else if (nome === 'campanha') { const c = S.pegar('campanhas', id); if (c) P.assumirCampanhaSemMestre(c); html = c ? M.paginaCampanha(c, estado) : naoAchou('Essa campanha não existe mais.', '#campanhas'); }
+    else if (nome === 'escudo' || nome === 'mesa') { const c = S.pegar('campanhas', id); if (c) P.assumirCampanhaSemMestre(c); html = c ? M.mesa(c, estado) : naoAchou('Essa campanha não existe mais.', '#campanhas'); }
     else if (nome === 'viloes') html = F.paginaViloes(estado);
     else if (nome === 'vilao') { const v = F.pegarVilao(id); html = v ? F.fichaVilao(v, estado) : naoAchou('Esse vilão não existe mais.', '#viloes'); }
     else if (nome === 'regras') html = paginaRegras();
     else html = paginaInicio();
     const foco = document.activeElement && document.activeElement.id;
     raiz().innerHTML = html;
+    travarLeitura();
     if (foco) { const el = document.getElementById(foco); if (el && el.matches('input,textarea')) { el.focus(); if (el.setSelectionRange && el.type !== 'number') { const n = el.value.length; el.setSelectionRange(n, n); } } }
     document.querySelectorAll('.nav a').forEach(a => a.classList.toggle('ativo', a.dataset.sec === secao(nome)));
   }
-  const secao = n => ({ heroi: 'herois', herois: 'herois', campanhas: 'campanhas', mesa: 'campanhas', viloes: 'viloes', vilao: 'viloes', regras: 'regras' })[n] || '';
+  const secao = n => ({ heroi: 'herois', herois: 'herois', campanhas: 'campanhas', mesa: 'campanhas', campanha: 'campanhas', escudo: 'campanhas', viloes: 'viloes', vilao: 'viloes', regras: 'regras' })[n] || '';
   const naoAchou = (t, volta) => `<section class="pagina"><div class="vazio-grande"><p>${esc(t)}</p><a class="btn" href="${volta}">Voltar</a></div></section>`;
 
+  // Fichas de outras pessoas: dá para ver, trocar de aba e rolar; não dá para mudar.
+  const LIVRES = ['aba', 'rolar-attr', 'rolar-ataque', 'duplicar-vilao', 'filtro'];
+  function travarLeitura() {
+    raiz().querySelectorAll('.leitura').forEach(box => box.querySelectorAll('input,select,textarea,button').forEach(el => {
+      if (el.closest('.rolar-livre') || LIVRES.includes(el.dataset.act)) return;
+      el.disabled = true;
+    }));
+  }
+
+  function paginaLogin() {
+    const m = AU.modo;
+    let corpo;
+    if (m === 'firebase') corpo = `<button class="btn primario grande largo" data-act="login-google"><span class="g-logo" aria-hidden="true">G</span> Entrar com Google</button>
+      <div class="ou"><span>ou com e-mail</span></div>
+      <form class="form-login" data-act-submit="login-email">
+        <label class="campo"><span>E-mail</span><input id="lg-email" name="email" type="email" autocomplete="email" required></label>
+        <label class="campo"><span>Senha</span><input id="lg-senha" name="senha" type="password" autocomplete="current-password" minlength="6" required></label>
+        <label class="campo"><span>Nome (só para criar conta)</span><input id="lg-nome" name="nome" autocomplete="nickname"></label>
+        <div class="barra-acoes"><button class="btn primario" name="acao" value="entrar">Entrar</button><button class="btn" name="acao" value="criar">Criar conta</button></div></form>`;
+    else if (m === 'claude') corpo = `<p>Esta página usa a sua conta do claude.ai. Entre no claude.ai (dá para entrar com o Google) e abra o link de novo.</p>`;
+    else {
+      const contas = AU.contasLocais();
+      corpo = `<p class="dica">Modo de teste: a conta fica só neste navegador. Para login com Google de verdade, o site precisa do Firebase configurado (veja FIREBASE.md).</p>
+        ${contas.length ? `<div class="contas">${contas.map(c => `<button class="btn" data-act="login-local" data-nome="${esc(c.nome)}">${esc(c.nome)}</button>`).join('')}</div>` : ''}
+        <form class="form-login" data-act-submit="login-local"><label class="campo"><span>Seu nome</span><input id="lg-local" name="nome" required maxlength="40" placeholder="Como a mesa te chama"></label>
+        <button class="btn primario">Entrar</button></form>`;
+    }
+    return `<section class="login"><div class="login-cartao"><h1 class="titulo-capa">Heróis<br><span>de Bueiro</span></h1>
+      <p class="capa-sub">Entre para salvar seus heróis na sua conta e participar das campanhas da mesa.</p>${corpo}</div></section>`;
+  }
+
   function paginaInicio() {
-    const nh = S.lista('herois').length, nc = S.lista('campanhas').length;
+    const nh = S.lista('herois').filter(h => h.dono === P.eu()).length, nc = P.minhasCampanhas().length;
     return `<section class="inicio">
       <div class="capa-hq">
         <div class="capa-texto"><p class="capa-selo">Playtest · sistema completo</p>
@@ -113,7 +148,14 @@
     render();
   }
 
+  // Rolagens da ficha vão para o histórico da campanha do herói (o mestre vê no escudo).
+  function campanhaDaFicha(o) {
+    if (!o || !o.id || !S.pegar('herois', o.id)) return null;
+    const c = P.campanhasDoHeroi(o).filter(P.ehMembro)[0];
+    return c ? c.id : null;
+  }
   function rolarAttrDe(o, d, attr, campanhaId) {
+    if (campanhaId === undefined) campanhaId = campanhaDaFicha(o);
     const aj = estado.ajuste | 0;
     const r = D.teste(nomeQuem(o), attr, d.niv[attr] | 0, aj);
     if (attr === 'CAR' && R.ORIGENS[o.origem] && R.ORIGENS[o.origem].semCarisma) r.nota = (r.nota ? r.nota + ' · ' : '') + 'Android: não vale para Mentir, Persuadir ou Intimidar';
@@ -121,10 +163,9 @@
     if (aj) { estado.ajuste = 0; render(); }
   }
 
-  function escolherHerois(titulo, jaTem, aoConfirmar) {
-    const hs = S.lista('herois').filter(h => !jaTem.includes(h.id));
-    if (!hs.length) { UI.janela(titulo, `<p>${S.lista('herois').length ? 'Todos os heróis já estão aqui.' : 'Você ainda não tem heróis.'}</p>`, [{ rotulo: 'Criar herói', classe: 'primario', acao: f => { f(); location.hash = '#herois'; } }, { rotulo: 'Fechar', acao: f => f() }]); return; }
-    UI.janela(titulo, `<div class="lista-escolha">${hs.map(h => `<label class="escolha">${UI.foto(h.foto, h.nome)}<span><b>${esc(h.nome)}</b><small>${esc(F.nomeClasse(h))}</small></span><input type="checkbox" value="${h.id}"></label>`).join('')}</div>`,
+  function escolherHerois(titulo, hs, aoConfirmar, semNada) {
+    if (!hs.length) { UI.janela(titulo, `<p>${esc(semNada || 'Nenhum herói disponível. Crie um herói ou veja se ele já está aqui.')}</p>`, [{ rotulo: 'Fechar', acao: f => f() }, { rotulo: 'Criar herói', classe: 'primario', acao: f => { f(); A['novo-heroi'](); } }]); return; }
+    UI.janela(titulo, `<div class="lista-escolha">${hs.map(h => `<label class="escolha">${UI.foto(h.foto, h.nome)}<span><b>${esc(h.nome)}</b><small>${esc(F.nomeClasse(h))} · ${esc(AU.nome(h.dono))}</small></span><input type="checkbox" value="${h.id}"></label>`).join('')}</div>`,
       [{ rotulo: 'Cancelar', acao: f => f() }, { rotulo: 'Adicionar', classe: 'primario', acao: (f, j) => { const ids = [...j.querySelectorAll('input:checked')].map(i => i.value); f(); if (ids.length) aoConfirmar(ids); } }]);
   }
 
@@ -137,8 +178,13 @@
 
   // ---------- Ações ----------
   const A = {
-    'novo-heroi'() { const h = S.salvar('herois', F.novoHeroi(), 0); location.hash = '#heroi-' + h.id; },
-    'duplicar-heroi'(el) { const x = docDe(el); const n = S.clone(x.o); delete n.id; n.nome += ' (cópia)'; n.criado = Date.now(); S.salvar('herois', n, 0); location.hash = '#heroi-' + n.id; },
+    'novo-heroi'() { const h = F.novoHeroi(); h.dono = P.eu(); h.jogador = AU.usuario.nome; S.salvar('herois', h, 0); location.hash = '#heroi-' + h.id; },
+    'duplicar-heroi'(el) { const x = docDe(el); const n = S.clone(x.o); delete n.id; n.nome += ' (cópia)'; n.criado = Date.now(); n.dono = P.eu(); n.mestres = []; S.salvar('herois', n, 0); location.hash = '#heroi-' + n.id; },
+    'assumir-heroi'(el) { const h = S.pegar('herois', el.dataset.id); h.dono = P.eu(); S.salvar('herois', h, 0); render(); UI.aviso(h.nome + ' agora é seu.', 'info'); },
+    condicao(el) { const x = docDe(el), v = el.dataset.v, cs = x.o.condicoes || []; x.o.condicoes = cs.includes(v) ? cs.filter(c => c !== v) : cs.concat(v); S.salvar('herois', x.o, 300); render(); },
+    'login-google'() { AU.entrarGoogle().catch(e => UI.aviso(erroLogin(e))); },
+    'login-local'(el) { AU.entrarLocal(el.dataset.nome); depoisDoLogin(); },
+    sair() { AU.sair(); },
     'apagar-heroi'(el) {
       const x = docDe(el);
       UI.confirmar('Apagar herói', `Apagar a ficha de ${x.o.nome}? Isso não tem volta.`, 'Apagar', () => {
@@ -177,7 +223,7 @@
     'rolar-ataque'(el) {
       const f = fonteAtual(); if (!f) return;
       const a = f.o.ataques[+el.dataset.i];
-      UI.resultado(D.ataque(nomeQuem(f.o), a.nome || 'Ataque', f.d.maestria[a.maestria] | 0, f.d.niv[a.attr] | 0, a.bonus | 0));
+      UI.resultado(D.ataque(nomeQuem(f.o), a.nome || 'Ataque', f.d.maestria[a.maestria] | 0, f.d.niv[a.attr] | 0, a.bonus | 0), campanhaDaFicha(f.o));
     },
     'usar-poder'(el) {
       const x = docDe(el), h = x.o, p = h.poderes[+el.dataset.i], d = R.derivados(h), m = F.manaAtual(h, d), custo = p.custo | 0;
@@ -193,9 +239,9 @@
     },
     recurso(el) { mudarRecurso(el.dataset.alvo, el.dataset.recurso, +el.dataset.d); },
     filtro(el) { estado.filtro = el.dataset.v; render(); },
-    'novo-vilao'() { const v = S.salvar('viloes', F.novoVilao(), 0); location.hash = '#vilao-' + v.id; },
+    'novo-vilao'() { const v = F.novoVilao(); v.dono = P.eu(); S.salvar('viloes', v, 0); location.hash = '#vilao-' + v.id; },
     'duplicar-vilao'() {
-      const v = F.pegarVilao(rota().slice(6)); const n = S.clone(v); delete n.id; delete n.base; n.nome += v.base ? '' : ' (cópia)';
+      const v = F.pegarVilao(rota().slice(6)); const n = S.clone(v); delete n.id; delete n.base; n.dono = P.eu(); n.nome += v.base ? '' : ' (cópia)';
       S.salvar('viloes', n, 0); location.hash = '#vilao-' + n.id;
     },
     'apagar-vilao'(el) { const x = docDe(el); UI.confirmar('Apagar vilão', `Apagar ${x.o.nome}? Combates que já usam esse vilão mantêm a cópia deles.`, 'Apagar', () => { S.apagar('viloes', x.id); location.hash = '#viloes'; }); },
@@ -204,13 +250,70 @@
     'nova-campanha'() {
       UI.janela('Nova campanha', '<label class="campo"><span>Nome</span><input id="nc-nome" placeholder="Os Ratos da Linha Vermelha"></label>', [
         { rotulo: 'Cancelar', acao: f => f() },
-        { rotulo: 'Criar', classe: 'primario', acao: (f, j) => { const nome = j.querySelector('#nc-nome').value.trim() || 'Nova campanha'; f(); const c = S.salvar('campanhas', { nome, criada: Date.now(), herois: [], combates: [], ganchos: [], rolagens: [] }, 0); estado.abaMesa = 'herois'; location.hash = '#mesa-' + c.id; } },
+        { rotulo: 'Criar', classe: 'primario', acao: (f, j) => { const nome = j.querySelector('#nc-nome').value.trim() || 'Nova campanha'; f(); const c = S.salvar('campanhas', { nome, criada: Date.now(), mestre: P.eu(), membros: [], escudo: [], codigo: P.novoCodigo(), herois: [], combates: [], ganchos: [], rolagens: [] }, 0); estado.abaCamp = 'herois'; location.hash = '#campanha-' + c.id; } },
       ]);
     },
     'apagar-campanha'(el) { const c = S.pegar('campanhas', el.dataset.id); UI.confirmar('Apagar campanha', `Apagar ${c.nome}? Os heróis continuam salvos; combates, ganchos e rolagens somem.`, 'Apagar', () => { S.apagar('campanhas', c.id); render(); }); },
     'aba-mesa'(el) { estado.abaMesa = el.dataset.aba; render(); },
-    'mesa-add-herois'() { const c = campanhaAtual(); escolherHerois('Adicionar heróis à campanha', c.herois || [], ids => { c.herois = (c.herois || []).concat(ids); S.salvar('campanhas', c, 0); render(); }); },
-    'mesa-tirar-heroi'(el) { const c = campanhaAtual(); c.herois = c.herois.filter(i => i !== el.dataset.id); S.salvar('campanhas', c, 0); render(); },
+    'aba-camp'(el) { estado.abaCamp = el.dataset.aba; render(); },
+    'entrar-codigo'() {
+      UI.janela('Entrar numa campanha', '<label class="campo"><span>Código de convite</span><input id="cod" maxlength="6" placeholder="K7Q2MX" style="text-transform:uppercase;letter-spacing:.2em"></label><p class="dica">Peça o código ao mestre. Ele aparece em Convidar jogadores.</p>', [
+        { rotulo: 'Cancelar', acao: f => f() },
+        { rotulo: 'Entrar', classe: 'primario', acao: (f, j) => {
+          const cod = j.querySelector('#cod').value.trim().toUpperCase();
+          const c = S.lista('campanhas').find(x => (x.codigo || '').toUpperCase() === cod);
+          if (!c) return UI.aviso('Nenhuma campanha com esse código. Confira com o mestre.');
+          f(); entrarNa(c);
+        } }]);
+    },
+    'entrar-campanha'(el) { entrarNa(S.pegar('campanhas', el.dataset.id)); },
+    convidar() {
+      const c = campanhaAtual();
+      if (!c.codigo) { c.codigo = P.novoCodigo(); S.salvar('campanhas', c, 0); }
+      const link = location.href.split('#')[0] + '#campanha-' + c.id;
+      UI.janela('Convidar jogadores', `<p>Passe o código para os jogadores. Eles entram em Campanhas, Entrar com código.</p>
+        <p class="codigo-grande">${esc(c.codigo)}</p>
+        <label class="campo"><span>Ou mande o link direto</span><input id="conv-link" readonly value="${esc(link)}"></label>
+        ${AU.modo === 'claude' ? '<p class="dica">Nesta página publicada, cada jogador também precisa ter acesso ao link (menu Compartilhar do claude.ai, com permissão de edição).</p>' : ''}`, [
+        { rotulo: 'Novo código', acao: (f, j) => { c.codigo = P.novoCodigo(); S.salvar('campanhas', c, 0); j.querySelector('.codigo-grande').textContent = c.codigo; } },
+        { rotulo: 'Copiar código', classe: 'primario', acao: () => navigator.clipboard.writeText(c.codigo).then(() => UI.aviso('Código copiado.', 'info')).catch(() => UI.aviso('Copie o código à mão: ' + c.codigo, 'info')) }]);
+    },
+    'add-meu-heroi'() {
+      const c = campanhaAtual();
+      const hs = S.lista('herois').filter(h => h.dono === P.eu() && !(c.herois || []).includes(h.id));
+      escolherHerois('Adicionar seus heróis', hs, ids => { c.herois = (c.herois || []).concat(ids); S.salvar('campanhas', c, 0); P.sincronizarHerois(c); render(); });
+    },
+    'tirar-heroi-campanha'(el) { const c = campanhaAtual(); c.herois = c.herois.filter(i => i !== el.dataset.id); (c.combates || []).forEach(cb => (cb.parts = cb.parts.filter(p => p.ref !== el.dataset.id))); S.salvar('campanhas', c, 0); render(); },
+    'escudo-toggle'(el) {
+      const c = campanhaAtual(), id = el.dataset.id, tem = (c.escudo || []).includes(id);
+      c.escudo = tem ? c.escudo.filter(x => x !== id) : (c.escudo || []).concat(id);
+      S.salvar('campanhas', c, 0); P.sincronizarHerois(c); render();
+      UI.aviso(tem ? `Escudo retirado de ${AU.nome(id)}.` : `${AU.nome(id)} agora abre o Escudo do Mestre.`, 'info');
+    },
+    'tornar-mestre'(el) {
+      const c = campanhaAtual(), id = el.dataset.id;
+      UI.confirmar('Passar o cargo de mestre', `${AU.nome(id)} vira o mestre desta campanha e você passa a jogador. Só o novo mestre pode desfazer.`, 'Passar', () => {
+        c.membros = (c.membros || []).filter(x => x !== id).concat(c.mestre); c.escudo = (c.escudo || []).filter(x => x !== id); c.mestre = id;
+        S.salvar('campanhas', c, 0); P.sincronizarHerois(c); render();
+      });
+    },
+    'remover-membro'(el) {
+      const c = campanhaAtual(), id = el.dataset.id;
+      UI.confirmar('Remover jogador', `Tirar ${AU.nome(id)} da campanha? Os heróis dessa pessoa saem junto.`, 'Remover', () => {
+        c.membros = (c.membros || []).filter(x => x !== id); c.escudo = (c.escudo || []).filter(x => x !== id);
+        const saem = (c.herois || []).filter(hid => (S.pegar('herois', hid) || {}).dono === id);
+        c.herois = c.herois.filter(hid => !saem.includes(hid)); (c.combates || []).forEach(cb => (cb.parts = cb.parts.filter(p => !saem.includes(p.ref))));
+        S.salvar('campanhas', c, 0); P.sincronizarHerois(c); render();
+      });
+    },
+    'sair-campanha'() {
+      const c = campanhaAtual();
+      UI.confirmar('Sair da campanha', `Sair de ${c.nome}? Seus heróis saem dela, mas continuam salvos na sua conta.`, 'Sair', () => {
+        const eu = P.eu(); c.membros = (c.membros || []).filter(x => x !== eu); c.escudo = (c.escudo || []).filter(x => x !== eu);
+        c.herois = (c.herois || []).filter(hid => (S.pegar('herois', hid) || {}).dono !== eu);
+        S.salvar('campanhas', c, 0); location.hash = '#campanhas';
+      });
+    },
     'mesa-rolar-attr'(el) { const c = campanhaAtual(), h = S.pegar('herois', el.dataset.heroi); rolarAttrDe(h, R.derivados(h), el.dataset.attr, c.id); },
     'novo-combate'() {
       const c = campanhaAtual();
@@ -240,10 +343,11 @@
     'tirar-part'(el) { const c = campanhaAtual(), cb = combateAtual(c); cb.parts = cb.parts.filter(p => p.uid !== el.dataset.uid); estado.sel = null; S.salvar('campanhas', c, 0); render(); },
     'combate-add-herois'() {
       const c = campanhaAtual(), cb = combateAtual(c);
-      escolherHerois('Adicionar heróis ao combate', cb.parts.filter(p => p.tipo === 'heroi').map(p => p.ref), ids => {
+      const ja = cb.parts.filter(p => p.tipo === 'heroi').map(p => p.ref);
+      escolherHerois('Adicionar heróis ao combate', M.heroisDa(c).filter(h => !ja.includes(h.id)), ids => {
         ids.forEach(id => cb.parts.push({ uid: S.novoId(), tipo: 'heroi', ref: id }));
-        c.herois = [...new Set((c.herois || []).concat(ids))]; S.salvar('campanhas', c, 0); render();
-      });
+        S.salvar('campanhas', c, 0); render();
+      }, 'Os jogadores precisam adicionar os heróis deles na página da campanha primeiro.');
     },
     'combate-add-viloes'() { estado.busca = ''; estado.filtro = 'todos'; abrirEscolhaViloes(); },
     'ver-vilao'(el) { UI.fechar(); location.hash = '#vilao-' + el.dataset.id; },
@@ -321,10 +425,15 @@
   const SUBMITS = {
     'rolar-livre'(form) {
       const expr = form.expr.value, f = fonteAtual(), c = campanhaAtual();
-      const r = D.livre(f ? nomeQuem(f.o) : 'Mestre', expr);
+      const r = D.livre(f ? nomeQuem(f.o) : AU.usuario.nome, expr);
       if (!r) return UI.aviso('Não entendi a expressão. Use algo como 2d6+3 ou 1d10+1d8.');
-      UI.resultado(r, c && c.id);
+      UI.resultado(r, c ? c.id : f && campanhaDaFicha(f.o));
     },
+    'login-email'(form, ev) {
+      const criar = ev.submitter && ev.submitter.value === 'criar';
+      AU.entrarEmail(form.email.value.trim(), form.senha.value, criar, form.nome.value.trim()).catch(e => UI.aviso(erroLogin(e)));
+    },
+    'login-local'(form) { const n = form.nome.value.trim(); if (n) { AU.entrarLocal(n); depoisDoLogin(); } },
   };
   const CHANGES = {
     'escolher-combate'(el) { estado.combate = el.value; estado.sel = null; estado.ultimo = null; render(); },
@@ -345,7 +454,7 @@
     });
     document.addEventListener('submit', e => {
       const f = e.target.dataset.actSubmit; if (!f) return;
-      e.preventDefault(); SUBMITS[f](e.target);
+      e.preventDefault(); SUBMITS[f](e.target, e);
     });
     document.addEventListener('input', e => {
       const el = e.target;
@@ -367,8 +476,8 @@
       if (el.matches('[data-act-change]')) return CHANGES[el.dataset.actChange](el);
       if (el.matches('[data-f]') && (el.type === 'number' || el.tagName === 'SELECT' || el.type === 'checkbox')) gravarCampo(el, true);
       if (el.matches('[data-foto], [data-capa]') && el.files[0]) {
-        const x = docDe(el);
-        UI.lerFoto(el.files[0], el.matches('[data-capa]') ? 900 : 220).then(url => { x.o[el.matches('[data-capa]') ? 'capa' : 'foto'] = url; S.salvar(x.col, x.o, 0); render(); })
+        const x = docDe(el), ehCapa = el.matches('[data-capa]'), arq = el.files[0]; el.value = '';
+        UI.recortarFoto(arq, ehCapa ? { w: 1200, h: 400 } : { w: 360, h: 360 }).then(url => { if (!url) return; x.o[ehCapa ? 'capa' : 'foto'] = url; S.salvar(x.col, x.o, 0); render(); })
           .catch(() => UI.aviso('Não consegui abrir essa imagem. Tente um JPG ou PNG.'));
       }
       if (el.matches('[data-f-part]')) render();
@@ -378,7 +487,7 @@
   }
 
   function gravarCampo(el, rerender) {
-    const x = docDe(el); if (!x) return;
+    const x = docDe(el); if (!x || el.closest('.leitura')) return;
     let v = el.type === 'checkbox' ? el.checked : el.value;
     if (el.type === 'number' || el.hasAttribute('data-num')) v = v === '' ? 0 : +v;
     setCaminho(x.o, el.dataset.f, v);
@@ -407,16 +516,49 @@
     ]);
   }
 
+  function entrarNa(c) {
+    if (!c) return;
+    if (!P.ehMembro(c)) { c.membros = (c.membros || []).concat(P.eu()); S.salvar('campanhas', c, 0); UI.aviso('Você entrou em ' + c.nome + '. Adicione seu herói.', 'info'); }
+    estado.abaCamp = 'herois'; location.hash = '#campanha-' + c.id; render();
+  }
+  function erroLogin(e) {
+    const c = (e && e.code) || '';
+    if (/popup-closed|cancelled-popup/.test(c)) return 'Login cancelado.';
+    if (/wrong-password|invalid-credential|user-not-found/.test(c)) return 'E-mail ou senha não conferem.';
+    if (/email-already-in-use/.test(c)) return 'Esse e-mail já tem conta. Use Entrar.';
+    if (/weak-password/.test(c)) return 'A senha precisa de pelo menos 6 caracteres.';
+    if (/unauthorized-domain/.test(c)) return 'Este endereço não está liberado no Firebase (Authentication > Settings > Authorized domains).';
+    return 'Não deu para entrar (' + (c || 'erro') + ').';
+  }
+
+  // Menu da conta no topo.
+  function desenharConta() {
+    const box = UI.$('#conta'), u = AU.usuario;
+    if (!u) { box.innerHTML = ''; return; }
+    const onde = S.modo === 'nuvem' ? (AU.modo === 'firebase' ? 'Salvo na sua conta' : 'Salvo na conta claude.ai') : 'Salvo neste navegador';
+    box.innerHTML = `<details class="menu-conta"><summary>${UI.foto(u.foto, u.nome, 'avatar')}<span class="conta-nome">${esc(u.nome)}</span></summary>
+      <div class="menu-conta-caixa"><p><b>${esc(u.nome)}</b><small>${esc(onde)}</small></p>
+        <button class="btn pequeno largo" id="btn-backup">Backup</button>
+        ${AU.modo === 'claude' ? '' : '<button class="btn pequeno largo perigo-txt" data-act="sair">Sair</button>'}</div></details>`;
+    UI.$('#btn-backup').addEventListener('click', backup);
+  }
+  // Nomes das outras pessoas (claude.ai resolve sob demanda).
+  function carregarNomes() {
+    const ids = new Set();
+    S.lista('campanhas').filter(P.ehMembro).forEach(c => [c.mestre].concat(c.membros || []).forEach(i => ids.add(i)));
+    S.lista('herois').forEach(h => h.dono && ids.add(h.dono));
+    S.lista('viloes').forEach(v => v.dono && ids.add(v.dono));
+    const antes = JSON.stringify([...ids].map(AU.nome));
+    AU.perfis([...ids]).then(() => { if (JSON.stringify([...ids].map(AU.nome)) !== antes) aoMudarRemoto(); });
+  }
+  function depoisDoLogin() { AU.publicarPerfil(); desenharConta(); carregarNomes(); render(); }
+
   async function iniciar() {
     ligar();
-    UI.$('#btn-backup').addEventListener('click', backup);
     raiz().innerHTML = '<p class="carregando">Abrindo o bueiro…</p>';
-    await S.iniciar(aoMudarRemoto);
-    const st = UI.$('#status-salvo');
-    st.textContent = S.modo === 'nuvem' ? 'Salvo para a mesa' : 'Salvo neste navegador';
-    st.title = S.modo === 'nuvem' ? 'Fichas e campanhas ficam numa base compartilhada com quem tem acesso de edição a esta página.' : 'As fichas ficam só neste navegador. Use o Backup para levar para outro lugar.';
-    st.className = 'status ' + S.modo;
-    render();
+    await AU.iniciar();
+    await S.iniciar(c => { if (c !== 'perfis') carregarNomes(); aoMudarRemoto(); });
+    if (AU.usuario) depoisDoLogin(); else render();
   }
   iniciar();
 })(window.HB);

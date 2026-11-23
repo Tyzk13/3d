@@ -21,6 +21,15 @@ Para ler uma função: Read com `offset` = linha e `limit` ≈ 40–80. Não lei
 
 | Arquivo | Linhas | Tamanho |
 |---|---|---|
+| `herois-de-bueiro/css/app.css` | 503 | 42 KB |
+| `herois-de-bueiro/index.html` | 37 | 2 KB |
+| `herois-de-bueiro/js/app.js` | 565 | 41 KB |
+| `herois-de-bueiro/js/dados.js` | 51 | 2 KB |
+| `herois-de-bueiro/js/ficha.js` | 363 | 32 KB |
+| `herois-de-bueiro/js/mestre.js` | 265 | 25 KB |
+| `herois-de-bueiro/js/regras.js` | 238 | 11 KB |
+| `herois-de-bueiro/js/store.js` | 107 | 5 KB |
+| `herois-de-bueiro/js/ui.js` | 161 | 9 KB |
 | `index.html` | 42 | 3 KB |
 | `legacy/igreja-3d-site.html` | 620 | 899 KB |
 | `legacy/servidor-sync.js` | 26 | 1 KB |
@@ -92,9 +101,30 @@ Para ler uma função: Read com `offset` = linha e `limit` ≈ 40–80. Não lei
 | `videos/stories/tempo.js` | 94 | 10 KB |
 | `vite.config.ts` | 39 | 2 KB |
 
-Outros textos: `.claude/skills/mapa-3d/CATALOGO.md`, `.claude/skills/mapa-3d/SKILL.md`, `.claude/skills/videos-historia/SKILL.md`, `CHANGELOG.md`, `CLAUDE.md`, `CREDITS.md`, `README.md`, `capturas/README.md`, `docs/BRIEFING.md`, `docs/HOSPEDAGEM.md`, `docs/NOVO-MAPA.md`, `docs/PROMPT-NOVO-MAPA.md`, `package.json`, `server/package-lock.json`, `server/package.json`, `tools/assets.json`, `tsconfig.json`, `videos/README.md`, `videos/package-lock.json`, `videos/package.json`, `videos/requirements.txt`
+Outros textos: `.claude/skills/mapa-3d/CATALOGO.md`, `.claude/skills/mapa-3d/SKILL.md`, `.claude/skills/videos-historia/SKILL.md`, `CHANGELOG.md`, `CLAUDE.md`, `CREDITS.md`, `README.md`, `capturas/README.md`, `docs/BRIEFING.md`, `docs/HOSPEDAGEM.md`, `docs/NOVO-MAPA.md`, `docs/PROMPT-NOVO-MAPA.md`, `herois-de-bueiro/README.md`, `package.json`, `server/package-lock.json`, `server/package.json`, `tools/assets.json`, `tsconfig.json`, `videos/README.md`, `videos/package-lock.json`, `videos/package.json`, `videos/requirements.txt`
 
 ## Funções, classes e exports (linha)
+
+### `herois-de-bueiro/js/app.js`
+`raiz` 4 · `rota` 9 · `render` 10 · `secao` 31 · `naoAchou` 32 · `travarLeitura` 36 · `paginaLogin` 43 · `paginaInicio` 65 · `paginaRegras` 83 · `t` 84 · `docDe` 107 · `setCaminho` 112 · `campanhaAtual` 117 · `combateAtual` 118 · `nomeQuem` 119 · `fonteAtual` 122 · `mudarRecurso` 130 · `campanhaDaFicha` 152 · `rolarAttrDe` 157 · `escolherHerois` 166 · `novoCombate` 172 · `base()` 197 · `convidar()` 270 · `turno()` 327 · `abrirEscolhaViloes` 420 · `ligar` 444 · `gravarCampo` 489 · `aoMudarRemoto` 503 · `backup` 510 · `entrarNa` 519 · `erroLogin` 524 · `desenharConta` 535 · `carregarNomes` 546 · `depoisDoLogin` 554 · `iniciar` 556
+
+### `herois-de-bueiro/js/dados.js`
+`d` 4 · `rolar` 5 · `soma` 6 · `teste` 9 · `ataque` 20 · `livre` 35
+
+### `herois-de-bueiro/js/ficha.js`
+`novoHeroi` 5 · `pvAtual` 14 · `manaAtual` 15 · `nomeClasse` 16 · `listaHerois` 19 · `grade` 24 · `vazioHerois` 34 · `cartaoHeroi` 39 · `hexagono` 50 · `blocoEscolhas` 63 · `ficha` 77 · `blocoElementos` 164 · `ajusteBarra` 178 · `linhaAttr` 191 · `sinal` 193 · `abaHeroi` 203 · `listaEditavel` 220 · `abaCombate` 228 · `cartaoAtaque` 235 · `abaReputacao` 250 · `viloes` 276 · `pegarVilao` 277 · `derivVilao` 278 · `novoVilao` 283 · `listaViloes` 287 · `cartaoVilao` 296 · `paginaViloes` 305 · `fichaVilao` 313
+
+### `herois-de-bueiro/js/mestre.js`
+`paginaCampanhas` 6 · `capa` 23 · `paginaCampanha` 28 · `cartaoHeroiCampanha` 56 · `abaJogadores` 64 · `estadoVida` 79 · `combateJogador` 83 · `mesa` 96 · `heroisDa` 116 · `abaHerois` 118 · `cartaoEscudo` 123 · `participante` 137 · `ordenar` 147 · `abaCombates` 152 · `painelParticipante` 180 · `abaGanchos` 207 · `cartaoGancho` 216 · `f` 217 · `cont` 236 · `abaDados` 256
+
+### `herois-de-bueiro/js/regras.js`
+`bonusMaestria` 26 · `perdePara` 73 · `estado()` 140 · `modsDe` 150 · `add` 152 · `ap` 153 · `nivelBruto` 170 · `limitar` 175 · `nivel` 176 · `maestrias` 178 · `pontosGastos` 189 · `derivados` 191 · `situacoes` 209 · `ordemClasse` 228
+
+### `herois-de-bueiro/js/store.js`
+`novoId` 10 · `clone` 11 · `lerLocal` 13 · `gravarLocal` 19 · `iniciar` 26 · `escrever` 60 · `agendar` 79 · `importar()` 98
+
+### `herois-de-bueiro/js/ui.js`
+`esc` 4 · `aviso` 7 · `janela` 16 · `fechar` 34 · `confirmar` 35 · `barra` 43 · `barraMini` 53 · `foto` 58 · `carregarImagem` 66 · `recortarFoto` 73 · `limitar` 86 · `desenhar` 90 · `exportar` 95 · `dadosHtml` 117 · `cartaoResultado` 120 · `resultado` 133 · `painelResultados` 148 · `opcoesAttr` 155
 
 ### `legacy/igreja-3d-site.html`
 `fit` 82 · `mat` 87 · `box` 88 · `cyl` 89 · `jit` 90 · `tex` 91 · `cl` 92 · `sm` 106 · `glass` 107 · `arch` 111 · `inst` 112 · `updEnv` 118 · `setTime` 132 · `buildIgreja` 139 · `haloT` 141 · `halo` 142 · `flat` 149 · `step` 177 · `pewM` 203 · `lace` 246 · `veil` 248 · `roofG` 280 · `car` 282 · `bench` 290 · `dead` 300 · `aoT` 312 · `mistT` 321 · `buildCampo` 352 · `K` 381 · `sizeT` 384 · `placeT` 385 · `makeToken` 389 · `dropT` 399 · `selT` 400 · `setTarget` 401 · `loadMap` 404 · `onPos` 419 · `onChar` 420 · `save` 421 · `netDb` 422 · `netWs` 429 · `snd` 430 · `open` 431 · `wk` 440 · `setM` 443 · `freeSpot` 444 · `end` 455 · `cutBg` 463 · `push` 464 · `prep` 467 · `spawn` 470 · `addChar` 471 · `resz` 475 · `focusT` 487 · `placeWalkCam` 494 · `togV` 495 · `startWalk` 496 · `setWalk` 500 · `walkStep` 502 · `jmove` 515 · `jend` 517 · `fillAreas` 521 · `xcalc` 522 · `xinfo` 523 · `xrender` 524 · `dl` 532 · `setC` 540 · `haloG` 545 · `dressSite` 546 · `fl2` 547 · `mt` 563 · `loadScript` 568 · `buildGlb` 569 · `importGlb` 590 · `importHdr` 595 · `noHdr` 600
