@@ -341,7 +341,7 @@
 
   function regras() {
     const t = (cab, linhas) => `<div class="tabela-rolagem"><table class="tabela-regra"><thead><tr>${cab.map(c => `<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>${linhas.map(l => `<tr>${l.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
-    return `<section class="pagina regras"><h1 class="titulo-hq">Regras</h1><p class="sub">Resumo do Livro dos Ceifadores (v0.7b, playtest). Para textos completos de habilidades, kidos e zanpakuto, consulte o livro.</p>
+    return `<section class="pagina regras"><div class="pagina-topo"><div><h1 class="titulo-hq">Regras</h1><p class="sub">Resumo do Livro dos Ceifadores (v0.7b, playtest). Para textos completos de habilidades, kidos e zanpakuto, consulte o livro.</p></div>${HB.botaoLivro('sh')}</div>
       <div class="regras-grade">
       <article class="bloco"><h2>Testes</h2><p>Role <b>1d20</b> + atributo + bônus de treinamento (se treinado) + outros, contra a CD: 10 média, 15 difícil, 20 desafiadora, 30 magistral, 40 quase impossível. Mestre numa perícia soma 1,5× o bônus de treinamento.</p>
         ${t(['Nível', 'Bônus de treinamento'], [['1–4', '+2'], ['5–8', '+3'], ['9–12', '+4'], ['13–16', '+5'], ['17–20', '+6']])}</article>
@@ -359,6 +359,8 @@
   HB.Sistemas.registrar({
     id: 'sh', nome: 'Shinigamis & Hollows', sub: 'Livro dos Ceifadores · sistema d20',
     descricao: 'Ceifadores da Gotei 13 contra hollows. Seis atributos, perícias, testes de resistência, Caminhos do Zankensoki, zanpakuto com shikai e bankai, kidos e Quebras do destino.',
+    livro: { pdf: 'livros/shinigamis-e-hollows-livro-dos-ceifadores-v0.7b.pdf', titulo: 'Livro dos Ceifadores v0.7b (playtest)', tamanho: '17 MB',
+      creditos: 'Shinigamis & Hollows é um projeto gratuito de fãs, de Setsugiri e equipe, baseado em Bleach, de Tite Kubo.' },
     rotulos: { personagens: 'Personagens', personagem: 'shinigami', novo: 'Novo shinigami', ameacas: 'Ameaças', ameaca: 'ameaça', novaAmeaca: 'Nova ameaça', recurso: 'Reiryoku' },
     iniciativa: 'rolada',
     temReputacao: false,

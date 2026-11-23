@@ -33,6 +33,7 @@
   HB.Sistemas.registrar({
     id: 'hb', nome: 'Heróis de Bueiro', sub: 'Super-heróis de rua · 1d10 + dado do nível',
     descricao: 'Heróis remendados, mutantes e alienígenas defendendo a cidade a partir do esgoto. Atributos por nível de dado, maestrias, elementos e reputação.',
+    livro: { pdf: 'livros/herois-de-bueiro-playtest.pdf', titulo: 'Heróis de Bueiro · Playtest completo', tamanho: '90 KB', creditos: 'Sistema original da mesa.' },
     rotulos: { personagens: 'Heróis', personagem: 'herói', novo: 'Novo herói', ameacas: 'Vilões', ameaca: 'vilão', novaAmeaca: 'Novo vilão', recurso: 'Mana' },
     iniciativa: 'fixa',
     temReputacao: true,

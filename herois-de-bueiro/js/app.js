@@ -75,18 +75,21 @@
     return `<section class="estante">
       <div class="estante-topo"><h1 class="titulo-capa">RPG<span>HUB</span></h1>
         <p class="capa-sub">Escolha o livro. Fichas, campanhas, ameaças e regras seguem o sistema dele; a conta, o Escudo do Mestre e o combate são os mesmos.</p></div>
-      <div class="livros">${livros.map(l => { const n = conta(l.id); return `<button class="livro livro-${l.id} ${SI.idAtivo === l.id ? 'aberto' : ''}" data-act="escolher-livro" data-id="${l.id}">
+      <div class="livros">${livros.map(l => { const n = conta(l.id); return `<div class="livro-item"><button class="livro livro-${l.id} ${SI.idAtivo === l.id ? 'aberto' : ''}" data-act="escolher-livro" data-id="${l.id}">
           <span class="livro-lombada" aria-hidden="true"></span>
           <span class="livro-capa"><span class="livro-selo">${esc(l.sub)}</span><b class="livro-nome">${esc(l.nome)}</b><span class="livro-desc">${esc(l.descricao)}</span>
-            <span class="livro-rodape">${AU.usuario ? `${n.p} ficha${n.p === 1 ? '' : 's'} · ${n.c} campanha${n.c === 1 ? '' : 's'}` : 'Entre para ver suas fichas'}<i>${SI.idAtivo === l.id ? 'Aberto' : 'Abrir livro'}</i></span></span></button>`; }).join('')}</div>
+            <span class="livro-rodape">${AU.usuario ? `${n.p} ficha${n.p === 1 ? '' : 's'} · ${n.c} campanha${n.c === 1 ? '' : 's'}` : 'Entre para ver suas fichas'}<i>${SI.idAtivo === l.id ? 'Aberto' : 'Abrir livro'}</i></span></span></button>
+          ${l.livro ? `<p class="livro-pdf"><a href="${l.livro.pdf}" target="_blank" rel="noopener">Ler o livro em PDF</a> <small>${esc(l.livro.titulo)} · ${esc(l.livro.tamanho)}. ${esc(l.livro.creditos)}</small></p>` : ''}</div>`; }).join('')}</div>
     </section>`;
   }
 
   HB.paginaRegrasHB = () => paginaRegras();
+  // Link para o PDF do livro (abre em outra aba; o navegador mostra e deixa baixar).
+  HB.botaoLivro = id => { const l = (SI.lista().find(x => x.id === id) || {}).livro; return l ? `<a class="btn primario" href="${l.pdf}" target="_blank" rel="noopener">Ler o livro <small>PDF · ${esc(l.tamanho)}</small></a>` : ''; };
   function paginaRegras() {
     const t = (cab, linhas) => `<div class="tabela-rolagem"><table class="tabela-regra"><thead><tr>${cab.map(c => `<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>${linhas.map(l => `<tr>${l.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
     return `<section class="pagina regras">
-      <h1 class="titulo-hq">Regras</h1>
+      <div class="pagina-topo"><h1 class="titulo-hq">Regras</h1>${HB.botaoLivro('hb')}</div>
       <div class="regras-grade">
       <article class="bloco"><h2>Rolagem</h2><p>Todo teste rola <b>1d10</b> mais o dado do nível no atributo. Cada personagem começa com ${R.PONTOS_INICIAIS} pontos de atributo; cada nível custa ${R.CUSTO_NIVEL}. Classe e origem somam ou tiram níveis.</p>
         ${t(['Nível', 'Dado somado'], R.NIVEIS.map((n, i) => [i + ' · ' + n.nome, i ? R.dadoTexto(i) : '0']))}</article>

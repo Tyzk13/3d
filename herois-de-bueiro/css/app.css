@@ -568,3 +568,7 @@ body[data-sistema="sh"] { background-image: none; }
   .pp-attrs.muitos { grid-template-columns: repeat(3, 1fr); }
   .livro { min-height: 250px; }
 }
+.livro-item { display: grid; gap: .7rem; align-content: start; }
+.livro-pdf { margin: 0; font-size: .86rem; display: grid; gap: .15rem; padding-left: 22px; }
+.livro-pdf a { font-weight: 700; }
+.pagina-topo .btn small { display: inline; margin-left: .3rem; font-weight: 600; opacity: .75; }

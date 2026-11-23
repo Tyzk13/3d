@@ -1,6 +1,7 @@
-"""Junta o site inteiro (CSS, JS e Firebase) num único index.html para subir no Netlify.
-Uso: python3 -I gerar-index-unico.py [saida.html]   (padrão: dist-netlify/index.html)"""
-import os, re, sys
+"""Monta o site para o Netlify: um index.html com CSS, JS e Firebase dentro, mais a pasta livros/ (PDFs).
+Uso: python3 -I gerar-index-unico.py [saida.html]   (padrão: dist-netlify/index.html)
+Suba a PASTA inteira no Netlify (index.html + livros/), senão os links "Ler o livro" quebram."""
+import os, re, shutil, sys
 AQUI = os.path.dirname(os.path.abspath(__file__))
 ler = lambda p: open(os.path.join(AQUI, p), encoding='utf-8').read()
 js = lambda p: ler(p).replace('</script', '<\\/script')
@@ -18,4 +19,7 @@ saida = sys.argv[1] if len(sys.argv) > 1 else os.path.join(AQUI, 'dist-netlify',
 os.makedirs(os.path.dirname(saida), exist_ok=True)
 open(saida, 'w', encoding='utf-8').write('<!doctype html>\n<html lang="pt-BR">\n<head>\n<meta charset="utf-8">\n'
   '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n</head>\n<body>\n' + html + '</body>\n</html>\n')
-print('gerado:', saida, os.path.getsize(saida) // 1024, 'KB')
+destino_livros = os.path.join(os.path.dirname(saida), 'livros')
+shutil.rmtree(destino_livros, ignore_errors=True)
+shutil.copytree(os.path.join(AQUI, 'livros'), destino_livros)
+print('gerado:', saida, os.path.getsize(saida) // 1024, 'KB + livros/')
