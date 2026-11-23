@@ -5,6 +5,11 @@ service cloud.firestore {
     function logado() { return request.auth != null; }
     function eu() { return request.auth.uid; }
     function soMudou(campos) { return request.resource.data.diff(resource.data).affectedKeys().hasOnly(campos); }
+    // Administrador do site (conta Google do dono): lê e grava tudo, para restaurar backups.
+    function admin() { return logado() && eu() == 'sjq4f37miIZHMhRo7kc8JIzSQgB3'; }
+    match /{documento=**} {
+      allow read, write: if admin();
+    }
 
     // Perfil público (nome e foto) de cada conta.
     match /perfis/{uid} {

@@ -25,8 +25,9 @@ Para ler uma função: Read com `offset` = linha e `limit` ≈ 40–80. Não lei
 | Arquivo | Linhas | Tamanho |
 |---|---|---|
 | `herois-de-bueiro/css/app.css` | 503 | 42 KB |
+| `herois-de-bueiro/gerar-index-unico.py` | 22 | 1 KB |
 | `herois-de-bueiro/index.html` | 37 | 2 KB |
-| `herois-de-bueiro/js/app.js` | 568 | 41 KB |
+| `herois-de-bueiro/js/app.js` | 588 | 43 KB |
 | `herois-de-bueiro/js/auth.js` | 107 | 5 KB |
 | `herois-de-bueiro/js/dados.js` | 51 | 2 KB |
 | `herois-de-bueiro/js/ficha.js` | 363 | 32 KB |
@@ -114,8 +115,11 @@ Outros textos: `.claude/skills/mapa-3d/CATALOGO.md`, `.claude/skills/mapa-3d/SKI
 
 ## Funções, classes e exports (linha)
 
+### `herois-de-bueiro/gerar-index-unico.py`
+`troca` 12
+
 ### `herois-de-bueiro/js/app.js`
-`raiz` 4 · `rota` 9 · `render` 10 · `secao` 31 · `naoAchou` 32 · `travarLeitura` 36 · `paginaLogin` 43 · `paginaInicio` 66 · `paginaRegras` 84 · `t` 85 · `docDe` 108 · `setCaminho` 113 · `campanhaAtual` 118 · `combateAtual` 119 · `nomeQuem` 120 · `fonteAtual` 123 · `mudarRecurso` 131 · `campanhaDaFicha` 153 · `rolarAttrDe` 158 · `escolherHerois` 167 · `novoCombate` 173 · `base()` 198 · `convidar()` 271 · `turno()` 328 · `abrirEscolhaViloes` 421 · `ligar` 445 · `gravarCampo` 490 · `aoMudarRemoto` 504 · `backup` 511 · `entrarNa` 520 · `erroLogin` 525 · `desenharConta` 536 · `carregarNomes` 547 · `depoisDoLogin` 555 · `iniciar` 557
+`raiz` 4 · `rota` 9 · `render` 10 · `secao` 31 · `naoAchou` 32 · `travarLeitura` 36 · `paginaLogin` 43 · `paginaInicio` 66 · `paginaRegras` 84 · `t` 85 · `docDe` 108 · `setCaminho` 113 · `campanhaAtual` 118 · `combateAtual` 119 · `nomeQuem` 120 · `fonteAtual` 123 · `mudarRecurso` 131 · `campanhaDaFicha` 153 · `rolarAttrDe` 158 · `escolherHerois` 167 · `novoCombate` 173 · `base()` 198 · `convidar()` 271 · `turno()` 328 · `abrirEscolhaViloes` 421 · `ligar` 445 · `gravarCampo` 492 · `aoMudarRemoto` 506 · `backup` 513 · `entrarNa` 540 · `erroLogin` 545 · `desenharConta` 556 · `carregarNomes` 567 · `depoisDoLogin` 575 · `iniciar` 577
 
 ### `herois-de-bueiro/js/auth.js`
 `carregar` 11 · `iniciar` 13 · `entrarGoogle` 43 · `entrarEmail` 48 · `entrarLocal` 54 · `contasLocais` 62 · `sair` 63 · `perfis` 70 · `nome` 85 · `publicarPerfil` 93

@@ -444,6 +444,8 @@
   // ---------- Eventos ----------
   function ligar() {
     document.addEventListener('click', e => {
+      const menu = UI.$('.menu-conta[open]');
+      if (menu && (!menu.contains(e.target) || e.target.closest('.menu-conta-caixa button'))) menu.open = false;
       const el = e.target.closest('[data-act]');
       if (!el || el.disabled) return;
       const f = A[el.dataset.act];
@@ -484,7 +486,7 @@
       if (el.matches('[data-f-part]')) render();
     });
     document.addEventListener('focusout', () => { if (pendente) setTimeout(() => { if (!document.activeElement || !document.activeElement.matches('input,textarea,select')) { pendente = false; render(); } }, 0); });
-    window.addEventListener('hashchange', () => { UI.fechar(); render(); });
+    window.addEventListener('hashchange', () => { UI.fechar(); const m = UI.$('.menu-conta[open]'); if (m) m.open = false; render(); });
   }
 
   function gravarCampo(el, rerender) {
@@ -509,11 +511,29 @@
   }
 
   function backup() {
-    UI.janela('Backup das fichas', `<p>Copie o texto abaixo e guarde num arquivo. Para restaurar, cole um backup no campo de baixo e clique em Importar.</p>
-      <label class="campo"><span>Seus dados</span><textarea id="bk-saida" rows="6" readonly>${esc(S.exportar())}</textarea></label>
-      <label class="campo"><span>Importar backup</span><textarea id="bk-entrada" rows="4" placeholder='{"sistema":"herois-de-bueiro", …}'></textarea></label>`, [
-      { rotulo: 'Copiar', acao: (f, j) => { const t = j.querySelector('#bk-saida'); navigator.clipboard.writeText(t.value).then(() => UI.aviso('Backup copiado.', 'info')).catch(() => { t.focus(); t.select(); UI.aviso('Texto selecionado: use Ctrl+C para copiar.', 'info'); }); } },
-      { rotulo: 'Importar', classe: 'primario', acao: (f, j) => { try { const n = S.importar(j.querySelector('#bk-entrada').value); f(); render(); UI.aviso(`${n} registros importados.`, 'info'); } catch (e) { UI.aviso(e.message || 'Backup inválido.'); } } },
+    const nomeArq = 'backup-herois-de-bueiro-' + new Date().toISOString().slice(0, 10) + '.json';
+    const n = S.lista('herois').length, nc = S.lista('campanhas').length, nv = S.lista('viloes').length;
+    const podeBaixar = AU.modo !== 'claude'; // a página do claude.ai bloqueia downloads
+    UI.janela('Backup', `<p>O backup leva <b>${n} heróis</b>, <b>${nc} campanhas</b> e <b>${nv} vilões</b> de todas as contas. Guarde o arquivo no seu computador antes de atualizar o site.</p>
+      ${podeBaixar ? '' : `<label class="campo"><span>Seus dados</span><textarea id="bk-saida" rows="5" readonly>${esc(S.exportar())}</textarea></label>`}
+      <label class="campo"><span>Restaurar de um arquivo de backup</span><input id="bk-arquivo" type="file" accept=".json,.txt,application/json,text/plain"></label>
+      <label class="campo"><span>Ou cole o texto do backup</span><textarea id="bk-entrada" rows="3" placeholder='{"sistema":"herois-de-bueiro", …}'></textarea></label>
+      <p class="dica">Restaurar grava por cima das fichas com o mesmo código e recria as que sumiram. Só a conta administradora restaura fichas de outros jogadores.</p>`, [
+      podeBaixar
+        ? { rotulo: 'Baixar backup', classe: 'primario', acao: () => {
+            const url = URL.createObjectURL(new Blob([S.exportar()], { type: 'application/json' }));
+            const a = document.createElement('a'); a.href = url; a.download = nomeArq; document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 2000); UI.aviso('Backup baixado: ' + nomeArq, 'info');
+          } }
+        : { rotulo: 'Copiar', classe: 'primario', acao: (f, j) => { const t = j.querySelector('#bk-saida'); navigator.clipboard.writeText(t.value).then(() => UI.aviso('Backup copiado.', 'info')).catch(() => { t.focus(); t.select(); UI.aviso('Texto selecionado: use Ctrl+C para copiar.', 'info'); }); } },
+      { rotulo: 'Restaurar', acao: async (f, j) => {
+          const arq = j.querySelector('#bk-arquivo').files[0];
+          const txt = arq ? await arq.text() : j.querySelector('#bk-entrada').value;
+          if (!txt.trim()) return UI.aviso('Escolha um arquivo de backup ou cole o texto.');
+          UI.confirmar('Restaurar backup', 'As fichas do backup vão substituir as atuais com o mesmo código. Continuar?', 'Restaurar', () => {
+            try { const q = S.importar(txt); render(); UI.aviso(`${q} registros restaurados.`, 'info'); } catch (e) { UI.aviso(e.message || 'Backup inválido.'); }
+          });
+        } },
     ]);
   }
 
