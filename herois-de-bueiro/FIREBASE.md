@@ -27,3 +27,12 @@ pessoa vê os próprios heróis e as campanhas de que participa.
 | Abrir o Escudo do Mestre (combate, ganchos, anotações) | | ✓ | ✓ | |
 | Passar/retirar o escudo, passar o cargo de mestre, remover jogador | | ✓ | | |
 | Entrar com código, adicionar o próprio herói, rolar | ✓ | ✓ | ✓ | ✓ |
+
+## Login no celular ("falta do estado inicial")
+No Netlify o login passa pelo próprio site: `_redirects` repassa `/__/auth/*` para o Firebase e
+`js/firebase-config.js` usa o domínio do site como `authDomain`. Para isso funcionar, uma vez:
+Google Cloud Console › APIs e serviços › Credenciais › **IDs do cliente OAuth 2.0** › "Web client (auto created by Google Service)":
+- **Origens JavaScript autorizadas**: `https://rpghub.netlify.app`
+- **URIs de redirecionamento autorizados**: `https://rpghub.netlify.app/__/auth/handler`
+
+Se trocar o nome do site no Netlify, repita com o endereço novo (e em Authentication › Domínios autorizados).

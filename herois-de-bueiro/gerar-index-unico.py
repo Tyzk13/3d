@@ -38,23 +38,29 @@ csp = '; '.join([
     "font-src https://fonts.gstatic.com",
     "img-src 'self' data: blob: https://*.googleusercontent.com https://www.gstatic.com",
     "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://" + projeto + ".firebaseapp.com https://www.google.com",
-    "frame-src https://" + projeto + ".firebaseapp.com https://accounts.google.com https://www.google.com https://www.recaptcha.net",
+    "frame-src 'self' https://" + projeto + ".firebaseapp.com https://accounts.google.com https://www.google.com https://www.recaptcha.net",
     "worker-src 'self' blob:",
     "object-src 'none'", "base-uri 'none'", "form-action 'self'", "frame-ancestors 'none'", "upgrade-insecure-requests",
 ])
+# CSP e bloqueio de moldura só na página do app: as páginas de login (/__/auth, repassadas ao Firebase)
+# precisam rodar os scripts delas e abrir dentro de um iframe do próprio site.
+pagina = ['  Content-Security-Policy: ' + csp, '  X-Frame-Options: DENY', '  Cross-Origin-Opener-Policy: same-origin-allow-popups']
 cab = '\n'.join([
     '/*',
-    '  Content-Security-Policy: ' + csp,
-    '  X-Frame-Options: DENY',
     '  X-Content-Type-Options: nosniff',
     '  Referrer-Policy: strict-origin-when-cross-origin',
     '  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()',
     '  Strict-Transport-Security: max-age=31536000; includeSubDomains',
-    '  Cross-Origin-Opener-Policy: same-origin-allow-popups',
+    '/', *pagina,
+    '/index.html', *pagina,
     '/livros/*',
     '  Cache-Control: public, max-age=604800',
     '',
 ])
+# Login pelo próprio domínio: o Netlify repassa /__/auth e /__/firebase para o Firebase (status 200 = proxy).
+open(os.path.join(os.path.dirname(saida), '_redirects'), 'w', encoding='utf-8').write(
+    '/__/auth/*  https://' + projeto + '.firebaseapp.com/__/auth/:splat  200\n'
+    '/__/firebase/*  https://' + projeto + '.firebaseapp.com/__/firebase/:splat  200\n')
 open(os.path.join(os.path.dirname(saida), '_headers'), 'w', encoding='utf-8').write(cab)
 destino_livros = os.path.join(os.path.dirname(saida), 'livros')
 shutil.rmtree(destino_livros, ignore_errors=True)

@@ -16,6 +16,8 @@ Para ler uma função: Read com `offset` = linha e `limit` ≈ 40–80. Não lei
 
 | Arquivo | Linha | Tamanho | Início |
 |---|---|---|---|
+| `herois-de-bueiro/vendor/firebase/firebase-app-check-compat.js` | 1 | 12 KB | !function(e,t){"object"==typeof exports& |
+| `herois-de-bueiro/vendor/firebase/firebase-app-check-compat.js` | 3 | 10 KB | `)}function Z(){var e=function(){if("und |
 | `herois-de-bueiro/vendor/firebase/firebase-app-compat.js` | 1 | 30 KB | !function(e,t){"object"==typeof exports& |
 | `herois-de-bueiro/vendor/firebase/firebase-auth-compat.js` | 1 | 136 KB | !function(e,t){"object"==typeof exports& |
 | `herois-de-bueiro/vendor/firebase/firebase-firestore-compat.js` | 1 | 333 KB | !function(e,t){"object"==typeof exports& |
@@ -26,13 +28,13 @@ Para ler uma função: Read com `offset` = linha e `limit` ≈ 40–80. Não lei
 | Arquivo | Linhas | Tamanho |
 |---|---|---|
 | `herois-de-bueiro/css/app.css` | 634 | 54 KB |
-| `herois-de-bueiro/gerar-index-unico.py` | 63 | 4 KB |
+| `herois-de-bueiro/gerar-index-unico.py` | 69 | 5 KB |
 | `herois-de-bueiro/index.html` | 43 | 2 KB |
 | `herois-de-bueiro/js/app.js` | 692 | 52 KB |
 | `herois-de-bueiro/js/auth.js` | 123 | 6 KB |
 | `herois-de-bueiro/js/dados.js` | 51 | 2 KB |
 | `herois-de-bueiro/js/ficha.js` | 366 | 33 KB |
-| `herois-de-bueiro/js/firebase-config.js` | 16 | 1 KB |
+| `herois-de-bueiro/js/firebase-config.js` | 18 | 1 KB |
 | `herois-de-bueiro/js/mestre.js` | 278 | 27 KB |
 | `herois-de-bueiro/js/op2.js` | 347 | 40 KB |
 | `herois-de-bueiro/js/permissoes.js` | 47 | 2 KB |
@@ -43,6 +45,8 @@ Para ler uma função: Read com `offset` = linha e `limit` ≈ 40–80. Não lei
 | `herois-de-bueiro/js/sistemas.js` | 28 | 1 KB |
 | `herois-de-bueiro/js/store.js` | 139 | 7 KB |
 | `herois-de-bueiro/js/ui.js` | 194 | 12 KB |
+| `herois-de-bueiro/testes/regras-firestore.test.mjs` | 85 | 8 KB |
+| `herois-de-bueiro/vendor/firebase/firebase-app-check-compat.js` | 5 | 23 KB |
 | `herois-de-bueiro/vendor/firebase/firebase-app-compat.js` | 9 | 31 KB |
 | `herois-de-bueiro/vendor/firebase/firebase-auth-compat.js` | 3 | 136 KB |
 | `herois-de-bueiro/vendor/firebase/firebase-firestore-compat.js` | 3 | 333 KB |
@@ -117,7 +121,7 @@ Para ler uma função: Read com `offset` = linha e `limit` ≈ 40–80. Não lei
 | `videos/stories/tempo.js` | 94 | 10 KB |
 | `vite.config.ts` | 39 | 2 KB |
 
-Outros textos: `.claude/skills/mapa-3d/CATALOGO.md`, `.claude/skills/mapa-3d/SKILL.md`, `.claude/skills/videos-historia/SKILL.md`, `CHANGELOG.md`, `CLAUDE.md`, `CREDITS.md`, `README.md`, `capturas/README.md`, `docs/BRIEFING.md`, `docs/HOSPEDAGEM.md`, `docs/NOVO-MAPA.md`, `docs/PROMPT-NOVO-MAPA.md`, `herois-de-bueiro/FIREBASE.md`, `herois-de-bueiro/README.md`, `herois-de-bueiro/netlify.toml`, `package.json`, `server/package-lock.json`, `server/package.json`, `tools/assets.json`, `tsconfig.json`, `videos/README.md`, `videos/package-lock.json`, `videos/package.json`, `videos/requirements.txt`
+Outros textos: `.claude/skills/mapa-3d/CATALOGO.md`, `.claude/skills/mapa-3d/SKILL.md`, `.claude/skills/videos-historia/SKILL.md`, `CHANGELOG.md`, `CLAUDE.md`, `CREDITS.md`, `README.md`, `capturas/README.md`, `docs/BRIEFING.md`, `docs/HOSPEDAGEM.md`, `docs/NOVO-MAPA.md`, `docs/PROMPT-NOVO-MAPA.md`, `herois-de-bueiro/FIREBASE.md`, `herois-de-bueiro/README.md`, `herois-de-bueiro/SEGURANCA.md`, `herois-de-bueiro/netlify.toml`, `herois-de-bueiro/testes/README.md`, `package.json`, `server/package-lock.json`, `server/package.json`, `tools/assets.json`, `tsconfig.json`, `videos/README.md`, `videos/package-lock.json`, `videos/package.json`, `videos/requirements.txt`
 
 ## Funções, classes e exports (linha)
 
@@ -165,6 +169,9 @@ Outros textos: `.claude/skills/mapa-3d/CATALOGO.md`, `.claude/skills/mapa-3d/SKI
 
 ### `herois-de-bueiro/js/ui.js`
 `esc` 4 · `imgSegura` 7 · `aviso` 9 · `janela` 18 · `fechar` 36 · `confirmar` 37 · `barra` 45 · `barraMini` 55 · `foto` 60 · `carregarImagem` 70 · `recortarFoto` 77 · `limitar` 90 · `desenhar` 94 · `exportar` 99 · `dadosHtml` 121 · `cartaoResultado` 124 · `resultado` 138 · `semMovimento` 152 · `fecharRolagem` 153 · `agendarFechar` 157 · `mostrarRolagem` 158 · `mostrar` 162 · `painelResultados` 180 · `opcoesAttr` 188
+
+### `herois-de-bueiro/testes/regras-firestore.test.mjs`
+`as` 12 · `C` 13 · `t` 15 · `reset` 16
 
 ### `legacy/igreja-3d-site.html`
 `fit` 82 · `mat` 87 · `box` 88 · `cyl` 89 · `jit` 90 · `tex` 91 · `cl` 92 · `sm` 106 · `glass` 107 · `arch` 111 · `inst` 112 · `updEnv` 118 · `setTime` 132 · `buildIgreja` 139 · `haloT` 141 · `halo` 142 · `flat` 149 · `step` 177 · `pewM` 203 · `lace` 246 · `veil` 248 · `roofG` 280 · `car` 282 · `bench` 290 · `dead` 300 · `aoT` 312 · `mistT` 321 · `buildCampo` 352 · `K` 381 · `sizeT` 384 · `placeT` 385 · `makeToken` 389 · `dropT` 399 · `selT` 400 · `setTarget` 401 · `loadMap` 404 · `onPos` 419 · `onChar` 420 · `save` 421 · `netDb` 422 · `netWs` 429 · `snd` 430 · `open` 431 · `wk` 440 · `setM` 443 · `freeSpot` 444 · `end` 455 · `cutBg` 463 · `push` 464 · `prep` 467 · `spawn` 470 · `addChar` 471 · `resz` 475 · `focusT` 487 · `placeWalkCam` 494 · `togV` 495 · `startWalk` 496 · `setWalk` 500 · `walkStep` 502 · `jmove` 515 · `jend` 517 · `fillAreas` 521 · `xcalc` 522 · `xinfo` 523 · `xrender` 524 · `dl` 532 · `setC` 540 · `haloG` 545 · `dressSite` 546 · `fl2` 547 · `mt` 563 · `loadScript` 568 · `buildGlb` 569 · `importGlb` 590 · `importHdr` 595 · `noHdr` 600

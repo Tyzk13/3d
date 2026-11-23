@@ -3,7 +3,9 @@
 // Na página publicada no claude.ai o Firebase não carrega (a página bloqueia sites de fora) e o app usa a conta claude.ai.
 window.HB_FIREBASE = {
   apiKey: "AIzaSyB-0K0_nDysaF47Z3vKk21x4T0A_DXojXk",
-  authDomain: "heroisdebueiro-dbd51.firebaseapp.com",
+  // No Netlify o login passa pelo próprio site (/__/auth, repassado ao Firebase pelo arquivo _redirects):
+  // sem isso, o Chrome do celular perde o "estado inicial" do login ao voltar do Google.
+  authDomain: /\.netlify\.app$/.test(location.hostname) ? location.host : "heroisdebueiro-dbd51.firebaseapp.com",
   projectId: "heroisdebueiro-dbd51",
   storageBucket: "heroisdebueiro-dbd51.firebasestorage.app",
   messagingSenderId: "824146013577",
