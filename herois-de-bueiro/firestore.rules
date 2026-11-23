@@ -1,54 +1,120 @@
 rules_version = '2';
-// Regras do Heróis de Bueiro (Firestore). Publique em: Console do Firebase > Firestore > Regras.
+// Regras do RPGHUB (Firestore). Publique em: Console do Firebase > Firestore > Regras.
+// Valem mesmo para quem tenta mexer pelo console do navegador ou com scripts: o site é só a interface.
 service cloud.firestore {
   match /databases/{db}/documents {
+    // ---------- Básico ----------
     function logado() { return request.auth != null; }
     function eu() { return request.auth.uid; }
-    function soMudou(campos) { return request.resource.data.diff(resource.data).affectedKeys().hasOnly(campos); }
-    // Administrador do site (conta Google do dono): lê e grava tudo, para restaurar backups.
     function admin() { return logado() && eu() == 'sjq4f37miIZHMhRo7kc8JIzSQgB3'; }
+    function novo() { return request.resource.data; }
+    function velho() { return resource.data; }
+    function mudou() { return novo().diff(velho()).affectedKeys(); }
+    function soMudou(campos) { return mudou().hasOnly(campos); }
+
+    // ---------- Validação de dados (tamanho e tipo) ----------
+    function idOk(id) { return id.matches('^[A-Za-z0-9_-]{1,64}$'); }
+    function sistemaOk() { return !('sistema' in novo()) || novo().sistema in ['hb', 'sh', 'op2']; }
+    function texto(c, max) { return !(c in novo()) || novo()[c] == null || (novo()[c] is string && novo()[c].size() <= max); }
+    function lista(c, max) { return !(c in novo()) || (novo()[c] is list && novo()[c].size() <= max); }
+    // Imagens só embutidas (o recorte do site gera isso); nada de links ou texto.
+    function imagem(c, max) {
+      return !(c in novo()) || novo()[c] == null || novo()[c] == '' ||
+        (novo()[c] is string && novo()[c].size() <= max && novo()[c].matches('^data:image/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$'));
+    }
+    function campos(max) { return novo().keys().size() <= max; }
+
+    // ---------- Administrador: restaura backups ----------
     match /{documento=**} {
       allow read, write: if admin();
     }
 
-    // Perfil público (nome e foto) de cada conta.
+    // ---------- Perfis (nome e foto de cada conta) ----------
     match /perfis/{uid} {
       allow read: if logado();
-      allow write: if logado() && uid == eu();
+      allow write: if logado() && uid == eu()
+        && novo().keys().hasOnly(['nome', 'foto', 'atualizado'])
+        && texto('nome', 80) && texto('foto', 1000);
+      allow delete: if logado() && uid == eu();
     }
 
-    // Heróis: o dono edita; o mestre (e quem tem o escudo) das campanhas do herói também.
+    // ---------- Fichas ----------
+    function fichaOk() {
+      return sistemaOk() && campos(70) && texto('nome', 200) && texto('jogador', 200) && imagem('foto', 150000)
+        && lista('mestres', 30) && lista('ataques', 60) && lista('poderes', 80) && lista('kidos', 80)
+        && lista('habilidades', 80) && lista('inventario', 200) && lista('pericias', 60) && lista('repHist', 60);
+    }
     match /herois/{id} {
       allow read: if logado();
-      allow create: if logado() && request.resource.data.dono == eu();
-      allow update: if logado() && (resource.data.dono == eu() || eu() in resource.data.get('mestres', [])
-                    || (!('dono' in resource.data) && request.resource.data.dono == eu()));
-      allow delete: if logado() && resource.data.dono == eu();
+      allow create: if logado() && idOk(id) && novo().dono == eu() && fichaOk();
+      // Dono edita; mestre e quem tem o escudo da campanha também. Ninguém troca o dono,
+      // exceto quem assume uma ficha antiga sem dono.
+      allow update: if logado() && fichaOk() && (
+        ((velho().get('dono', null) == eu() || eu() in velho().get('mestres', []))
+          && novo().get('dono', null) == velho().get('dono', null))
+        || (!('dono' in velho()) && novo().dono == eu())
+      );
+      allow delete: if logado() && velho().get('dono', null) == eu();
     }
 
-    // Vilões criados pela mesa: só o dono muda.
+    // ---------- Ameaças criadas pela mesa ----------
+    function vilaoOk() {
+      return sistemaOk() && campos(40) && texto('nome', 200) && texto('categoria', 200) && texto('desc', 5000)
+        && imagem('foto', 150000) && lista('ataques', 40) && lista('poderes', 40);
+    }
     match /viloes/{id} {
       allow read: if logado();
-      allow create: if logado() && request.resource.data.dono == eu();
-      allow update, delete: if logado() && resource.data.dono == eu();
+      allow create: if logado() && idOk(id) && novo().dono == eu() && vilaoOk();
+      allow update: if logado() && velho().get('dono', null) == eu() && novo().dono == eu() && vilaoOk();
+      allow delete: if logado() && velho().get('dono', null) == eu();
     }
 
-    // Campanhas: o mestre e quem tem o escudo mudam tudo (o cargo de mestre e a lista do escudo, só o mestre).
-    // Jogadores só entram/saem, adicionam heróis e registram rolagens.
+    // ---------- Campanhas ----------
+    function campanhaOk() {
+      return sistemaOk() && campos(30) && texto('nome', 200) && texto('codigo', 12) && texto('anotacoes', 20000)
+        && imagem('capa', 200000) && lista('membros', 50) && lista('escudo', 50) && lista('herois', 100)
+        && lista('combates', 20) && lista('ganchos', 100) && lista('rolagens', 30);
+    }
+    // Jogador entra ou sai SÓ a si mesmo.
+    function membrosSoEu() {
+      let a = velho().get('membros', []).toSet();
+      let d = novo().get('membros', []).toSet();
+      return a == d
+        || (d.difference(a) == [eu()].toSet() && a.difference(d).size() == 0)
+        || (a.difference(d) == [eu()].toSet() && d.difference(a).size() == 0);
+    }
+    // Jogador só pode SAIR do escudo (devolver), nunca se dar o escudo.
+    function escudoSoSaiEu() {
+      let a = velho().get('escudo', []).toSet();
+      let d = novo().get('escudo', []).toSet();
+      return a == d || (a.difference(d) == [eu()].toSet() && d.difference(a).size() == 0);
+    }
+    // Jogador adiciona heróis; para tirar, só um por vez e só o dele (indicado em ultimoHeroi).
+    function heroisDoJogador() {
+      let saiu = velho().get('herois', []).toSet().difference(novo().get('herois', []).toSet());
+      return saiu.size() == 0
+        || (saiu == [novo().get('ultimoHeroi', '')].toSet()
+            && get(/databases/$(db)/documents/herois/$(novo().ultimoHeroi)).data.dono == eu());
+    }
     match /campanhas/{id} {
       allow read: if logado();
-      allow create: if logado() && request.resource.data.mestre == eu();
-      allow update: if logado() && (
-        resource.data.mestre == eu()
-        || (eu() in resource.data.get('escudo', [])
-            && request.resource.data.mestre == resource.data.mestre
-            && request.resource.data.get('escudo', []) == resource.data.get('escudo', []))
-        || (soMudou(['membros', 'herois', 'rolagens', 'combates', 'escudo', 'atualizado'])
-            && request.resource.data.mestre == resource.data.mestre
-            && request.resource.data.get('escudo', []).hasOnly(resource.data.get('escudo', []))
-            && (eu() in request.resource.data.get('membros', []) || eu() in resource.data.get('membros', [])))
+      allow create: if logado() && idOk(id) && novo().mestre == eu() && campanhaOk()
+        && novo().get('escudo', []).size() == 0;
+      allow update: if logado() && campanhaOk() && (
+        // Mestre: tudo; só pode passar o cargo para um jogador da campanha.
+        (velho().get('mestre', null) == eu()
+          && (novo().mestre == eu() || novo().mestre in velho().get('membros', [])))
+        // Campanha antiga sem mestre: o primeiro a abrir assume.
+        || (!('mestre' in velho()) && novo().mestre == eu())
+        // Quem recebeu o escudo: mesa, combates, ganchos e anotações; não mexe em cargos nem em quem participa.
+        || (eu() in velho().get('escudo', [])
+          && soMudou(['combates', 'ganchos', 'rolagens', 'anotacoes', 'vidaViloes', 'atualizado', 'ultimoHeroi']))
+        // Jogador (ou quem está entrando): entrar/sair, adicionar/tirar o próprio herói e rolar dados.
+        || ((eu() in velho().get('membros', []) || eu() in novo().get('membros', []))
+          && soMudou(['membros', 'escudo', 'herois', 'rolagens', 'atualizado', 'ultimoHeroi'])
+          && membrosSoEu() && escudoSoSaiEu() && heroisDoJogador())
       );
-      allow delete: if logado() && resource.data.mestre == eu();
+      allow delete: if logado() && velho().get('mestre', null) == eu();
     }
   }
 }

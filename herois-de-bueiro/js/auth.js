@@ -15,12 +15,17 @@
     const noClaude = !!(window.claude && typeof window.claude.use === 'function');
     const cfg = noClaude ? null : window.HB_FIREBASE;
     if (cfg && cfg.apiKey && !window.firebase) {
-      try { for (const f of ['firebase-app-compat.js', 'firebase-auth-compat.js', 'firebase-firestore-compat.js']) await carregar(SDK + f); }
+      try { for (const f of ['firebase-app-compat.js', 'firebase-app-check-compat.js', 'firebase-auth-compat.js', 'firebase-firestore-compat.js']) await carregar(SDK + f); }
       catch (e) { modo = 'erro'; return; }
     }
     if (cfg && cfg.apiKey && window.firebase) {
-      modo = 'firebase';
       fb = window.firebase.apps.length ? window.firebase.app() : window.firebase.initializeApp(cfg);
+      // App Check: o Firebase só aceita pedidos vindos deste site (bloqueia scripts e bots). Liga com a chave do reCAPTCHA v3.
+      if (window.HB_APPCHECK && window.firebase.appCheck && !HB.A._appcheck) {
+        HB.A._appcheck = true;
+        try { window.firebase.appCheck().activate(new window.firebase.appCheck.ReCaptchaV3Provider(window.HB_APPCHECK), true); } catch (e) { /* segue sem App Check */ }
+      }
+      modo = 'firebase';
       await new Promise(ok => fb.auth().onAuthStateChanged(u => {
         usuario = u ? { uid: u.uid, nome: u.displayName || (u.email || '').split('@')[0] || 'Sem nome', foto: u.photoURL || '' } : null;
         ok();

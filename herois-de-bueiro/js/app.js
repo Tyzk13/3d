@@ -31,6 +31,8 @@
     const foco = document.activeElement && document.activeElement.id;
     raiz().innerHTML = html;
     travarLeitura();
+    raiz().querySelectorAll('input:not([type=number]):not([type=file]):not([type=checkbox]):not([type=range]):not([maxlength])').forEach(i => (i.maxLength = 200));
+    raiz().querySelectorAll('textarea:not([maxlength])').forEach(t => (t.maxLength = 5000));
     if (foco) { const el = document.getElementById(foco); if (el && el.matches('input,textarea')) { el.focus(); if (el.setSelectionRange && el.type !== 'number') { const n = el.value.length; el.setSelectionRange(n, n); } } }
     document.querySelectorAll('.nav a').forEach(a => a.classList.toggle('ativo', a.dataset.sec === secao(nome)));
   }
@@ -54,7 +56,7 @@
       <div class="ou"><span>ou com e-mail</span></div>
       <form class="form-login" data-act-submit="login-email">
         <label class="campo"><span>E-mail</span><input id="lg-email" name="email" type="email" autocomplete="email" required></label>
-        <label class="campo"><span>Senha</span><input id="lg-senha" name="senha" type="password" autocomplete="current-password" minlength="6" required></label>
+        <label class="campo"><span>Senha</span><input id="lg-senha" name="senha" type="password" autocomplete="current-password" minlength="8" maxlength="128" required></label>
         <label class="campo"><span>Nome (só para criar conta)</span><input id="lg-nome" name="nome" autocomplete="nickname"></label>
         <div class="barra-acoes"><button class="btn primario" name="acao" value="entrar">Entrar</button><button class="btn" name="acao" value="criar">Criar conta</button></div></form>`;
     else if (m === 'erro') corpo = `<p class="faixa">Não consegui carregar o login (arquivos em vendor/firebase). Recarregue a página; se continuar, confira se a pasta vendor foi publicada junto com o site.</p>`;
@@ -317,7 +319,13 @@
       const hs = S.lista('herois').filter(h => h.dono === P.eu() && !(c.herois || []).includes(h.id));
       escolherHerois('Adicionar seus heróis', hs, ids => { c.herois = (c.herois || []).concat(ids); S.salvar('campanhas', c, 0); P.sincronizarHerois(c); render(); });
     },
-    'tirar-heroi-campanha'(el) { const c = campanhaAtual(); c.herois = c.herois.filter(i => i !== el.dataset.id); (c.combates || []).forEach(cb => (cb.parts = cb.parts.filter(p => p.ref !== el.dataset.id))); S.salvar('campanhas', c, 0); render(); },
+    'tirar-heroi-campanha'(el) {
+      const c = campanhaAtual(), id = el.dataset.id;
+      c.herois = c.herois.filter(i => i !== id);
+      c.ultimoHeroi = id; // as regras conferem que quem tira é o dono (ou o mestre)
+      if (P.temEscudo(c)) (c.combates || []).forEach(cb => (cb.parts = cb.parts.filter(p => p.ref !== id)));
+      S.salvar('campanhas', c, 0); render();
+    },
     'escudo-toggle'(el) {
       const c = campanhaAtual(), id = el.dataset.id, tem = (c.escudo || []).includes(id);
       c.escudo = tem ? c.escudo.filter(x => x !== id) : (c.escudo || []).concat(id);
@@ -342,9 +350,8 @@
     },
     'sair-campanha'() {
       const c = campanhaAtual();
-      UI.confirmar('Sair da campanha', `Sair de ${c.nome}? Seus heróis saem dela, mas continuam salvos na sua conta.`, 'Sair', () => {
+      UI.confirmar('Sair da campanha', `Sair de ${c.nome}? Suas fichas continuam salvas na sua conta; o mestre tira da mesa quando quiser.`, 'Sair', () => {
         const eu = P.eu(); c.membros = (c.membros || []).filter(x => x !== eu); c.escudo = (c.escudo || []).filter(x => x !== eu);
-        c.herois = (c.herois || []).filter(hid => (S.pegar('herois', hid) || {}).dono !== eu);
         S.salvar('campanhas', c, 0); location.hash = '#campanhas';
       });
     },
@@ -632,7 +639,8 @@
     if (/disallowed-useragent|web-storage-unsupported/.test(c)) return 'Este navegador não permite o login do Google. Abra o site no Chrome ou no Safari.';
     if (/wrong-password|invalid-credential|user-not-found/.test(c)) return 'E-mail ou senha não conferem.';
     if (/email-already-in-use/.test(c)) return 'Esse e-mail já tem conta. Use Entrar.';
-    if (/weak-password/.test(c)) return 'A senha precisa de pelo menos 6 caracteres.';
+    if (/weak-password|password-does-not-meet/.test(c)) return 'Senha fraca: use pelo menos 8 caracteres, com letras e números.';
+    if (/too-many-requests/.test(c)) return 'Muitas tentativas. Espere alguns minutos e tente de novo.';
     if (/unauthorized-domain/.test(c)) return 'Este endereço não está liberado no Firebase (Authentication > Settings > Authorized domains).';
     return 'Não deu para entrar (' + (c || 'erro') + ').';
   }

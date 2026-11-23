@@ -9,3 +9,7 @@ window.HB_FIREBASE = {
   messagingSenderId: "824146013577",
   appId: "1:824146013577:web:0aa6d5c1e6baa640328558",
 };
+
+// App Check (proteção contra scripts e bots): cole aqui a CHAVE DO SITE do reCAPTCHA v3 e ative em
+// Console do Firebase > App Check. Deixe null enquanto não configurar. Passo a passo em SEGURANCA.md.
+window.HB_APPCHECK = null;
