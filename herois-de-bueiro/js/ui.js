@@ -119,7 +119,7 @@
   }
   function cartaoResultado(r) {
     const quando = new Date(r.em || Date.now()).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
-    const acerto = (r.acertou == null ? '' : `<span class="selo ${r.acertou ? 'ok' : 'falha'}">${r.acertou ? 'Acertou' : 'Errou'} (${r.tipo === 'ataque' ? 'Def' : 'CD'} ${r.alvoDef})</span>`)
+    const acerto = (r.acertou == null ? '' : `<span class="selo ${r.acertou ? 'ok' : 'falha'}">${r.acertou ? 'Acertou' : 'Errou'} (${r.rotuloAlvo || (r.tipo === 'ataque' ? 'Def' : 'CD')} ${r.alvoDef})</span>`)
       + (r.critico ? '<span class="selo ok">Crítico</span>' : '') + (r.desastre ? '<span class="selo falha">Desastre</span>' : '');
     const dano = r.dano ? `<div class="res-col"><b>${r.dano.total}</b><small>dano</small></div>` : '';
     return `<div class="res ${r.tipo} ${r.secreta ? 'secreta' : ''}">${r.secreta ? '<span class="selo-secreta">Secreta</span>' : ''}

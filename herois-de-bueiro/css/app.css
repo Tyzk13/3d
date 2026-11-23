@@ -609,3 +609,25 @@ button.barra-num:hover { text-decoration: underline; }
   60% { transform: translate(6px, -6px) rotate(20deg) scale(1.08); }
   100% { transform: none; }
 }
+
+/* ---------- Ordem Paranormal II ---------- */
+.livro-op2 { --capa: repeating-linear-gradient(0deg, rgba(255,255,255,.03) 0 2px, transparent 2px 5px), radial-gradient(circle at 75% 30%, rgba(190,40,40,.35), transparent 55%), linear-gradient(170deg, #241515, #0b0909 75%); --tinta: #e14b4b; }
+.livro-op2 .livro-nome { font-family: 'Special Elite', 'Courier New', monospace; font-weight: 400; font-size: clamp(1.9rem, 5vw, 2.5rem); letter-spacing: .01em; }
+body[data-sistema="op2"] { --faixa: #e14b4b; --faixa-tinta: #fff; --asfalto: #0f0d0d; --concreto: #191515; --concreto-2: #241d1d; --linha: #3a2e2e; background-image: none; }
+body[data-sistema="op2"] .faixa-hq { height: 2px; background: repeating-linear-gradient(90deg, #e14b4b 0 40px, transparent 40px 52px); }
+body[data-sistema="op2"] .logo-tampa { border-color: #e14b4b; background: radial-gradient(circle, #e14b4b 0 20%, #0f0d0d 22%); }
+body[data-sistema="op2"] .titulo-hq, body[data-sistema="op2"] .bloco-topo h3, body[data-sistema="op2"] .regras h2, body[data-sistema="op2"] .secao { font-family: 'Special Elite', 'Courier New', monospace; font-weight: 400; letter-spacing: .01em; text-shadow: none; }
+body[data-sistema="op2"] .bloco-topo h3 { font-size: 1.15rem; }
+.hexagono.trio .hex-no circle { r: 40; }
+.ficha-sel.quatro { grid-template-columns: 4.5rem 4.5rem 1fr 1fr; }
+.cat-pericia { text-align: left; margin: .8rem 0 .2rem; color: var(--faixa); }
+.cat-pericia small { text-transform: none; letter-spacing: 0; color: var(--giz-2); font-weight: 500; }
+.nome-pericia { background: transparent; border: 0; border-bottom: 1px dashed transparent; border-radius: 0; padding: .1rem 0; font-weight: 600; }
+.nome-pericia:hover, .nome-pericia:focus { border-bottom-color: var(--linha); }
+.impeto .slots { display: flex; gap: .3rem; margin-bottom: .4rem; }
+.slot { width: 2rem; height: 2rem; display: grid; place-items: center; border: 2px solid var(--linha); border-radius: 6px; opacity: .35; }
+.slot.on { opacity: 1; border-color: var(--faixa); background: color-mix(in srgb, var(--faixa) 25%, transparent); }
+.interruptor.melhoria { margin: -.2rem 0 .5rem; font-size: .76rem; }
+.regra.bloqueada { opacity: .45; }
+.q-linha small { color: var(--giz-2); font-weight: 400; }
+@media (max-width: 560px) { .ficha-sel.quatro { grid-template-columns: 1fr 1fr; } }

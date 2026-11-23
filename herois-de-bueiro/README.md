@@ -3,6 +3,7 @@
 Gerenciador de fichas e campanhas de RPG. A entrada é uma estante de livros; o livro aberto define o sistema:
 - **Heróis de Bueiro** (playtest completo): 1d10 + dado do nível, maestrias, classes, origens, elementos, reputação.
 - **Shinigamis & Hollows** (Livro dos Ceifadores v0.7b): d20, seis atributos, perícias, TRs, divisões, Pontos de Partida, Caminhos, zanpakuto, kidos, Quebras, ameaças pelo Guia de Inimigos.
+- **Ordem Paranormal II** (Teorias e Homebrews, de fãs): Físico/Emoção/Mente e perícias em dados d4–d12, teste pelo maior dado + dados de bônus contra DT 7, PV/PD, ocupações, perfis Analista/Executor/Vigilante e melhorias.
 
 Conta, campanhas, Escudo do Mestre, combate, ganchos e backup são comuns aos dois. Fichas e campanhas sem o campo `sistema` (criadas antes do RPGHUB) são do Heróis de Bueiro.
 
@@ -36,6 +37,7 @@ Crie `js/<id>-regras.js` e `js/<id>-ficha.js` e registre com `HB.Sistemas.regist
 | `js/sistema-hb.js` | Heróis de Bueiro ligado ao RPGHUB. |
 | `js/sh-regras.js` | Shinigamis & Hollows: perícias, TRs, níveis, divisões, partidas, zanpakuto, guia de inimigos, dados d20. |
 | `js/sh-ficha.js` | Shinigamis & Hollows: ficha, ameaças (hollows), regras e ligação com o RPGHUB. |
+| `js/op2.js` | Ordem Paranormal II: regras, ficha, ameaças e ligação com o RPGHUB. |
 | `js/app.js` | Rotas por `#hash`, ações dos botões, ligação dos campos com os dados. |
 
 ## Decisões onde o PDF deixa aberto
@@ -51,3 +53,8 @@ Crie `js/<id>-regras.js` e `js/<id>-ficha.js` e registre com `HB.Sistemas.regist
 - Ataque com margem de crítico menor que 20 (ex.: Tanto 18) só é crítico se já acertar; 20 natural sobe um grau.
 - Aplicar dano no combate já desconta a Dureza do alvo.
 - Ameaças do bestiário base são originais, montadas pelo Guia de Inimigos.
+
+## Decisões no Ordem Paranormal II
+- O PDF não define o teste: a mesa escolheu "maior entre o dado do atributo e o da perícia", com dados de bônus somando. Todos os dados em 1 = falha crítica.
+- Perícias não vêm listadas: lista inicial editável (5 físicas, 5 emocionais, 5 mentais) que cada ficha pode renomear, apagar ou ampliar.
+- Iniciativa: maior entre Físico e Reflexos. Ataque acerta com resultado ≥ DT do alvo (padrão 7).

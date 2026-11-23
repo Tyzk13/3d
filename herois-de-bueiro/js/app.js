@@ -399,8 +399,9 @@
       if (alvo) r.titulo += ' → ' + alvo.nome;
       UI.resultado(r, c.id);
       const dano = alvo ? Math.max(0, r.dano.total - (alvo.dureza | 0)) : 0;
+      const rotDef = p.sis.id === 'op2' ? 'DT' : 'Defesa';
       estado.ultimo = alvo ? { de: p.uid, alvo: alvo.uid, alvoNome: alvo.nome, dureza: alvo.dureza | 0, dano: r.acertou ? dano : 0,
-        texto: r.desastre ? `Desastre contra ${alvo.nome}: erra e quem estiver ao alcance pode atacar como reação.` : r.acertou ? `${r.critico ? 'Crítico em' : 'Acertou'} ${alvo.nome} (${r.total} contra Defesa ${alvo.def}).` : `Errou ${alvo.nome} (${r.total} contra Defesa ${alvo.def}).` } : null;
+        texto: r.desastre ? `Desastre contra ${alvo.nome}: erra e quem estiver ao alcance pode atacar como reação.` : r.acertou ? `${r.critico ? 'Crítico em' : 'Acertou'} ${alvo.nome} (${r.total} contra ${rotDef} ${alvo.def}).` : `Errou ${alvo.nome} (${r.total} contra ${rotDef} ${alvo.def}).` } : null;
       render();
     },
     'aplicar-dano'() {
@@ -452,18 +453,25 @@
       cb.parts.forEach(p => { const f = p.tipo === 'heroi' ? S.pegar('herois', p.ref) : p.v; if (f) p.ini = sis.rolarIniciativa(f); p.desempate = 0; });
       cb.turno = 0; S.salvar('campanhas', c, 0); render(); UI.aviso('Iniciativa rolada de novo para todos.', 'info');
     },
+    'op-nova-pericia'(el) {
+      const x = docDe(el); if (!x || el.closest('.leitura')) return;
+      x.o.pericias = (x.o.pericias || []).concat({ nome: 'Nova perícia', cat: UI.$('#op-nova-cat').value, passo: 0 });
+      S.salvar(x.col, x.o); render();
+    },
     'sh-multi'(el) { estado.multi = +el.dataset.v; render(); },
     'sh-passo'(el) {
       const x = docDe(el); if (!x || el.closest('.leitura')) return;
       const campo = el.dataset.f, ps = campo.split('.'); let o = x.o; for (let i = 0; i < ps.length - 1; i++) o = o[ps[i]] = o[ps[i]] || {};
-      const k = ps[ps.length - 1], lim = campo.startsWith('afinidades') ? [0, 10] : campo.startsWith('atributos') ? [-5, 10] : [0, 99];
+      const k = ps[ps.length - 1];
+      const lim = el.dataset.max != null ? [+(el.dataset.min || 0), +el.dataset.max] : campo.startsWith('afinidades') ? [0, 10] : campo.startsWith('atributos') ? [-5, 10] : [0, 99];
       o[k] = Math.max(lim[0], Math.min(lim[1], (o[k] | 0) + +el.dataset.d));
       S.salvar(x.col, x.o); render();
     },
     'sh-quebra'(el) { const x = docDe(el); if (!x) return; const v = +el.dataset.v; x.o.quebras = (x.o.quebras | 0) === v ? v - 1 : v; S.salvar(x.col, x.o, 300); render(); if (x.o.quebras >= 3) UI.aviso('Três Quebras: o destino foi destruído. Converse com o mestre.', 'info'); },
     'sh-adicionar'(el) {
       const x = docDe(el); if (!x) return; const k = el.dataset.campo;
-      const novo = { ataques: SI.de(x.o).id === 'sh' && x.col === 'viloes' ? { nome: 'Ataque', acerto: 3, dano: '1d6+3', tipoDano: 'Cortante', margem: 20 } : { nome: 'Novo ataque', tipo: 'corpo', attr: 'FOR', dano: '1d6', bonus: 0, margem: 20 },
+      const doSis = SI.de(x.o).novoItem && SI.de(x.o).novoItem(x.col, k);
+      const novo = doSis || { ataques: SI.de(x.o).id === 'sh' && x.col === 'viloes' ? { nome: 'Ataque', acerto: 3, dano: '1d6+3', tipoDano: 'Cortante', margem: 20 } : { nome: 'Novo ataque', tipo: 'corpo', attr: 'FOR', dano: '1d6', bonus: 0, margem: 20 },
         kidos: { nome: '', custo: 1, desc: '' }, habilidades: { nome: '', desc: '' }, inventario: { nome: '', qtd: 1 }, poderes: { nome: '', custo: 0, desc: '' } }[k] || {};
       x.o[k] = (x.o[k] || []).concat(novo); S.salvar(x.col, x.o); render();
     },
