@@ -1,6 +1,13 @@
-# Heróis de Bueiro — fichas e mesa
+# RPGHUB — fichas e mesa para vários sistemas
 
-App de fichas para o sistema **Heróis de Bueiro** (playtest completo), no molde de um gerenciador de campanhas de RPG: heróis, campanhas com mesa do mestre, combate com iniciativa, vilões e regras.
+Gerenciador de fichas e campanhas de RPG. A entrada é uma estante de livros; o livro aberto define o sistema:
+- **Heróis de Bueiro** (playtest completo): 1d10 + dado do nível, maestrias, classes, origens, elementos, reputação.
+- **Shinigamis & Hollows** (Livro dos Ceifadores v0.7b): d20, seis atributos, perícias, TRs, divisões, Pontos de Partida, Caminhos, zanpakuto, kidos, Quebras, ameaças pelo Guia de Inimigos.
+
+Conta, campanhas, Escudo do Mestre, combate, ganchos e backup são comuns aos dois. Fichas e campanhas sem o campo `sistema` (criadas antes do RPGHUB) são do Heróis de Bueiro.
+
+## Adicionar um sistema
+Crie `js/<id>-regras.js` e `js/<id>-ficha.js` e registre com `HB.Sistemas.registrar({...})` (veja `js/sh-ficha.js`): ficha, ameaças, regras, `derivados`, `combatente`, `teste`, `ataque` e `iniciativa` ('fixa' ou 'rolada').
 
 ## Como abrir e entrar
 - **Publicado (claude.ai)**: entra com a conta claude.ai de quem abre (que pode ser a do Google). Fichas e campanhas ficam numa base compartilhada da página.
@@ -25,6 +32,10 @@ App de fichas para o sistema **Heróis de Bueiro** (playtest completo), no molde
 | `js/ui.js` | Janelas, avisos, barras de vida/mana, cartões de resultado, recorte de foto. |
 | `js/ficha.js` | Lista e ficha de heróis; bestiário e ficha de vilões. |
 | `js/mestre.js` | Campanhas e Mesa do Mestre (heróis, combates, ganchos, dados, anotações). |
+| `js/sistemas.js` | Registro dos livros/sistemas e livro ativo. |
+| `js/sistema-hb.js` | Heróis de Bueiro ligado ao RPGHUB. |
+| `js/sh-regras.js` | Shinigamis & Hollows: perícias, TRs, níveis, divisões, partidas, zanpakuto, guia de inimigos, dados d20. |
+| `js/sh-ficha.js` | Shinigamis & Hollows: ficha, ameaças (hollows), regras e ligação com o RPGHUB. |
 | `js/app.js` | Rotas por `#hash`, ações dos botões, ligação dos campos com os dados. |
 
 ## Decisões onde o PDF deixa aberto
@@ -34,3 +45,9 @@ App de fichas para o sistema **Heróis de Bueiro** (playtest completo), no molde
 - Bestial: os modificadores valem só na Forma Bestial; assumir a forma custa 5 de Mana.
 - Curandeiro: "8 de mana + 6 por nível" foi lido como 6 por nível de Feitiçaria.
 - Estrategista/Inventor não aparece na tabela de iniciativa: fica depois do Tanker.
+
+## Decisões no Shinigamis & Hollows
+- Divisões citam "Persuasão" e "História", que não estão na lista de perícias: viraram Diplomacia e Conhecimento.
+- Ataque com margem de crítico menor que 20 (ex.: Tanto 18) só é crítico se já acertar; 20 natural sobe um grau.
+- Aplicar dano no combate já desconta a Dureza do alvo.
+- Ameaças do bestiário base são originais, montadas pelo Guia de Inimigos.

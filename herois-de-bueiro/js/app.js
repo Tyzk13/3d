@@ -2,8 +2,8 @@
 (function (HB) {
   const R = HB.R, UI = HB.UI, S = HB.S, F = HB.F, M = HB.M, D = HB.D, esc = UI.esc;
   const raiz = () => UI.$('#app');
-  const estado = { rota: '', busca: '', filtro: 'todos', aba: 'combate', abaMesa: 'herois', abaCamp: 'herois', ajuste: 0 };
-  const P = HB.P, AU = HB.A;
+  const estado = { rota: '', busca: '', filtro: 'todos', aba: 'combate', abaMesa: 'herois', abaCamp: 'herois', ajuste: 0, multi: 0 };
+  const P = HB.P, AU = HB.A, SI = HB.Sistemas;
 
   // ---------- Rotas ----------
   function rota() { return (location.hash || '#inicio').slice(1); }
@@ -12,15 +12,20 @@
     if (r !== estado.rota) { const mesmaFamilia = r.split('-')[0] === estado.rota.split('-')[0]; estado.rota = r; if (!mesmaFamilia) { estado.busca = ''; estado.filtro = 'todos'; } estado.aba = 'combate'; estado.ajuste = 0; estado.ultimo = null; window.scrollTo(0, 0); }
     const [nome, ...resto] = r.split('-'), id = resto.join('-');
     let html;
+    // Abrir uma ficha, ameaça ou campanha de outro livro troca o livro ativo.
+    const doc = nome === 'heroi' ? S.pegar('herois', id) : nome === 'vilao' ? F.pegarVilao(id) : (nome === 'campanha' || nome === 'escudo' || nome === 'mesa') ? S.pegar('campanhas', id) : null;
+    if (doc && SI.idDe(doc) !== SI.idAtivo) { SI.escolher(SI.idDe(doc)); desenharTopo(); }
+    const precisaLivro = ['herois', 'campanhas', 'viloes', 'regras'].includes(nome);
+    if (precisaLivro && !SI.ativo) { location.hash = '#inicio'; return; }
     if (!AU.usuario && nome !== 'regras') html = paginaLogin();
     else if (nome === 'herois') html = F.listaHerois(estado);
-    else if (nome === 'heroi') { const h = S.pegar('herois', id); html = h ? F.ficha(h, estado) : naoAchou('Esse herói não existe mais.', '#herois'); }
+    else if (nome === 'heroi') { const h = S.pegar('herois', id); html = h ? SI.de(h).ficha(h, estado) : naoAchou('Essa ficha não existe mais.', '#herois'); }
     else if (nome === 'campanhas') html = M.paginaCampanhas();
     else if (nome === 'campanha') { const c = S.pegar('campanhas', id); if (c) P.assumirCampanhaSemMestre(c); html = c ? M.paginaCampanha(c, estado) : naoAchou('Essa campanha não existe mais.', '#campanhas'); }
     else if (nome === 'escudo' || nome === 'mesa') { const c = S.pegar('campanhas', id); if (c) P.assumirCampanhaSemMestre(c); html = c ? M.mesa(c, estado) : naoAchou('Essa campanha não existe mais.', '#campanhas'); }
-    else if (nome === 'viloes') html = F.paginaViloes(estado);
-    else if (nome === 'vilao') { const v = F.pegarVilao(id); html = v ? F.fichaVilao(v, estado) : naoAchou('Esse vilão não existe mais.', '#viloes'); }
-    else if (nome === 'regras') html = paginaRegras();
+    else if (nome === 'viloes') html = SI.ativo.paginaViloes(estado);
+    else if (nome === 'vilao') { const v = F.pegarVilao(id); html = v ? SI.de(v).fichaVilao(v, estado) : naoAchou('Essa ameaça não existe mais.', '#viloes'); }
+    else if (nome === 'regras') html = SI.ativo.regras();
     else html = paginaInicio();
     const foco = document.activeElement && document.activeElement.id;
     raiz().innerHTML = html;
@@ -28,11 +33,11 @@
     if (foco) { const el = document.getElementById(foco); if (el && el.matches('input,textarea')) { el.focus(); if (el.setSelectionRange && el.type !== 'number') { const n = el.value.length; el.setSelectionRange(n, n); } } }
     document.querySelectorAll('.nav a').forEach(a => a.classList.toggle('ativo', a.dataset.sec === secao(nome)));
   }
-  const secao = n => ({ heroi: 'herois', herois: 'herois', campanhas: 'campanhas', mesa: 'campanhas', campanha: 'campanhas', escudo: 'campanhas', viloes: 'viloes', vilao: 'viloes', regras: 'regras' })[n] || '';
+  const secao = n => ({ inicio: '',  heroi: 'herois', herois: 'herois', campanhas: 'campanhas', mesa: 'campanhas', campanha: 'campanhas', escudo: 'campanhas', viloes: 'viloes', vilao: 'viloes', regras: 'regras' })[n] || '';
   const naoAchou = (t, volta) => `<section class="pagina"><div class="vazio-grande"><p>${esc(t)}</p><a class="btn" href="${volta}">Voltar</a></div></section>`;
 
   // Fichas de outras pessoas: dá para ver, trocar de aba e rolar; não dá para mudar.
-  const LIVRES = ['aba', 'rolar-attr', 'rolar-ataque', 'duplicar-vilao', 'filtro'];
+  const LIVRES = ['aba', 'rolar-attr', 'rolar-ataque', 'duplicar-vilao', 'filtro', 'sh-multi'];
   function travarLeitura() {
     raiz().querySelectorAll('.leitura').forEach(box => box.querySelectorAll('input,select,textarea,button').forEach(el => {
       if (el.closest('.rolar-livre') || LIVRES.includes(el.dataset.act)) return;
@@ -59,28 +64,25 @@
         <form class="form-login" data-act-submit="login-local"><label class="campo"><span>Seu nome</span><input id="lg-local" name="nome" required maxlength="40" placeholder="Como a mesa te chama"></label>
         <button class="btn primario">Entrar</button></form>`;
     }
-    return `<section class="login"><div class="login-cartao"><h1 class="titulo-capa">Heróis<br><span>de Bueiro</span></h1>
+    return `<section class="login"><div class="login-cartao"><h1 class="titulo-capa">RPG<span>HUB</span></h1>
       <p class="capa-sub">Entre para salvar seus heróis na sua conta e participar das campanhas da mesa.</p>${corpo}</div></section>`;
   }
 
+  // Estante do RPGHUB: cada livro é um sistema.
   function paginaInicio() {
-    const nh = S.lista('herois').filter(h => h.dono === P.eu()).length, nc = P.minhasCampanhas().length;
-    return `<section class="inicio">
-      <div class="capa-hq">
-        <div class="capa-texto"><p class="capa-selo">Playtest · sistema completo</p>
-          <h1 class="titulo-capa">Heróis<br><span>de Bueiro</span></h1>
-          <p class="capa-sub">Fichas, campanhas e combate para a sua mesa. Classe, origem e atributos entram; vida, mana, defesa e iniciativa saem calculadas.</p>
-          <div class="capa-botoes"><a class="btn primario grande" href="#herois">${nh ? 'Ver meus heróis' : 'Criar um herói'}</a><a class="btn grande" href="#campanhas">${nc ? 'Abrir campanhas' : 'Montar uma campanha'}</a></div></div>
-        <div class="capa-arte" aria-hidden="true"><div class="balao">POW!</div><div class="tampa"><span></span><span></span><span></span><span></span></div></div>
-      </div>
-      <div class="inicio-cartoes">
-        <a class="cartao-atalho" href="#herois"><b>Heróis</b><span>${nh} ficha${nh === 1 ? '' : 's'}. Hexágono de atributos, maestrias, poderes, inventário e reputação.</span></a>
-        <a class="cartao-atalho" href="#campanhas"><b>Mesa do Mestre</b><span>${nc} campanha${nc === 1 ? '' : 's'}. Iniciativa automática, alvo e dano em um clique, ganchos de cena.</span></a>
-        <a class="cartao-atalho" href="#viloes"><b>Vilões</b><span>Bestiário base com ${F.BESTIARIO.length} ameaças e espaço para os vilões da sua mesa.</span></a>
-        <a class="cartao-atalho" href="#regras"><b>Regras</b><span>Tabelas de dados, classes, origens, elementos e reputação para consulta.</span></a>
-      </div></section>`;
+    const livros = SI.lista();
+    const conta = id => ({ p: S.lista('herois').filter(h => SI.idDe(h) === id && h.dono === P.eu()).length, c: P.minhasCampanhas().filter(c => SI.idDe(c) === id).length });
+    return `<section class="estante">
+      <div class="estante-topo"><h1 class="titulo-capa">RPG<span>HUB</span></h1>
+        <p class="capa-sub">Escolha o livro. Fichas, campanhas, ameaças e regras seguem o sistema dele; a conta, o Escudo do Mestre e o combate são os mesmos.</p></div>
+      <div class="livros">${livros.map(l => { const n = conta(l.id); return `<button class="livro livro-${l.id} ${SI.idAtivo === l.id ? 'aberto' : ''}" data-act="escolher-livro" data-id="${l.id}">
+          <span class="livro-lombada" aria-hidden="true"></span>
+          <span class="livro-capa"><span class="livro-selo">${esc(l.sub)}</span><b class="livro-nome">${esc(l.nome)}</b><span class="livro-desc">${esc(l.descricao)}</span>
+            <span class="livro-rodape">${AU.usuario ? `${n.p} ficha${n.p === 1 ? '' : 's'} · ${n.c} campanha${n.c === 1 ? '' : 's'}` : 'Entre para ver suas fichas'}<i>${SI.idAtivo === l.id ? 'Aberto' : 'Abrir livro'}</i></span></span></button>`; }).join('')}</div>
+    </section>`;
   }
 
+  HB.paginaRegrasHB = () => paginaRegras();
   function paginaRegras() {
     const t = (cab, linhas) => `<div class="tabela-rolagem"><table class="tabela-regra"><thead><tr>${cab.map(c => `<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>${linhas.map(l => `<tr>${l.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
     return `<section class="pagina regras">
@@ -123,8 +125,8 @@
   function fonteAtual() {
     const d = UI.$('[data-doc]');
     const r = rota();
-    if (r.startsWith('heroi-')) { const h = S.pegar('herois', r.slice(6)); return h && { o: h, d: R.derivados(h), heroi: true }; }
-    if (r.startsWith('vilao-')) { const v = F.pegarVilao(r.slice(6)); return v && { o: v, d: F.derivVilao(v) }; }
+    if (r.startsWith('heroi-')) { const h = S.pegar('herois', r.slice(6)); return h && { o: h, sis: SI.de(h), heroi: true }; }
+    if (r.startsWith('vilao-')) { const v = F.pegarVilao(r.slice(6)); return v && { o: v, sis: SI.de(v) }; }
     return d ? null : null;
   }
 
@@ -132,7 +134,7 @@
     const ps = alvo.split(':');
     if (ps[0] === 'heroi') {
       const h = S.pegar('herois', ps[1]); if (!h) return;
-      const d = R.derivados(h), max = recurso === 'pv' ? d.pvMax : d.manaMax;
+      const d = SI.de(h).derivados(h), max = recurso === 'pv' ? d.pvMax : d.manaMax;
       const at = recurso === 'pv' ? F.pvAtual(h, d) : F.manaAtual(h, d);
       h[recurso] = Math.max(recurso === 'pv' ? -max : 0, Math.min(max, at + delta));
       S.salvar('herois', h, 500);
@@ -155,23 +157,25 @@
     const c = P.campanhasDoHeroi(o).filter(P.ehMembro)[0];
     return c ? c.id : null;
   }
-  function rolarAttrDe(o, d, attr, campanhaId) {
+  function rolarAttrDe(o, attr, campanhaId) {
     if (campanhaId === undefined) campanhaId = campanhaDaFicha(o);
     const aj = estado.ajuste | 0;
-    const r = D.teste(nomeQuem(o), attr, d.niv[attr] | 0, aj);
-    if (attr === 'CAR' && R.ORIGENS[o.origem] && R.ORIGENS[o.origem].semCarisma) r.nota = (r.nota ? r.nota + ' · ' : '') + 'Android: não vale para Mentir, Persuadir ou Intimidar';
+    const r = SI.de(o).teste(o, attr, { ajuste: aj });
+    if (!r) return;
     UI.resultado(r, campanhaId);
     if (aj) { estado.ajuste = 0; render(); }
   }
+  // Iniciativa rolada (Shinigamis & Hollows) ao entrar no combate.
+  function iniDe(c, part, fonte) { const sis = SI.de(c); if (sis.iniciativa === 'rolada' && fonte) part.ini = sis.rolarIniciativa(fonte); return part; }
 
   function escolherHerois(titulo, hs, aoConfirmar, semNada) {
     if (!hs.length) { UI.janela(titulo, `<p>${esc(semNada || 'Nenhum herói disponível. Crie um herói ou veja se ele já está aqui.')}</p>`, [{ rotulo: 'Fechar', acao: f => f() }, { rotulo: 'Criar herói', classe: 'primario', acao: f => { f(); A['novo-heroi'](); } }]); return; }
-    UI.janela(titulo, `<div class="lista-escolha">${hs.map(h => `<label class="escolha">${UI.foto(h.foto, h.nome)}<span><b>${esc(h.nome)}</b><small>${esc(F.nomeClasse(h))} · ${esc(AU.nome(h.dono))}</small></span><input type="checkbox" value="${h.id}"></label>`).join('')}</div>`,
+    UI.janela(titulo, `<div class="lista-escolha">${hs.map(h => `<label class="escolha">${UI.foto(h.foto, h.nome)}<span><b>${esc(h.nome)}</b><small>${esc(SI.de(h).nomeClasse(h))} · ${esc(AU.nome(h.dono))}</small></span><input type="checkbox" value="${h.id}"></label>`).join('')}</div>`,
       [{ rotulo: 'Cancelar', acao: f => f() }, { rotulo: 'Adicionar', classe: 'primario', acao: (f, j) => { const ids = [...j.querySelectorAll('input:checked')].map(i => i.value); f(); if (ids.length) aoConfirmar(ids); } }]);
   }
 
   function novoCombate(c, nome) {
-    const cb = { id: S.novoId(), nome: nome || 'Combate ' + ((c.combates || []).length + 1), rodada: 1, turno: 0, parts: (c.herois || []).map(id => ({ uid: S.novoId(), tipo: 'heroi', ref: id })) };
+    const cb = { id: S.novoId(), nome: nome || 'Combate ' + ((c.combates || []).length + 1), rodada: 1, turno: 0, parts: (c.herois || []).map(id => iniDe(c, { uid: S.novoId(), tipo: 'heroi', ref: id }, S.pegar('herois', id))) };
     c.combates = (c.combates || []).concat(cb);
     estado.combate = cb.id; estado.abaMesa = 'combates'; estado.sel = null;
     S.salvar('campanhas', c, 200); render();
@@ -179,7 +183,7 @@
 
   // ---------- Ações ----------
   const A = {
-    'novo-heroi'() { const h = F.novoHeroi(); h.dono = P.eu(); h.jogador = AU.usuario.nome; S.salvar('herois', h, 0); location.hash = '#heroi-' + h.id; },
+    'novo-heroi'() { const sis = SI.ativo || SI.de(null); const h = sis.novoPersonagem(); h.sistema = sis.id; h.dono = P.eu(); h.jogador = AU.usuario.nome; S.salvar('herois', h, 0); location.hash = '#heroi-' + h.id; },
     'duplicar-heroi'(el) { const x = docDe(el); const n = S.clone(x.o); delete n.id; n.nome += ' (cópia)'; n.criado = Date.now(); n.dono = P.eu(); n.mestres = []; S.salvar('herois', n, 0); location.hash = '#heroi-' + n.id; },
     'assumir-heroi'(el) { const h = S.pegar('herois', el.dataset.id); h.dono = P.eu(); S.salvar('herois', h, 0); render(); UI.aviso(h.nome + ' agora é seu.', 'info'); },
     condicao(el) { const x = docDe(el), v = el.dataset.v, cs = x.o.condicoes || []; x.o.condicoes = cs.includes(v) ? cs.filter(c => c !== v) : cs.concat(v); S.salvar('herois', x.o, 300); render(); },
@@ -204,7 +208,7 @@
     },
     ajuste(el) { estado.ajuste = Math.max(-5, Math.min(5, (estado.ajuste | 0) + +el.dataset.d)); render(); },
     'ajuste-fixo'(el) { estado.ajuste = +el.dataset.v; render(); },
-    'rolar-attr'(el) { const f = fonteAtual(); if (f) rolarAttrDe(f.o, f.d, el.dataset.attr); },
+    'rolar-attr'(el) { const f = fonteAtual(); if (f) rolarAttrDe(f.o, el.dataset.attr, f.heroi ? undefined : null); },
     'forma-bestial'(el) {
       const x = docDe(el), h = x.o;
       if (!h.formaBestial) {
@@ -223,11 +227,11 @@
     'remover-item'(el) { const x = docDe(el); x.o[el.dataset.campo].splice(+el.dataset.i, 1); S.salvar(x.col, x.o); render(); },
     'rolar-ataque'(el) {
       const f = fonteAtual(); if (!f) return;
-      const a = f.o.ataques[+el.dataset.i];
-      UI.resultado(D.ataque(nomeQuem(f.o), a.nome || 'Ataque', f.d.maestria[a.maestria] | 0, f.d.niv[a.attr] | 0, a.bonus | 0), campanhaDaFicha(f.o));
+      const r = f.sis.ataque(f.o, +el.dataset.i, { multi: estado.multi });
+      if (r) UI.resultado(r, f.heroi ? campanhaDaFicha(f.o) : null);
     },
     'usar-poder'(el) {
-      const x = docDe(el), h = x.o, p = h.poderes[+el.dataset.i], d = R.derivados(h), m = F.manaAtual(h, d), custo = p.custo | 0;
+      const x = docDe(el), h = x.o, p = h.poderes[+el.dataset.i], d = SI.de(h).derivados(h), m = F.manaAtual(h, d), custo = p.custo | 0;
       if (custo > m) return UI.aviso(`Mana insuficiente: ${p.nome || 'o poder'} custa ${custo} e restam ${m}.`, 'info');
       h.mana = m - custo; S.salvar('herois', h); render(); UI.aviso(`${p.nome || 'Poder'} usado: −${custo} Mana.`, 'info');
     },
@@ -240,7 +244,7 @@
     },
     recurso(el) { mudarRecurso(el.dataset.alvo, el.dataset.recurso, +el.dataset.d); },
     filtro(el) { estado.filtro = el.dataset.v; render(); },
-    'novo-vilao'() { const v = F.novoVilao(); v.dono = P.eu(); S.salvar('viloes', v, 0); location.hash = '#vilao-' + v.id; },
+    'novo-vilao'() { const v = SI.ativo.novoVilao(); v.sistema = SI.ativo.id; v.dono = P.eu(); S.salvar('viloes', v, 0); location.hash = '#vilao-' + v.id; },
     'duplicar-vilao'() {
       const v = F.pegarVilao(rota().slice(6)); const n = S.clone(v); delete n.id; delete n.base; n.dono = P.eu(); n.nome += v.base ? '' : ' (cópia)';
       S.salvar('viloes', n, 0); location.hash = '#vilao-' + n.id;
@@ -251,7 +255,7 @@
     'nova-campanha'() {
       UI.janela('Nova campanha', '<label class="campo"><span>Nome</span><input id="nc-nome" placeholder="Os Ratos da Linha Vermelha"></label>', [
         { rotulo: 'Cancelar', acao: f => f() },
-        { rotulo: 'Criar', classe: 'primario', acao: (f, j) => { const nome = j.querySelector('#nc-nome').value.trim() || 'Nova campanha'; f(); const c = S.salvar('campanhas', { nome, criada: Date.now(), mestre: P.eu(), membros: [], escudo: [], codigo: P.novoCodigo(), herois: [], combates: [], ganchos: [], rolagens: [] }, 0); estado.abaCamp = 'herois'; location.hash = '#campanha-' + c.id; } },
+        { rotulo: 'Criar', classe: 'primario', acao: (f, j) => { const nome = j.querySelector('#nc-nome').value.trim() || 'Nova campanha'; f(); const c = S.salvar('campanhas', { nome, sistema: SI.ativo.id, criada: Date.now(), mestre: P.eu(), membros: [], escudo: [], codigo: P.novoCodigo(), herois: [], combates: [], ganchos: [], rolagens: [] }, 0); estado.abaCamp = 'herois'; location.hash = '#campanha-' + c.id; } },
       ]);
     },
     'apagar-campanha'(el) { const c = S.pegar('campanhas', el.dataset.id); UI.confirmar('Apagar campanha', `Apagar ${c.nome}? Os heróis continuam salvos; combates, ganchos e rolagens somem.`, 'Apagar', () => { S.apagar('campanhas', c.id); render(); }); },
@@ -315,7 +319,7 @@
         S.salvar('campanhas', c, 0); location.hash = '#campanhas';
       });
     },
-    'mesa-rolar-attr'(el) { const c = campanhaAtual(), h = S.pegar('herois', el.dataset.heroi); rolarAttrDe(h, R.derivados(h), el.dataset.attr, c.id); },
+    'mesa-rolar-attr'(el) { const c = campanhaAtual(), h = S.pegar('herois', el.dataset.heroi); rolarAttrDe(h, el.dataset.attr, c.id); },
     'novo-combate'() {
       const c = campanhaAtual();
       UI.janela('Novo combate', '<label class="campo"><span>Nome</span><input id="ncb-nome" placeholder="Emboscada no viaduto"></label><p class="dica">Os heróis da campanha entram automaticamente. Vilões você adiciona depois.</p>',
@@ -346,7 +350,7 @@
       const c = campanhaAtual(), cb = combateAtual(c);
       const ja = cb.parts.filter(p => p.tipo === 'heroi').map(p => p.ref);
       escolherHerois('Adicionar heróis ao combate', M.heroisDa(c).filter(h => !ja.includes(h.id)), ids => {
-        ids.forEach(id => cb.parts.push({ uid: S.novoId(), tipo: 'heroi', ref: id }));
+        ids.forEach(id => cb.parts.push(iniDe(c, { uid: S.novoId(), tipo: 'heroi', ref: id }, S.pegar('herois', id))));
         S.salvar('campanhas', c, 0); render();
       }, 'Os jogadores precisam adicionar os heróis deles na página da campanha primeiro.');
     },
@@ -355,21 +359,25 @@
     'add-vilao-combate'(el) {
       const c = campanhaAtual(), cb = combateAtual(c), v = S.clone(F.pegarVilao(el.dataset.id));
       const iguais = cb.parts.filter(p => p.tipo === 'vilao' && p.v.id === v.id).length;
-      cb.parts.push({ uid: S.novoId(), tipo: 'vilao', v, nome: v.nome + (iguais ? ' ' + (iguais + 1) : ''), pv: v.pvMax | 0, mana: v.manaMax | 0 });
+      cb.parts.push(iniDe(c, { uid: S.novoId(), tipo: 'vilao', v, nome: v.nome + (iguais ? ' ' + (iguais + 1) : ''), pv: v.pvMax | 0, mana: v.manaMax | 0 }, v));
       S.salvar('campanhas', c, 200); render(); UI.aviso(v.nome + ' entrou no combate.', 'info');
     },
     'part-rolar-attr'(el) {
       const c = campanhaAtual(), cb = combateAtual(c), p = M.participante(c, cb.parts.find(x => x.uid === el.dataset.uid));
-      UI.resultado(D.teste(p.nome, el.dataset.attr, p.d.niv[el.dataset.attr] | 0, 0), c.id);
+      const r = p.sis.teste(p.fonte, el.dataset.attr, {}); if (!r) return;
+      r.quem = p.nome; UI.resultado(r, c.id);
     },
     'part-atacar'(el) {
       const c = campanhaAtual(), cb = combateAtual(c), ord = M.ordenar(c, cb);
-      const p = ord.find(x => x.uid === el.dataset.uid), a = p.fonte.ataques[+el.dataset.i];
+      const p = ord.find(x => x.uid === el.dataset.uid);
       const sel = UI.$('#pp-alvo'), alvo = sel ? ord.find(x => x.uid === sel.value) : null;
-      const r = D.ataque(p.nome, a.nome || 'Ataque', p.d.maestria[a.maestria] | 0, p.d.niv[a.attr] | 0, a.bonus | 0, alvo ? alvo.def : null);
+      const r = p.sis.ataque(p.fonte, +el.dataset.i, { alvoDef: alvo ? alvo.def : null, multi: estado.multi }); if (!r) return;
+      r.quem = p.nome;
       if (alvo) r.titulo += ' → ' + alvo.nome;
       UI.resultado(r, c.id);
-      estado.ultimo = alvo ? { de: p.uid, alvo: alvo.uid, alvoNome: alvo.nome, dano: r.dano.total, texto: r.acertou ? `Acertou ${alvo.nome} (${r.total} contra Defesa ${alvo.def}).` : `Errou ${alvo.nome} (${r.total} contra Defesa ${alvo.def}).` } : null;
+      const dano = alvo ? Math.max(0, r.dano.total - (alvo.dureza | 0)) : 0;
+      estado.ultimo = alvo ? { de: p.uid, alvo: alvo.uid, alvoNome: alvo.nome, dureza: alvo.dureza | 0, dano: r.acertou ? dano : 0,
+        texto: r.desastre ? `Desastre contra ${alvo.nome}: erra e quem estiver ao alcance pode atacar como reação.` : r.acertou ? `${r.critico ? 'Crítico em' : 'Acertou'} ${alvo.nome} (${r.total} contra Defesa ${alvo.def}).` : `Errou ${alvo.nome} (${r.total} contra Defesa ${alvo.def}).` } : null;
       render();
     },
     'aplicar-dano'() {
@@ -379,10 +387,10 @@
     },
     'part-poder'(el) {
       const c = campanhaAtual(), cb = combateAtual(c), p = M.participante(c, cb.parts.find(x => x.uid === el.dataset.uid));
-      const pod = p.fonte.poderes[+el.dataset.i], custo = pod.custo | 0;
-      if (custo > p.mana) return UI.aviso(`Mana insuficiente: ${pod.nome} custa ${custo} e restam ${p.mana}.`, 'info');
+      const pod = p.cb.poderes[+el.dataset.i], custo = pod.custo | 0, rec = p.sis.rotulos.recurso;
+      if (custo > p.mana) return UI.aviso(`${rec} insuficiente: ${pod.nome} custa ${custo} e restam ${p.mana}.`, 'info');
       mudarRecurso(`part:${c.id}:${cb.id}:${p.uid}`, 'mana', -custo);
-      UI.aviso(`${p.nome} usou ${pod.nome}: −${custo} Mana.`, 'info');
+      UI.aviso(`${p.nome} usou ${pod.nome}: −${custo} ${rec}.`, 'info');
     },
     'novo-gancho'(el) {
       const c = campanhaAtual(), tipo = el.dataset.tipo;
@@ -408,18 +416,51 @@
       const c = campanhaAtual(), i = +el.dataset.i, g = c.ganchos[i], attr = el.dataset.attr, k = el.dataset.k;
       const h = S.pegar('herois', UI.$('#g-q-' + i).value); if (!h) return;
       if (k === 'sucessos' && (g.usadas | 0) >= (g.acoes | 0)) return UI.aviso('Acabaram as ações do plano. O Mestre pode liberar mais.', 'info');
-      const r = D.teste(h.nome, attr, R.derivados(h).niv[attr], 0, attr === 'INT' ? 'Plano de invasão' : 'Tocaia');
+      const sis = SI.de(h), r = sis.teste(h, sis.ganchoAttr[attr], {}); r.titulo = (attr === 'INT' ? 'Plano de invasão' : 'Tocaia') + ' · ' + r.titulo;
       const dt = attr === 'INT' ? (g.dt == null ? 8 : g.dt) : (g.percepcao == null ? 8 : g.percepcao);
       r.alvoDef = dt; r.acertou = r.total >= dt; r.nota = 'contra ' + dt;
       if (k === 'sucessos') g.usadas = (g.usadas | 0) + 1;
       if (r.acertou) g[k] = (g[k] | 0) + 1;
       UI.resultado(r, c.id); S.salvar('campanhas', c, 0); render();
     },
+    'escolher-livro'(el) { SI.escolher(el.dataset.id); estado.busca = ''; estado.filtro = 'todos'; desenharTopo(); location.hash = '#herois'; },
+    'rolar-iniciativa'() {
+      const c = campanhaAtual(), cb = combateAtual(c), sis = SI.de(c);
+      cb.parts.forEach(p => { const f = p.tipo === 'heroi' ? S.pegar('herois', p.ref) : p.v; if (f) p.ini = sis.rolarIniciativa(f); p.desempate = 0; });
+      cb.turno = 0; S.salvar('campanhas', c, 0); render(); UI.aviso('Iniciativa rolada de novo para todos.', 'info');
+    },
+    'sh-multi'(el) { estado.multi = +el.dataset.v; render(); },
+    'sh-passo'(el) {
+      const x = docDe(el); if (!x || el.closest('.leitura')) return;
+      const campo = el.dataset.f, ps = campo.split('.'); let o = x.o; for (let i = 0; i < ps.length - 1; i++) o = o[ps[i]] = o[ps[i]] || {};
+      const k = ps[ps.length - 1], lim = campo.startsWith('afinidades') ? [0, 10] : campo.startsWith('atributos') ? [-5, 10] : [0, 99];
+      o[k] = Math.max(lim[0], Math.min(lim[1], (o[k] | 0) + +el.dataset.d));
+      S.salvar(x.col, x.o); render();
+    },
+    'sh-quebra'(el) { const x = docDe(el); if (!x) return; const v = +el.dataset.v; x.o.quebras = (x.o.quebras | 0) === v ? v - 1 : v; S.salvar(x.col, x.o, 300); render(); if (x.o.quebras >= 3) UI.aviso('Três Quebras: o destino foi destruído. Converse com o mestre.', 'info'); },
+    'sh-adicionar'(el) {
+      const x = docDe(el); if (!x) return; const k = el.dataset.campo;
+      const novo = { ataques: SI.de(x.o).id === 'sh' && x.col === 'viloes' ? { nome: 'Ataque', acerto: 3, dano: '1d6+3', tipoDano: 'Cortante', margem: 20 } : { nome: 'Novo ataque', tipo: 'corpo', attr: 'FOR', dano: '1d6', bonus: 0, margem: 20 },
+        kidos: { nome: '', custo: 1, desc: '' }, habilidades: { nome: '', desc: '' }, inventario: { nome: '', qtd: 1 }, poderes: { nome: '', custo: 0, desc: '' } }[k] || {};
+      x.o[k] = (x.o[k] || []).concat(novo); S.salvar(x.col, x.o); render();
+    },
+    'sh-usar-kido'(el) {
+      const x = docDe(el), h = x.o, k = (h.kidos || [])[+el.dataset.i]; if (!k) return;
+      const d = SI.de(h).derivados(h), m = F.manaAtual(h, d), custo = k.custo | 0;
+      if (custo > m) return UI.aviso(`Reiryoku insuficiente: ${k.nome || 'o kido'} custa ${custo} e restam ${m}.`, 'info');
+      h.mana = m - custo; S.salvar('herois', h); render(); UI.aviso(`${k.nome || 'Kido'}: −${custo} Reiryoku.`, 'info');
+    },
+    'sh-guia'(el) {
+      const x = docDe(el); if (!x) return;
+      SI.de(x.o).aplicarGuia(x.o, +UI.$('#sv-gnivel').value, +UI.$('#sv-gperfil').value);
+      S.salvar(x.col, x.o, 0); render(); UI.aviso('Números preenchidos pelo Guia de Inimigos. Ajuste o que quiser.', 'info');
+    },
     'rolar-rapido'(el) { const c = campanhaAtual(); UI.resultado(D.livre('Mestre', el.dataset.expr), c && c.id); },
   };
 
   function abrirEscolhaViloes() {
-    const j = UI.janela('Adicionar vilões ao combate', `<div id="escolha-viloes">${F.listaViloes(estado, true)}</div>`, [{ rotulo: 'Pronto', classe: 'primario', acao: f => f() }]);
+    const sis = SI.de(campanhaAtual());
+    const j = UI.janela('Adicionar ' + sis.rotulos.ameacas.toLowerCase() + ' ao combate', `<div id="escolha-viloes">${sis.listaViloes(estado, true)}</div>`, [{ rotulo: 'Pronto', classe: 'primario', acao: f => f() }]);
     j.classList.add('larga');
   }
 
@@ -449,7 +490,7 @@
       const el = e.target.closest('[data-act]');
       if (!el || el.disabled) return;
       const f = A[el.dataset.act];
-      if (f) { e.preventDefault(); f(el, e); if (UI.$('#escolha-viloes') && /filtro|add-vilao/.test(el.dataset.act)) UI.$('#escolha-viloes').innerHTML = F.listaViloes(estado, true); }
+      if (f) { e.preventDefault(); f(el, e); if (UI.$('#escolha-viloes') && /filtro|add-vilao/.test(el.dataset.act)) UI.$('#escolha-viloes').innerHTML = SI.de(campanhaAtual()).listaViloes(estado, true); }
     });
     document.addEventListener('keydown', e => {
       if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('g[data-act]')) { e.preventDefault(); e.target.dispatchEvent(new MouseEvent('click', { bubbles: true })); }
@@ -464,7 +505,7 @@
       if (el.matches('[data-busca]')) {
         estado.busca = el.value;
         const box = UI.$('#escolha-viloes');
-        if (box && box.contains(el)) { box.innerHTML = F.listaViloes(estado, true); const n = box.querySelector('[data-busca]'); n.focus(); n.setSelectionRange(n.value.length, n.value.length); }
+        if (box && box.contains(el)) { box.innerHTML = SI.de(campanhaAtual()).listaViloes(estado, true); const n = box.querySelector('[data-busca]'); n.focus(); n.setSelectionRange(n.value.length, n.value.length); }
         else render();
         return;
       }
@@ -498,6 +539,7 @@
     if (el.dataset.f === 'classe') { x.o.escolhas.classe = {}; x.o.escolhas.maestria = ''; }
     if (el.dataset.f === 'origem') { x.o.escolhas.origem = {}; x.o.elementos = []; x.o.formaBestial = false; }
     S.salvar(x.col, x.o, rerender ? 300 : 800);
+    const sis = SI.de(x.o); if (sis.aoMudarCampo) { sis.aoMudarCampo(x.o, el.dataset.f); S.salvar(x.col, x.o, rerender ? 300 : 800); }
     if (rerender) render();
   }
 
@@ -552,6 +594,15 @@
     return 'Não deu para entrar (' + (c || 'erro') + ').';
   }
 
+  // Nome do livro e rótulos do menu mudam com o sistema.
+  function desenharTopo() {
+    const sis = SI.ativo, chip = UI.$('#livro-atual');
+    document.body.dataset.sistema = sis ? sis.id : '';
+    if (chip) { chip.hidden = !sis; chip.textContent = sis ? sis.nome : ''; }
+    UI.$('.nav').hidden = !sis;
+    if (sis) { UI.$('[data-sec=herois]').textContent = sis.rotulos.personagens; UI.$('[data-sec=viloes]').textContent = sis.rotulos.ameacas; }
+  }
+
   // Menu da conta no topo.
   function desenharConta() {
     const box = UI.$('#conta'), u = AU.usuario;
@@ -576,6 +627,8 @@
 
   async function iniciar() {
     ligar();
+    if (SI.idAtivo) SI.escolher(SI.idAtivo);
+    desenharTopo();
     raiz().innerHTML = '<p class="carregando">Abrindo o bueiro…</p>';
     await AU.iniciar();
     // Sem login no Firebase o banco recusa leituras: mostra a entrada primeiro (o login recarrega a página).

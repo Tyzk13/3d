@@ -17,30 +17,32 @@
 
   // ---------- Lista de heróis ----------
   function listaHerois(estado) {
-    const busca = (estado.busca || '').toLowerCase(), eu = HB.P.eu();
-    const todos = S.lista('herois').filter(HB.P.heroiVisivel).filter(h => !busca || (h.nome + ' ' + (h.jogador || '')).toLowerCase().includes(busca))
+    const busca = (estado.busca || '').toLowerCase(), eu = HB.P.eu(), sis = HB.Sistemas.ativo, r = sis.rotulos;
+    const todos = S.lista('herois').filter(h => HB.Sistemas.doSistema(h, sis.id)).filter(HB.P.heroiVisivel).filter(h => !busca || (h.nome + ' ' + (h.jogador || '')).toLowerCase().includes(busca))
       .sort((a, b) => (b.criado || 0) - (a.criado || 0));
     const meus = todos.filter(h => h.dono === eu), semDono = todos.filter(h => !h.dono), mesa = todos.filter(h => h.dono && h.dono !== eu);
     const grade = (xs, extra) => `<div class="grade-cartoes">${xs.map(h => cartaoHeroi(h, extra)).join('')}</div>`;
     return `<section class="pagina">
-      <div class="pagina-topo"><div><h1 class="titulo-hq">Heróis</h1><p class="sub">${meus.length} ficha${meus.length === 1 ? '' : 's'} sua${meus.length === 1 ? '' : 's'}</p></div>
-        <button class="btn primario" data-act="novo-heroi">Novo herói</button></div>
+      <div class="pagina-topo"><div><h1 class="titulo-hq">${esc(r.personagens)}</h1><p class="sub">${meus.length} ficha${meus.length === 1 ? '' : 's'} sua${meus.length === 1 ? '' : 's'} · ${esc(sis.nome)}</p></div>
+        <button class="btn primario" data-act="novo-heroi">${esc(r.novo)}</button></div>
       <label class="busca"><span class="sr">Buscar</span><input id="busca-herois" data-busca placeholder="Buscar por nome ou jogador" value="${esc(estado.busca || '')}"></label>
-      ${meus.length ? grade(meus) : vazioHerois()}
-      ${mesa.length ? `<h2 class="secao">Heróis das suas campanhas</h2>${grade(mesa)}` : ''}
+      ${meus.length ? grade(meus) : vazioHerois(sis)}
+      ${mesa.length ? `<h2 class="secao">${esc(r.personagens)} das suas campanhas</h2>${grade(mesa)}` : ''}
       ${semDono.length ? `<h2 class="secao">Fichas sem dono</h2><p class="dica">Criadas antes do login. Assuma as que são suas.</p>${grade(semDono, 'assumir')}` : ''}
     </section>`;
   }
-  function vazioHerois() {
-    return `<div class="vazio-grande"><p class="titulo-hq">Nenhum herói ainda</p>
-      <p>Crie a primeira ficha: escolha classe e origem, distribua os 20 pontos de atributo e o resto se calcula sozinho.</p>
-      <button class="btn primario" data-act="novo-heroi">Criar herói</button></div>`;
+  function vazioHerois(sis) {
+    const texto = sis.id === 'hb' ? 'Crie a primeira ficha: escolha classe e origem, distribua os 20 pontos de atributo e o resto se calcula sozinho.'
+      : 'Crie a primeira ficha: escolha divisão e Ponto de Partida, distribua os atributos e marque as perícias. Vida, Reiryoku, Defesa e bônus se calculam sozinhos.';
+    return `<div class="vazio-grande"><p class="titulo-hq">Nenhuma ficha ainda</p>
+      <p>${texto}</p>
+      <button class="btn primario" data-act="novo-heroi">${esc(sis.rotulos.novo)}</button></div>`;
   }
   function cartaoHeroi(h, extra) {
-    const d = R.derivados(h);
+    const sis = HB.Sistemas.de(h), d = sis.derivados(h);
     return `<article class="cartao-heroi">
       ${UI.foto(h.foto, h.nome)}
-      <div class="ch-info"><h3>${esc(h.nome)}</h3><p class="ch-classe">${esc(nomeClasse(h))}</p>
+      <div class="ch-info"><h3>${esc(h.nome)}</h3><p class="ch-classe">${esc(sis.nomeClasse(h))}</p>
         <p class="ch-meta">${h.dono ? 'Conta: ' + esc(HB.A.nome(h.dono)) : 'Sem dono'}${(h.condicoes || []).length ? ' · ' + esc(h.condicoes.join(', ')) : ''}</p>
         <div class="ch-barras">${UI.barraMini('pv', pvAtual(h, d), d.pvMax)}${UI.barraMini('mana', manaAtual(h, d), d.manaMax)}</div></div>
       <div class="ch-acoes">${extra === 'assumir' ? `<button class="btn pequeno" data-act="assumir-heroi" data-id="${h.id}">É meu</button>` : ''}<a class="btn pequeno primario" href="#heroi-${h.id}">Abrir ficha</a></div></article>`;
@@ -273,8 +275,8 @@
     { id: 'base-elemental', base: true, nome: 'Lodo Elemental', categoria: 'Elemental (Água) · Grande', elemento: 'Água', ameaca: 4, niveis: { FOR: 3, AGI: 1, CAR: 0, INT: 1, FEI: 4, VIG: 4 }, maestria: { cac: 2, dist: 0, mag: 3 }, pvMax: 70, manaMax: 30, defesa: 8,
       ataques: [{ nome: 'Tromba de esgoto', maestria: 'mag', attr: 'FEI', bonus: 2, obs: 'Empurra 3 m' }, { nome: 'Abraço afogador', maestria: 'cac', attr: 'FOR', bonus: 0 }], desc: 'Água parada que criou vontade própria. Domina o Fogo e é vulnerável ao Vento.' },
   ];
-  function viloes() { return BESTIARIO.concat(S.lista('viloes')); }
-  function pegarVilao(id) { return BESTIARIO.find(v => v.id === id) || S.pegar('viloes', id); }
+  function viloes() { return BESTIARIO.concat(S.lista('viloes').filter(v => HB.Sistemas.doSistema(v, 'hb'))); }
+  function pegarVilao(id) { return HB.Sistemas.lista().map(x => x.bestiario.find(v => v.id === id)).find(Boolean) || S.pegar('viloes', id); }
   function derivVilao(v) {
     const niv = {}; R.TODOS.forEach(a => (niv[a] = R.limitar((v.niveis || {})[a] | 0)));
     const maestria = {}; R.MAESTRIAS.forEach(m => (maestria[m.id] = R.limitar((v.maestria || {})[m.id] | 0)));

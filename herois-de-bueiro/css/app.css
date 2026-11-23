@@ -500,3 +500,71 @@ input[type=range] { padding: 0; accent-color: var(--faixa); }
 .leitura .foto-troca span { display: none; }
 .leitura .foto-troca { cursor: default; }
 @media (max-width: 560px) { .conta-nome { display: none; } .interruptor { margin-left: 0; } }
+
+/* ---------- RPGHUB: estante de livros ---------- */
+.livro-atual { font-size: .76rem; font-weight: 700; text-decoration: none; color: var(--giz); border: 1px solid var(--linha); border-radius: 99px; padding: .2rem .65rem; white-space: nowrap; }
+.livro-atual:hover { border-color: var(--faixa); }
+.estante { display: grid; gap: 1.6rem; padding-block: 1rem 2rem; }
+.estante-topo { display: grid; gap: .4rem; }
+.estante-topo .capa-sub { margin: 0; }
+.livros { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr)); gap: 1.6rem; }
+.livro { --capa: #2a1f12; --tinta: var(--faixa); position: relative; display: flex; min-height: 300px; padding: 0; border: 0; border-radius: 4px 10px 10px 4px; cursor: pointer; text-align: left; color: #f4f1e8;
+  background: var(--capa); box-shadow: 8px 10px 0 #000; transition: transform .2s ease, box-shadow .2s ease; font: inherit; }
+.livro:hover, .livro:focus-visible { transform: translateY(-4px) rotate(-.6deg); box-shadow: 10px 14px 0 #000; }
+.livro-lombada { width: 22px; flex: none; border-radius: 4px 0 0 4px; background: linear-gradient(90deg, rgba(0,0,0,.55), rgba(255,255,255,.08) 60%, rgba(0,0,0,.35)); }
+.livro-capa { flex: 1; display: grid; align-content: start; gap: .6rem; padding: 1.3rem 1.3rem 1rem; min-width: 0; }
+.livro-selo { font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .12em; color: var(--tinta); }
+.livro-nome { font-family: var(--f-hq); font-weight: 400; font-size: clamp(2.2rem, 6vw, 3rem); line-height: .92; letter-spacing: .03em; text-shadow: 3px 3px 0 #000; overflow-wrap: anywhere; }
+.livro-desc { font-size: .9rem; color: rgba(244,241,232,.82); max-width: 42ch; }
+.livro-rodape { margin-top: auto; display: flex; justify-content: space-between; align-items: center; gap: .6rem; font-size: .78rem; color: rgba(244,241,232,.7); padding-top: .8rem; border-top: 1px solid rgba(255,255,255,.15); }
+.livro-rodape i { font-style: normal; font-weight: 800; color: #111; background: var(--tinta); padding: .3rem .7rem; border-radius: 4px; }
+.livro.aberto { outline: 3px solid var(--tinta); outline-offset: 4px; }
+.livro-hb { --capa: radial-gradient(rgba(255,210,63,.18) 1.4px, transparent 1.6px) 0 0/9px 9px, linear-gradient(160deg, #3a2f12, #15130c 70%); --tinta: #ffd23f; }
+.livro-sh { --capa: linear-gradient(transparent 0 48%, rgba(124,196,255,.10) 48% 52%, transparent 52%) 0 0/100% 34px, linear-gradient(165deg, #172434, #090c12 72%); --tinta: #7cc4ff; }
+.livro-sh .livro-nome { font-family: 'Cinzel', var(--f-hq); font-weight: 700; font-size: clamp(1.8rem, 5vw, 2.5rem); letter-spacing: .02em; }
+
+/* ---------- Tema do Shinigamis & Hollows ---------- */
+body[data-sistema="sh"] { --faixa: #7cc4ff; --faixa-tinta: #06121f; --asfalto: #0d1015; --concreto: #151a22; --concreto-2: #1e2530; --linha: #2e3846; }
+body[data-sistema="sh"] .faixa-hq { background: linear-gradient(90deg, transparent, #7cc4ff 20%, #e8eef6 50%, #7cc4ff 80%, transparent); height: 2px; }
+body[data-sistema="sh"] .logo-tampa { border-color: #7cc4ff; background: radial-gradient(circle, #e8eef6 0 22%, #0d1015 24%); }
+body[data-sistema="sh"] .titulo-hq, body[data-sistema="sh"] .bloco-topo h3, body[data-sistema="sh"] .regras h2, body[data-sistema="sh"] .secao { font-family: 'Cinzel', var(--f-hq); font-weight: 700; letter-spacing: .02em; }
+body[data-sistema="sh"] .bloco-topo h3 { font-size: 1.05rem; }
+body[data-sistema="sh"] .titulo-hq { font-size: 2rem; }
+body[data-sistema="sh"] { background-image: none; }
+
+/* Ficha S&H */
+.ficha-sel.tres { grid-template-columns: 5rem 1fr 1fr; }
+.numeros-sh { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; }
+.numeros-sh > div { display: grid; background: var(--concreto); border: 1px solid var(--linha); border-radius: 6px; padding: .45rem .6rem; }
+.numeros-sh small { font-size: .62rem; text-transform: uppercase; letter-spacing: .06em; }
+.numeros-sh b { font-size: 1.2rem; font-variant-numeric: tabular-nums; }
+.defesa-conta select { width: auto; display: inline-block; padding: .15rem .3rem; }
+.quebras .q-linha { display: flex; align-items: center; gap: .4rem; margin: .3rem 0; }
+.quebras .q-linha > span { flex: 1; font-weight: 600; font-size: .88rem; }
+.quebra { width: 2rem; height: 2rem; border: 2px solid var(--linha); background: var(--asfalto); color: #fff; border-radius: 50%; cursor: pointer; font-weight: 800; }
+.quebra.on { background: var(--perigo); border-color: #000; }
+.grau { width: auto; padding: .2rem .3rem; font-size: .78rem; }
+.grau.g1 { border-color: var(--faixa); }
+.grau.g2 { border-color: var(--faixa); background: color-mix(in srgb, var(--faixa) 20%, var(--asfalto)); font-weight: 700; }
+.pericias th small, .tabela-attr th small { color: var(--giz-2); font-weight: 500; margin-left: .2rem; }
+.pericias tr.bloq th, .pericias tr.bloq .btn-dado { opacity: .5; }
+.caminhos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; }
+.caminho { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: .2rem .5rem; background: var(--asfalto); border-radius: 6px; padding: .5rem .6rem; }
+.caminho .grad { grid-column: 1 / -1; font-size: .74rem; color: var(--faixa); font-weight: 700; }
+.multi { display: flex; gap: .3rem; flex-wrap: wrap; }
+.chip.on { background: var(--faixa); color: var(--faixa-tinta); border-style: solid; border-color: var(--faixa); }
+.item.zan { border-color: color-mix(in srgb, var(--faixa) 45%, var(--linha)); }
+.guia { display: flex; align-items: flex-end; gap: .6rem; flex-wrap: wrap; background: var(--concreto); border: 1px dashed var(--faixa); border-radius: 8px; padding: .6rem .8rem; margin-top: .8rem; }
+.guia > b { align-self: center; }
+.guia .dica { margin: 0; align-self: center; }
+.vilao-numeros { grid-template-columns: repeat(3, 1fr); }
+.pp-attrs.muitos { grid-template-columns: repeat(5, 1fr); }
+.pp-attrs.muitos .eh-attr small { font-size: .56rem; }
+.dado.d20 { background: var(--faixa); color: var(--faixa-tinta); border-color: var(--faixa); }
+@media (max-width: 560px) {
+  .ficha-sel.tres { grid-template-columns: 1fr 1fr; }
+  .ficha-sel.tres .campo:first-child { grid-column: 1 / -1; }
+  .caminhos { grid-template-columns: 1fr; }
+  .pp-attrs.muitos { grid-template-columns: repeat(3, 1fr); }
+  .livro { min-height: 250px; }
+}
