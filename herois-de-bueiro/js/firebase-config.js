@@ -1,12 +1,11 @@
-// Login com Google (site próprio). Deixe null para usar a conta do claude.ai (página publicada)
-// ou a conta local de teste. Para ligar, cole aqui a configuração do seu projeto Firebase
-// (Console do Firebase > Configurações do projeto > Seus apps > Web). Passo a passo em FIREBASE.md.
-window.HB_FIREBASE = null;
-/* Exemplo:
+// Login com Google (site próprio). Configuração do projeto Firebase "heroisdebueiro-dbd51".
+// Não é segredo: quem protege os dados são as regras em firestore.rules (Console > Firestore > Regras).
+// Na página publicada no claude.ai o Firebase não carrega (a página bloqueia sites de fora) e o app usa a conta claude.ai.
 window.HB_FIREBASE = {
-  apiKey: "AIza...",
-  authDomain: "seu-projeto.firebaseapp.com",
-  projectId: "seu-projeto",
-  appId: "1:123:web:abc",
+  apiKey: "AIzaSyB-0K0_nDysaF47Z3vKk21x4T0A_DXojXk",
+  authDomain: "heroisdebueiro-dbd51.firebaseapp.com",
+  projectId: "heroisdebueiro-dbd51",
+  storageBucket: "heroisdebueiro-dbd51.firebasestorage.app",
+  messagingSenderId: "824146013577",
+  appId: "1:824146013577:web:0aa6d5c1e6baa640328558",
 };
-*/

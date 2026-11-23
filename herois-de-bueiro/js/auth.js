@@ -7,14 +7,16 @@
   const CHAVE = 'herois-de-bueiro:conta';
   const perfisCache = {};
 
-  const SDK = 'https://cdn.jsdelivr.net/npm/firebase@10.12.2/';
+  const SDK = 'vendor/firebase/'; // firebase@10.12.2 (compat), servido junto com o site
   const carregar = src => new Promise((ok, falha) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = falha; document.head.appendChild(s); });
 
   async function iniciar() {
-    const cfg = window.HB_FIREBASE;
+    // Dentro do claude.ai a página bloqueia servidores de fora: lá vale sempre a conta claude.ai.
+    const noClaude = !!(window.claude && typeof window.claude.use === 'function');
+    const cfg = noClaude ? null : window.HB_FIREBASE;
     if (cfg && cfg.apiKey && !window.firebase) {
       try { for (const f of ['firebase-app-compat.js', 'firebase-auth-compat.js', 'firebase-firestore-compat.js']) await carregar(SDK + f); }
-      catch (e) { HB.UI.aviso('Não consegui carregar o Firebase. Confira a internet e o arquivo js/firebase-config.js.'); }
+      catch (e) { modo = 'erro'; return; }
     }
     if (cfg && cfg.apiKey && window.firebase) {
       modo = 'firebase';

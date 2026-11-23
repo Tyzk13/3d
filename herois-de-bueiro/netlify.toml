@@ -1,0 +1,4 @@
+# Site estático: no Netlify, use "Base directory" = herois-de-bueiro e deixe o build vazio.
+[build]
+  publish = "."
+  command = ""

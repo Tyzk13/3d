@@ -50,6 +50,7 @@
         <label class="campo"><span>Senha</span><input id="lg-senha" name="senha" type="password" autocomplete="current-password" minlength="6" required></label>
         <label class="campo"><span>Nome (só para criar conta)</span><input id="lg-nome" name="nome" autocomplete="nickname"></label>
         <div class="barra-acoes"><button class="btn primario" name="acao" value="entrar">Entrar</button><button class="btn" name="acao" value="criar">Criar conta</button></div></form>`;
+    else if (m === 'erro') corpo = `<p class="faixa">Não consegui carregar o login (arquivos em vendor/firebase). Recarregue a página; se continuar, confira se a pasta vendor foi publicada junto com o site.</p>`;
     else if (m === 'claude') corpo = `<p>Esta página usa a sua conta do claude.ai. Entre no claude.ai (dá para entrar com o Google) e abra o link de novo.</p>`;
     else {
       const contas = AU.contasLocais();
@@ -557,6 +558,8 @@
     ligar();
     raiz().innerHTML = '<p class="carregando">Abrindo o bueiro…</p>';
     await AU.iniciar();
+    // Sem login no Firebase o banco recusa leituras: mostra a entrada primeiro (o login recarrega a página).
+    if (!AU.usuario && AU.modo !== 'local' && AU.modo !== 'claude') { render(); return; }
     await S.iniciar(c => { if (c !== 'perfis') carregarNomes(); aoMudarRemoto(); });
     if (AU.usuario) depoisDoLogin(); else render();
   }

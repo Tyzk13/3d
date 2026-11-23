@@ -23,10 +23,13 @@ Para ler uma função: Read com `offset` = linha e `limit` ≈ 40–80. Não lei
 |---|---|---|
 | `herois-de-bueiro/css/app.css` | 503 | 42 KB |
 | `herois-de-bueiro/index.html` | 37 | 2 KB |
-| `herois-de-bueiro/js/app.js` | 565 | 41 KB |
+| `herois-de-bueiro/js/app.js` | 568 | 41 KB |
+| `herois-de-bueiro/js/auth.js` | 107 | 5 KB |
 | `herois-de-bueiro/js/dados.js` | 51 | 2 KB |
 | `herois-de-bueiro/js/ficha.js` | 363 | 32 KB |
+| `herois-de-bueiro/js/firebase-config.js` | 12 | 1 KB |
 | `herois-de-bueiro/js/mestre.js` | 265 | 25 KB |
+| `herois-de-bueiro/js/permissoes.js` | 47 | 2 KB |
 | `herois-de-bueiro/js/regras.js` | 238 | 11 KB |
 | `herois-de-bueiro/js/store.js` | 107 | 5 KB |
 | `herois-de-bueiro/js/ui.js` | 161 | 9 KB |
@@ -101,12 +104,15 @@ Para ler uma função: Read com `offset` = linha e `limit` ≈ 40–80. Não lei
 | `videos/stories/tempo.js` | 94 | 10 KB |
 | `vite.config.ts` | 39 | 2 KB |
 
-Outros textos: `.claude/skills/mapa-3d/CATALOGO.md`, `.claude/skills/mapa-3d/SKILL.md`, `.claude/skills/videos-historia/SKILL.md`, `CHANGELOG.md`, `CLAUDE.md`, `CREDITS.md`, `README.md`, `capturas/README.md`, `docs/BRIEFING.md`, `docs/HOSPEDAGEM.md`, `docs/NOVO-MAPA.md`, `docs/PROMPT-NOVO-MAPA.md`, `herois-de-bueiro/README.md`, `package.json`, `server/package-lock.json`, `server/package.json`, `tools/assets.json`, `tsconfig.json`, `videos/README.md`, `videos/package-lock.json`, `videos/package.json`, `videos/requirements.txt`
+Outros textos: `.claude/skills/mapa-3d/CATALOGO.md`, `.claude/skills/mapa-3d/SKILL.md`, `.claude/skills/videos-historia/SKILL.md`, `CHANGELOG.md`, `CLAUDE.md`, `CREDITS.md`, `README.md`, `capturas/README.md`, `docs/BRIEFING.md`, `docs/HOSPEDAGEM.md`, `docs/NOVO-MAPA.md`, `docs/PROMPT-NOVO-MAPA.md`, `herois-de-bueiro/FIREBASE.md`, `herois-de-bueiro/README.md`, `package.json`, `server/package-lock.json`, `server/package.json`, `tools/assets.json`, `tsconfig.json`, `videos/README.md`, `videos/package-lock.json`, `videos/package.json`, `videos/requirements.txt`
 
 ## Funções, classes e exports (linha)
 
 ### `herois-de-bueiro/js/app.js`
-`raiz` 4 · `rota` 9 · `render` 10 · `secao` 31 · `naoAchou` 32 · `travarLeitura` 36 · `paginaLogin` 43 · `paginaInicio` 65 · `paginaRegras` 83 · `t` 84 · `docDe` 107 · `setCaminho` 112 · `campanhaAtual` 117 · `combateAtual` 118 · `nomeQuem` 119 · `fonteAtual` 122 · `mudarRecurso` 130 · `campanhaDaFicha` 152 · `rolarAttrDe` 157 · `escolherHerois` 166 · `novoCombate` 172 · `base()` 197 · `convidar()` 270 · `turno()` 327 · `abrirEscolhaViloes` 420 · `ligar` 444 · `gravarCampo` 489 · `aoMudarRemoto` 503 · `backup` 510 · `entrarNa` 519 · `erroLogin` 524 · `desenharConta` 535 · `carregarNomes` 546 · `depoisDoLogin` 554 · `iniciar` 556
+`raiz` 4 · `rota` 9 · `render` 10 · `secao` 31 · `naoAchou` 32 · `travarLeitura` 36 · `paginaLogin` 43 · `paginaInicio` 66 · `paginaRegras` 84 · `t` 85 · `docDe` 108 · `setCaminho` 113 · `campanhaAtual` 118 · `combateAtual` 119 · `nomeQuem` 120 · `fonteAtual` 123 · `mudarRecurso` 131 · `campanhaDaFicha` 153 · `rolarAttrDe` 158 · `escolherHerois` 167 · `novoCombate` 173 · `base()` 198 · `convidar()` 271 · `turno()` 328 · `abrirEscolhaViloes` 421 · `ligar` 445 · `gravarCampo` 490 · `aoMudarRemoto` 504 · `backup` 511 · `entrarNa` 520 · `erroLogin` 525 · `desenharConta` 536 · `carregarNomes` 547 · `depoisDoLogin` 555 · `iniciar` 557
+
+### `herois-de-bueiro/js/auth.js`
+`carregar` 11 · `iniciar` 13 · `entrarGoogle` 43 · `entrarEmail` 48 · `entrarLocal` 54 · `contasLocais` 62 · `sair` 63 · `perfis` 70 · `nome` 85 · `publicarPerfil` 93
 
 ### `herois-de-bueiro/js/dados.js`
 `d` 4 · `rolar` 5 · `soma` 6 · `teste` 9 · `ataque` 20 · `livre` 35
@@ -116,6 +122,9 @@ Outros textos: `.claude/skills/mapa-3d/CATALOGO.md`, `.claude/skills/mapa-3d/SKI
 
 ### `herois-de-bueiro/js/mestre.js`
 `paginaCampanhas` 6 · `capa` 23 · `paginaCampanha` 28 · `cartaoHeroiCampanha` 56 · `abaJogadores` 64 · `estadoVida` 79 · `combateJogador` 83 · `mesa` 96 · `heroisDa` 116 · `abaHerois` 118 · `cartaoEscudo` 123 · `participante` 137 · `ordenar` 147 · `abaCombates` 152 · `painelParticipante` 180 · `abaGanchos` 207 · `cartaoGancho` 216 · `f` 217 · `cont` 236 · `abaDados` 256
+
+### `herois-de-bueiro/js/permissoes.js`
+`eu` 5 · `ehMestre` 6 · `temEscudo` 7 · `ehMembro` 8 · `campanhasDoHeroi` 9 · `minhasCampanhas` 10 · `podeEditarHeroi` 12 · `podeEditarVilao` 17 · `heroiVisivel` 19 · `mestresDe` 25 · `sincronizarHerois` 26 · `assumirCampanhaSemMestre` 36 · `novoCodigo` 39
 
 ### `herois-de-bueiro/js/regras.js`
 `bonusMaestria` 26 · `perdePara` 73 · `estado()` 140 · `modsDe` 150 · `add` 152 · `ap` 153 · `nivelBruto` 170 · `limitar` 175 · `nivel` 176 · `maestrias` 178 · `pontosGastos` 189 · `derivados` 191 · `situacoes` 209 · `ordemClasse` 228
