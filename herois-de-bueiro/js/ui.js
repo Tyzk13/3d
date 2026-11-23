@@ -3,6 +3,8 @@
   const R = HB.R;
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
   const $ = (s, el = document) => el.querySelector(s);
+  // Fotos e capas só podem ser imagens embutidas (é o que o recorte gera); bloqueia texto malicioso gravado no banco.
+  const imgSegura = u => (typeof u === 'string' && /^data:image\/(jpeg|png|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(u) ? u : '');
 
   function aviso(msg, tipo = 'erro') {
     const box = $('#avisos'); if (!box) return;
@@ -56,7 +58,9 @@
   }
 
   function foto(src, nome, classe = '') {
-    if (src) return `<img class="foto ${classe}" src="${esc(src)}" alt="">`;
+    // <img> aceita também o avatar da conta (https do Google ou caminho do próprio site).
+    src = imgSegura(src) || (typeof src === 'string' && /^(https:\/\/|\/)[^\s"'<>]+$/.test(src) ? src : '');
+    if (src) return `<img class="foto ${classe}" src="${esc(src)}" alt="" referrerpolicy="no-referrer">`;
     const ini = String(nome || '?').trim().split(/\s+/).slice(0, 2).map(p => p[0] || '').join('').toUpperCase();
     return `<div class="foto vazia ${classe}" aria-hidden="true">${esc(ini || '?')}</div>`;
   }
@@ -185,5 +189,5 @@
     return `<option value="">${esc(vazio)}</option>` + lista.map(a => `<option value="${a}" ${a === atual ? 'selected' : ''}>${esc(R.nomeAttr(a))}</option>`).join('');
   }
 
-  HB.UI = { esc, $, aviso, janela, fechar, confirmar, barra, barraMini, foto, recortarFoto, resultado, cartaoResultado, painelResultados, fecharRolagem, sessao, opcoesAttr };
+  HB.UI = { imgSegura, esc, $, aviso, janela, fechar, confirmar, barra, barraMini, foto, recortarFoto, resultado, cartaoResultado, painelResultados, fecharRolagem, sessao, opcoesAttr };
 })(window.HB);

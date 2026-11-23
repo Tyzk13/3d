@@ -38,7 +38,7 @@
   const naoAchou = (t, volta) => `<section class="pagina"><div class="vazio-grande"><p>${esc(t)}</p><a class="btn" href="${volta}">Voltar</a></div></section>`;
 
   // Fichas de outras pessoas: dá para ver, trocar de aba e rolar; não dá para mudar.
-  const LIVRES = ['aba', 'rolar-attr', 'rolar-ataque', 'duplicar-vilao', 'filtro', 'sh-multi'];
+  const LIVRES = ['aba', 'rolar-attr', 'rolar-ataque', 'duplicar-vilao', 'filtro', 'sh-multi', 'ajuste', 'ajuste-fixo'];
   function travarLeitura() {
     raiz().querySelectorAll('.leitura').forEach(box => box.querySelectorAll('input,select,textarea,button').forEach(el => {
       if (el.closest('.rolar-livre') || LIVRES.includes(el.dataset.act)) return;
@@ -49,7 +49,8 @@
   function paginaLogin() {
     const m = AU.modo;
     let corpo;
-    if (m === 'firebase') corpo = `<button class="btn primario grande largo" data-act="login-google"><span class="g-logo" aria-hidden="true">G</span> Entrar com Google</button>
+    const webview = /FBAN|FBAV|Instagram|WhatsApp|Line\/|; wv\)/i.test(navigator.userAgent);
+    if (m === 'firebase') corpo = `${webview ? '<p class="faixa">Você abriu pelo app (WhatsApp, Instagram…). O Google não deixa entrar por aqui: toque nos três pontinhos e escolha "Abrir no navegador".</p>' : ''}<button class="btn primario grande largo" data-act="login-google"><span class="g-logo" aria-hidden="true">G</span> Entrar com Google</button>
       <div class="ou"><span>ou com e-mail</span></div>
       <form class="form-login" data-act-submit="login-email">
         <label class="campo"><span>E-mail</span><input id="lg-email" name="email" type="email" autocomplete="email" required></label>
@@ -76,7 +77,7 @@
     return `<section class="estante">
       <div class="estante-topo"><h1 class="titulo-capa">RPG<span>HUB</span></h1>
         <p class="capa-sub">Escolha o livro. Fichas, campanhas, ameaças e regras seguem o sistema dele; a conta, o Escudo do Mestre e o combate são os mesmos.</p></div>
-      <div class="livros">${livros.map(l => { const n = conta(l.id); return `<div class="livro-item"><button class="livro livro-${l.id} ${SI.idAtivo === l.id ? 'aberto' : ''}" data-act="escolher-livro" data-id="${l.id}">
+      <div class="livros">${livros.map(l => { const n = conta(l.id); return `<div class="livro-item"><button class="livro livro-${esc(l.id)} ${SI.idAtivo === l.id ? 'aberto' : ''}" data-act="escolher-livro" data-id="${esc(l.id)}">
           <span class="livro-lombada" aria-hidden="true"></span>
           <span class="livro-capa"><span class="livro-selo">${esc(l.sub)}</span><b class="livro-nome">${esc(l.nome)}</b><span class="livro-desc">${esc(l.descricao)}</span>
             <span class="livro-rodape">${AU.usuario ? `${n.p} ficha${n.p === 1 ? '' : 's'} · ${n.c} campanha${n.c === 1 ? '' : 's'}` : 'Entre para ver suas fichas'}<i>${SI.idAtivo === l.id ? 'Aberto' : 'Abrir livro'}</i></span></span></button>
@@ -174,7 +175,7 @@
 
   function escolherHerois(titulo, hs, aoConfirmar, semNada) {
     if (!hs.length) { UI.janela(titulo, `<p>${esc(semNada || 'Nenhum herói disponível. Crie um herói ou veja se ele já está aqui.')}</p>`, [{ rotulo: 'Fechar', acao: f => f() }, { rotulo: 'Criar herói', classe: 'primario', acao: f => { f(); A['novo-heroi'](); } }]); return; }
-    UI.janela(titulo, `<div class="lista-escolha">${hs.map(h => `<label class="escolha">${UI.foto(h.foto, h.nome)}<span><b>${esc(h.nome)}</b><small>${esc(SI.de(h).nomeClasse(h))} · ${esc(AU.nome(h.dono))}</small></span><input type="checkbox" value="${h.id}"></label>`).join('')}</div>`,
+    UI.janela(titulo, `<div class="lista-escolha">${hs.map(h => `<label class="escolha">${UI.foto(h.foto, h.nome)}<span><b>${esc(h.nome)}</b><small>${esc(SI.de(h).nomeClasse(h))} · ${esc(AU.nome(h.dono))}</small></span><input type="checkbox" value="${esc(h.id)}"></label>`).join('')}</div>`,
       [{ rotulo: 'Cancelar', acao: f => f() }, { rotulo: 'Adicionar', classe: 'primario', acao: (f, j) => { const ids = [...j.querySelectorAll('input:checked')].map(i => i.value); f(); if (ids.length) aoConfirmar(ids); } }]);
   }
 
@@ -228,7 +229,12 @@
       S.salvar(x.col, x.o); render();
     },
     'novo-ataque'(el) { const x = docDe(el); if (!x) return; x.o.ataques = (x.o.ataques || []).concat({ nome: 'Soco', maestria: 'cac', attr: 'FOR', bonus: 0 }); S.salvar(x.col, x.o); render(); },
-    'remover-item'(el) { const x = docDe(el); x.o[el.dataset.campo].splice(+el.dataset.i, 1); S.salvar(x.col, x.o); render(); },
+    'remover-item'(el) {
+      const x = docDe(el), i = +el.dataset.i, k = el.dataset.campo; x.o[k].splice(i, 1);
+      // Perícia escolhida pela ocupação (Ordem Paranormal II) acompanha a lista.
+      if (k === 'pericias' && x.o.ocupEscolha !== '' && x.o.ocupEscolha != null) { const e = +x.o.ocupEscolha; x.o.ocupEscolha = e === i ? '' : e > i ? String(e - 1) : x.o.ocupEscolha; }
+      S.salvar(x.col, x.o); render();
+    },
     'rolar-ataque'(el) {
       const f = fonteAtual(); if (!f) return;
       const r = f.sis.ataque(f.o, +el.dataset.i, { multi: estado.multi });
@@ -356,14 +362,16 @@
       const c = campanhaAtual(), cb = combateAtual(c), n = M.ordenar(c, cb).length; if (!n) return;
       let t = (cb.turno | 0) + +el.dataset.d, r = cb.rodada | 0 || 1;
       if (t >= n) { t = 0; r++; } if (t < 0) { if (r > 1) { t = n - 1; r--; } else t = 0; }
-      cb.turno = t; cb.rodada = r; estado.sel = null; estado.ultimo = null; S.salvar('campanhas', c, 200); render();
+      cb.turno = t; cb.rodada = r; estado.sel = null; estado.ultimo = null; estado.multi = 0; S.salvar('campanhas', c, 200); render();
     },
     'sel-part'(el) { estado.sel = el.dataset.uid; estado.ultimo = null; render(); },
     'mover-part'(el) {
       const c = campanhaAtual(), cb = combateAtual(c), ord = M.ordenar(c, cb), i = ord.findIndex(p => p.uid === el.dataset.uid), j = i + +el.dataset.d;
       if (j < 0 || j >= ord.length) return;
       const a = ord[i], b = ord[j];
-      if (a.agi !== b.agi || R.ordemClasse(a.classe) !== R.ordemClasse(b.classe)) return UI.aviso('Só dá para trocar a ordem de quem empatou na Agilidade e na classe.', 'info');
+      const rolada = SI.de(c).iniciativa === 'rolada';
+      const empate = rolada ? (a.ini | 0) === (b.ini | 0) && a.agi === b.agi : a.agi === b.agi && a.ordemClasse === b.ordemClasse;
+      if (!empate) return UI.aviso(rolada ? 'Só dá para trocar a ordem de quem empatou na iniciativa e na Destreza.' : 'Só dá para trocar a ordem de quem empatou na Agilidade e na classe.', 'info');
       ord.forEach((p, k) => { cb.parts.find(x => x.uid === p.uid).desempate = k; });
       cb.parts.find(x => x.uid === a.uid).desempate = j; cb.parts.find(x => x.uid === b.uid).desempate = i;
       S.salvar('campanhas', c, 200); render();
@@ -407,13 +415,13 @@
     'aplicar-dano'() {
       const c = campanhaAtual(), cb = combateAtual(c), u = estado.ultimo; if (!u) return;
       estado.ultimo = null;
-      mudarRecurso(`part:${c.id}:${cb.id}:${u.alvo}`, 'pv', -u.dano);
+      mudarRecurso(`part:${esc(c.id)}:${esc(cb.id)}:${u.alvo}`, 'pv', -u.dano);
     },
     'part-poder'(el) {
       const c = campanhaAtual(), cb = combateAtual(c), p = M.participante(c, cb.parts.find(x => x.uid === el.dataset.uid));
       const pod = p.cb.poderes[+el.dataset.i], custo = pod.custo | 0, rec = p.sis.rotulos.recurso;
       if (custo > p.mana) return UI.aviso(`${rec} insuficiente: ${pod.nome} custa ${custo} e restam ${p.mana}.`, 'info');
-      mudarRecurso(`part:${c.id}:${cb.id}:${p.uid}`, 'mana', -custo);
+      mudarRecurso(`part:${esc(c.id)}:${esc(cb.id)}:${esc(p.uid)}`, 'mana', -custo);
       UI.aviso(`${p.nome} usou ${pod.nome}: −${custo} ${rec}.`, 'info');
     },
     'novo-gancho'(el) {
@@ -517,6 +525,8 @@
   // ---------- Eventos ----------
   function ligar() {
     document.addEventListener('click', e => {
+      // Atualização de outra pessoa que esperava a janela fechar.
+      if (pendente && !UI.$('#janela')) setTimeout(() => { const a = document.activeElement; if (pendente && !UI.$('#janela') && !(a && a.matches('input,textarea,select'))) { pendente = false; render(); } }, 0);
       const menu = UI.$('.menu-conta[open]');
       if (menu && (!menu.contains(e.target) || e.target.closest('.menu-conta-caixa button'))) menu.open = false;
       const el = e.target.closest('[data-act]');
@@ -619,6 +629,7 @@
   function erroLogin(e) {
     const c = (e && e.code) || '';
     if (/popup-closed|cancelled-popup/.test(c)) return 'Login cancelado.';
+    if (/disallowed-useragent|web-storage-unsupported/.test(c)) return 'Este navegador não permite o login do Google. Abra o site no Chrome ou no Safari.';
     if (/wrong-password|invalid-credential|user-not-found/.test(c)) return 'E-mail ou senha não conferem.';
     if (/email-already-in-use/.test(c)) return 'Esse e-mail já tem conta. Use Entrar.';
     if (/weak-password/.test(c)) return 'A senha precisa de pelo menos 6 caracteres.';

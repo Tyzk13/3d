@@ -45,7 +45,7 @@
       <div class="ch-info"><h3>${esc(h.nome)}</h3><p class="ch-classe">${esc(sis.nomeClasse(h))}</p>
         <p class="ch-meta">${h.dono ? 'Conta: ' + esc(HB.A.nome(h.dono)) : 'Sem dono'}${(h.condicoes || []).length ? ' · ' + esc(h.condicoes.join(', ')) : ''}</p>
         <div class="ch-barras">${UI.barraMini('pv', pvAtual(h, d), d.pvMax)}${UI.barraMini('mana', manaAtual(h, d), d.manaMax)}</div></div>
-      <div class="ch-acoes">${extra === 'assumir' ? `<button class="btn pequeno" data-act="assumir-heroi" data-id="${h.id}">É meu</button>` : ''}<a class="btn pequeno primario" href="#heroi-${h.id}">Abrir ficha</a></div></article>`;
+      <div class="ch-acoes">${extra === 'assumir' ? `<button class="btn pequeno" data-act="assumir-heroi" data-id="${esc(h.id)}">É meu</button>` : ''}<a class="btn pequeno primario" href="#heroi-${esc(h.id)}">Abrir ficha</a></div></article>`;
   }
 
   // ---------- Ficha do herói ----------
@@ -67,12 +67,12 @@
     return def.escolhas.map(e => {
       const v = (valores || {})[e.id] || '';
       let ops;
-      if (e.tipo === 'pacote') ops = `<option value="">Escolha…</option>` + e.opcoes.map(o => `<option value="${o.id}" ${o.id === v ? 'selected' : ''}>${esc(o.nome)}</option>`).join('');
+      if (e.tipo === 'pacote') ops = `<option value="">Escolha…</option>` + e.opcoes.map(o => `<option value="${esc(o.id)}" ${o.id === v ? 'selected' : ''}>${esc(o.nome)}</option>`).join('');
       else {
         const proib = e.diferenteDe ? (valores || {})[e.diferenteDe] : null;
         ops = UI.opcoesAttr(e.opcoes.filter(a => a !== proib || a === v), v);
       }
-      return `<label class="campo"><span>${esc(e.rotulo)}</span><select id="${alvoPath.replace(/\./g, '-')}-${e.id}" data-f="${alvoPath}.${e.id}" data-re>${ops}</select></label>`;
+      return `<label class="campo"><span>${esc(e.rotulo)}</span><select id="${alvoPath.replace(/\./g, '-')}-${esc(e.id)}" data-f="${alvoPath}.${esc(e.id)}" data-re>${ops}</select></label>`;
     }).join('');
   }
 
@@ -92,7 +92,7 @@
 
     const pode = HB.P.podeEditarHeroi(h), dono = h.dono === HB.P.eu();
     const camps = HB.P.campanhasDoHeroi(h).filter(HB.P.ehMembro);
-    return `<section class="pagina ficha ${pode ? '' : 'leitura'}" data-doc="herois:${h.id}">
+    return `<section class="pagina ficha ${pode ? '' : 'leitura'}" data-doc="herois:${esc(h.id)}">
       ${pode ? '' : `<p class="faixa">Ficha de ${esc(HB.A.nome(h.dono))}. Você pode ver e rolar, mas só o dono e o mestre da campanha mudam os números.</p>`}
       <div class="ficha-topo">
         <label class="foto-troca" title="Trocar foto">${UI.foto(h.foto, h.nome, 'grande')}<input type="file" accept="image/*" data-foto hidden><span>Trocar foto</span></label>
@@ -104,7 +104,7 @@
             <label class="campo"><span>Origem</span><select id="h-origem" data-f="origem" data-re><option value="">Escolha…</option>${Object.entries(R.ORIGENS).map(([k, v]) => `<option value="${k}" ${k === h.origem ? 'selected' : ''}>${esc(v.nome)}</option>`).join('')}</select></label>
           </div>
         </div>
-        <div class="ficha-acoes">${camps.map(c => `<a class="chip-link" href="#campanha-${c.id}">${esc(c.nome)}</a>`).join('')}
+        <div class="ficha-acoes">${camps.map(c => `<a class="chip-link" href="#campanha-${esc(c.id)}">${esc(c.nome)}</a>`).join('')}
           ${dono || !h.dono ? '<button class="btn pequeno" data-act="duplicar-heroi">Duplicar</button><button class="btn pequeno perigo-txt" data-act="apagar-heroi">Apagar</button>' : ''}</div>
       </div>
       <div class="ficha-fixa" aria-hidden="true"><b>${esc(h.nome)}</b>${UI.barraMini('pv', pvAtual(h, d), d.pvMax)}${UI.barraMini('mana', manaAtual(h, d), d.manaMax)}<span>Def ${d.defesa}</span></div>
@@ -137,10 +137,10 @@
           </div>
           <div class="bloco">
             <div class="bloco-topo"><h3>Maestrias</h3><span class="sub">ataque = 1d10 + bônus</span></div>
-            ${c && c.maestriaEscolha ? `<label class="campo"><span>Maestria nível ${c.maestriaEscolha} da classe</span><select id="h-maestria" data-f="escolhas.maestria" data-re><option value="">Escolha…</option>${R.MAESTRIAS.map(m => `<option value="${m.id}" ${h.escolhas.maestria === m.id ? 'selected' : ''}>${esc(m.nome)}</option>`).join('')}</select></label>` : ''}
+            ${c && c.maestriaEscolha ? `<label class="campo"><span>Maestria nível ${c.maestriaEscolha} da classe</span><select id="h-maestria" data-f="escolhas.maestria" data-re><option value="">Escolha…</option>${R.MAESTRIAS.map(m => `<option value="${esc(m.id)}" ${h.escolhas.maestria === m.id ? 'selected' : ''}>${esc(m.nome)}</option>`).join('')}</select></label>` : ''}
             <div class="maestrias">${R.MAESTRIAS.map(m => `<div class="maestria">
               <span class="m-nome">${esc(m.nome)}</span><span class="m-nivel">Nível ${d.maestria[m.id]}</span><b>+${R.bonusMaestria(d.maestria[m.id])}</b>
-              <label class="campo mini"><span>Outros</span><input id="h-me-${m.id}" type="number" data-f="maestriaExtra.${m.id}" data-re value="${(h.maestriaExtra || {})[m.id] | 0}"></label></div>`).join('')}</div>
+              <label class="campo mini"><span>Outros</span><input id="h-me-${esc(m.id)}" type="number" data-f="maestriaExtra.${esc(m.id)}" data-re value="${(h.maestriaExtra || {})[m.id] | 0}"></label></div>`).join('')}</div>
           </div>
           <div class="bloco">
             <div class="bloco-topo"><h3>Classe e origem</h3></div>
@@ -230,8 +230,8 @@
   // Ataques: usados na ficha do herói e na do vilão. col = 'herois' | 'viloes'
   function abaCombate(o, d, col) {
     const xs = o.ataques || [];
-    return `<form class="rolar-livre" data-act-submit="rolar-livre"><label class="sr" for="livre-${o.id}">Rolar dados</label>
-        <input id="livre-${o.id}" name="expr" placeholder="Rolar dados: 2d6+3" autocomplete="off"><button class="btn">Rolar</button></form>
+    return `<form class="rolar-livre" data-act-submit="rolar-livre"><label class="sr" for="livre-${esc(o.id)}">Rolar dados</label>
+        <input id="livre-${esc(o.id)}" name="expr" placeholder="Rolar dados: 2d6+3" autocomplete="off"><button class="btn">Rolar</button></form>
       <div class="itens">${xs.map((a, i) => cartaoAtaque(o, d, a, i)).join('') || '<p class="vazio">Sem ataques. Um soco usa Força e a maestria Corpo a corpo.</p>'}</div>
       <button class="btn largo" data-act="novo-ataque">Novo ataque</button>`;
   }
@@ -241,7 +241,7 @@
       <div class="item-topo"><input id="at-n-${i}" class="item-nome" data-f="ataques.${i}.nome" value="${esc(a.nome)}" placeholder="Nome do ataque">
         <button class="btn pequeno primario" data-act="rolar-ataque" data-i="${i}">Atacar</button></div>
       <div class="ataque-campos">
-        <label class="campo"><span>Maestria</span><select id="at-m-${i}" data-f="ataques.${i}.maestria" data-re>${R.MAESTRIAS.map(m => `<option value="${m.id}" ${m.id === a.maestria ? 'selected' : ''}>${esc(m.curto)}</option>`).join('')}</select></label>
+        <label class="campo"><span>Maestria</span><select id="at-m-${i}" data-f="ataques.${i}.maestria" data-re>${R.MAESTRIAS.map(m => `<option value="${esc(m.id)}" ${m.id === a.maestria ? 'selected' : ''}>${esc(m.curto)}</option>`).join('')}</select></label>
         <label class="campo"><span>Dano por</span><select id="at-a-${i}" data-f="ataques.${i}.attr" data-re>${R.TODOS.map(x => `<option value="${x}" ${x === a.attr ? 'selected' : ''}>${esc(R.nomeAttr(x))}</option>`).join('')}</select></label>
         <label class="campo mini"><span>Bônus dano</span><input id="at-b-${i}" type="number" data-f="ataques.${i}.bonus" data-re value="${a.bonus | 0}"></label>
       </div>
@@ -254,7 +254,7 @@
     const p = h.reputacao | 0, e = R.REPUTACAO.estado(p);
     const pct = Math.max(0, Math.min(100, (p + 100) / 2));
     return `<div class="rep">
-      <div class="rep-estado ${e.id}"><b>${esc(e.nome)}</b><span>${p > 0 ? '+' : ''}${p} pontos</span></div>
+      <div class="rep-estado ${esc(e.id)}"><b>${esc(e.nome)}</b><span>${p > 0 ? '+' : ''}${p} pontos</span></div>
       <div class="rep-trilho" aria-hidden="true"><span style="left:${pct}%"></span><i>−100</i><i>0</i><i>+100</i></div>
       <p class="regra">${esc(e.efeito)}.</p>
       <div class="rep-acao">
@@ -302,8 +302,8 @@
       ${UI.foto(v.foto, v.nome)}
       <div class="cv-info"><h3>${esc(v.nome)}</h3><p><b>Ameaça ${v.ameaca | 0}</b> · ${esc(v.categoria || 'Sem categoria')}</p>
         <p class="cv-stats">PV ${v.pvMax | 0} · Def ${v.defesa | 0}${v.base ? ' · <span class="selo">Base</span>' : ''}</p></div>
-      <div class="cv-acoes">${modoEscolha ? `<button class="btn pequeno" data-act="ver-vilao" data-id="${v.id}">Ficha</button><button class="btn pequeno primario" data-act="add-vilao-combate" data-id="${v.id}">Adicionar</button>`
-        : `<a class="btn pequeno primario" href="#vilao-${v.id}">Ficha</a>`}</div></article>`;
+      <div class="cv-acoes">${modoEscolha ? `<button class="btn pequeno" data-act="ver-vilao" data-id="${esc(v.id)}">Ficha</button><button class="btn pequeno primario" data-act="add-vilao-combate" data-id="${esc(v.id)}">Adicionar</button>`
+        : `<a class="btn pequeno primario" href="#vilao-${esc(v.id)}">Ficha</a>`}</div></article>`;
   }
   function paginaViloes(estado) {
     return `<section class="pagina">
@@ -316,7 +316,7 @@
   function fichaVilao(v, estado) {
     const d = derivVilao(v), so = !HB.P.podeEditarVilao(v);
     const dis = so ? 'disabled' : '';
-    return `<section class="pagina ficha vilao ${so ? 'leitura' : ''}" ${so ? '' : `data-doc="viloes:${v.id}"`}>
+    return `<section class="pagina ficha vilao ${so ? 'leitura' : ''}" ${so ? '' : `data-doc="viloes:${esc(v.id)}"`}>
       <div class="ficha-topo">
         <label class="foto-troca">${UI.foto(v.foto, v.nome, 'grande')}${so ? '' : '<input type="file" accept="image/*" data-foto hidden><span>Foto</span>'}</label>
         <div class="ficha-ident">
@@ -347,7 +347,7 @@
             </tbody></table></div></div>
           <div class="bloco"><div class="bloco-topo"><h3>Maestrias</h3></div>
             <div class="maestrias">${R.MAESTRIAS.map(m => `<div class="maestria"><span class="m-nome">${esc(m.nome)}</span>
-              ${so ? `<span class="m-nivel">Nível ${d.maestria[m.id]}</span>` : `<select id="v-m-${m.id}" data-f="maestria.${m.id}" data-num data-re aria-label="Nível">${[0, 1, 2, 3, 4, 5].map(i => `<option value="${i}" ${i === d.maestria[m.id] ? 'selected' : ''}>Nível ${i}</option>`).join('')}</select>`}
+              ${so ? `<span class="m-nivel">Nível ${d.maestria[m.id]}</span>` : `<select id="v-m-${esc(m.id)}" data-f="maestria.${esc(m.id)}" data-num data-re aria-label="Nível">${[0, 1, 2, 3, 4, 5].map(i => `<option value="${i}" ${i === d.maestria[m.id] ? 'selected' : ''}>Nível ${i}</option>`).join('')}</select>`}
               <b>+${R.bonusMaestria(d.maestria[m.id])}</b></div>`).join('')}</div></div>
           <div class="bloco"><div class="bloco-topo"><h3>Descrição</h3></div>
             <textarea id="v-desc" rows="5" data-f="desc" ${dis}>${esc(v.desc || '')}</textarea></div>

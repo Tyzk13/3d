@@ -99,7 +99,7 @@
       <text x="160" y="156" class="hex-centro">1d20</text><text x="160" y="176" class="hex-centro-sub">+ atributo</text></svg>`;
   }
   const passo = (campo, valor, rot) => `<div class="passo"><button class="seta" data-act="sh-passo" data-f="${campo}" data-d="-1" aria-label="Diminuir ${esc(rot)}">−</button><b>${valor}</b><button class="seta" data-act="sh-passo" data-f="${campo}" data-d="1" aria-label="Aumentar ${esc(rot)}">+</button></div>`;
-  const selGrau = (campo, g, id) => `<select id="${id}" class="grau g${g}" data-f="${campo}" data-num data-re aria-label="Treinamento"><option value="0" ${g === 0 ? 'selected' : ''}>—</option><option value="1" ${g === 1 ? 'selected' : ''}>Treinado</option><option value="2" ${g === 2 ? 'selected' : ''}>Mestre</option></select>`;
+  const selGrau = (campo, g, id) => `<select id="${esc(id)}" class="grau g${g}" data-f="${campo}" data-num data-re aria-label="Treinamento"><option value="0" ${g === 0 ? 'selected' : ''}>—</option><option value="1" ${g === 1 ? 'selected' : ''}>Treinado</option><option value="2" ${g === 2 ? 'selected' : ''}>Mestre</option></select>`;
 
   function ficha(h, estado) {
     const d = X.derivados(h), aba = estado.aba || 'combate';
@@ -115,7 +115,7 @@
     if (sobraAttr < 0) pend.push(`${-sobraAttr} ponto${sobraAttr < -1 ? 's' : ''} de atributo acima do total`);
     if (sobraAfin > 0) pend.push(`distribua ${sobraAfin} de Afinidade nos Caminhos`);
     if (X.TODOS.some(a => X.val(h, a) > d.limite)) pend.push(`atributo acima do limite ${d.limite}`);
-    return `<section class="pagina ficha sh ${pode ? '' : 'leitura'}" data-doc="herois:${h.id}">
+    return `<section class="pagina ficha sh ${pode ? '' : 'leitura'}" data-doc="herois:${esc(h.id)}">
       ${pode ? '' : `<p class="faixa">Ficha de ${esc(HB.A.nome(h.dono))}. Você pode ver e rolar, mas só o dono e o mestre da campanha mudam os números.</p>`}
       <div class="ficha-topo">
         <label class="foto-troca" title="Trocar foto">${UI.foto(h.foto, h.nome, 'grande')}<input type="file" accept="image/*" data-foto hidden><span>Trocar foto</span></label>
@@ -128,7 +128,7 @@
             <label class="campo"><span>Ponto de Partida</span><select id="s-partida" data-f="partida" data-re><option value="">Escolha…</option>${Object.entries(X.PARTIDAS).map(([k, v]) => `<option value="${k}" ${k === h.partida ? 'selected' : ''}>${v.nome}</option>`).join('')}</select></label>
           </div>
         </div>
-        <div class="ficha-acoes">${camps.map(c => `<a class="chip-link" href="#campanha-${c.id}">${esc(c.nome)}</a>`).join('')}
+        <div class="ficha-acoes">${camps.map(c => `<a class="chip-link" href="#campanha-${esc(c.id)}">${esc(c.nome)}</a>`).join('')}
           ${dono || !h.dono ? '<button class="btn pequeno" data-act="duplicar-heroi">Duplicar</button><button class="btn pequeno perigo-txt" data-act="apagar-heroi">Apagar</button>' : ''}</div>
       </div>
       <div class="ficha-fixa" aria-hidden="true"><b>${esc(h.nome)}</b>${UI.barraMini('pv', pvAtual(h, d), d.pvMax)}${UI.barraMini('mana', manaAtual(h, d), d.manaMax)}<span>Def ${d.defesa}</span></div>
@@ -157,18 +157,18 @@
         <div class="col-meio">
           <div class="bloco"><div class="bloco-topo"><h3>Atributos</h3><span class="pontos ${sobraAttr < 0 ? 'ruim' : sobraAttr === 0 ? 'ok' : ''}">${d.gastos} / ${d.pontosAttr} pts · limite ${d.limite}</span></div>
             <div class="tabela-rolagem"><table class="tabela-attr"><tbody>${X.ATRIBUTOS.map(a => `<tr><th scope="row">${a.nome}</th><td>${passo('atributos.' + a.id, sn(X.val(h, a.id)), a.nome)}</td>
-              <td><button class="btn-dado" data-act="rolar-attr" data-attr="${a.id}">1d20 ${sn(X.val(h, a.id))}</button></td></tr>`).join('')}</tbody></table></div>
+              <td><button class="btn-dado" data-act="rolar-attr" data-attr="${esc(a.id)}">1d20 ${sn(X.val(h, a.id))}</button></td></tr>`).join('')}</tbody></table></div>
             <p class="dica">7 pontos iniciais + 3 da divisão${div ? ` (${esc(div.nota || div.attrs.map(X.nomeAttr).join(' e '))}, máx. 2 no mesmo)` : ''} + 2 nos níveis 3, 6, 9, 12, 15 e 18. Na criação, ninguém passa de 4.</p></div>
           <div class="bloco"><div class="bloco-topo"><h3>Testes de resistência</h3></div>
             <div class="tabela-rolagem"><table class="tabela-attr"><tbody>${X.TRS.map(t => { const b = X.bonusTR(h, t.id, d.bt); return `<tr><th scope="row">${t.nome} <small>${t.attr}</small></th>
-              <td>${selGrau('trs.' + t.id + '.grau', b.grau, 'tr-' + t.id)}</td><td><input id="tr-o-${t.id}" class="num" type="number" data-f="trs.${t.id}.outros" data-re value="${((h.trs || {})[t.id] || {}).outros | 0}" aria-label="Outros"></td>
-              <td><button class="btn-dado" data-act="rolar-attr" data-attr="${t.id}">1d20 ${sn(b.total)}</button></td></tr>`; }).join('')}</tbody></table></div>
+              <td>${selGrau('trs.' + t.id + '.grau', b.grau, 'tr-' + t.id)}</td><td><input id="tr-o-${esc(t.id)}" class="num" type="number" data-f="trs.${esc(t.id)}.outros" data-re value="${((h.trs || {})[t.id] || {}).outros | 0}" aria-label="Outros"></td>
+              <td><button class="btn-dado" data-act="rolar-attr" data-attr="${esc(t.id)}">1d20 ${sn(b.total)}</button></td></tr>`; }).join('')}</tbody></table></div>
             <p class="dica">Treinado em dois na criação. Mestre: um sucesso por 10 ou mais vira crítico.</p></div>
           <div class="bloco"><div class="bloco-topo"><h3>Perícias</h3><span class="sub">${treinadas} treinadas · mestre em até ${d.mestrias}</span></div>
             <div class="tabela-rolagem"><table class="tabela-attr pericias"><thead><tr><th>Perícia</th><th>Treino</th><th>Outros</th><th>Rolar</th></tr></thead><tbody>
             ${X.PERICIAS.map(p => { const b = X.bonusPericia(h, p.id, d.bt); return `<tr class="${b.bloqueada ? 'bloq' : ''}"><th scope="row">${p.nome}${p.treino ? '*' : ''} <small>${p.attr}</small></th>
-              <td>${selGrau('pericias.' + p.id + '.grau', b.grau, 'pe-' + p.id)}</td><td><input id="pe-o-${p.id}" class="num" type="number" data-f="pericias.${p.id}.outros" data-re value="${((h.pericias || {})[p.id] || {}).outros | 0}" aria-label="Outros"></td>
-              <td><button class="btn-dado" data-act="rolar-attr" data-attr="${p.id}" ${b.bloqueada ? 'title="Exige treinamento"' : ''}>${sn(b.total)}</button></td></tr>`; }).join('')}</tbody></table></div>
+              <td>${selGrau('pericias.' + p.id + '.grau', b.grau, 'pe-' + p.id)}</td><td><input id="pe-o-${esc(p.id)}" class="num" type="number" data-f="pericias.${esc(p.id)}.outros" data-re value="${((h.pericias || {})[p.id] || {}).outros | 0}" aria-label="Outros"></td>
+              <td><button class="btn-dado" data-act="rolar-attr" data-attr="${esc(p.id)}" ${b.bloqueada ? 'title="Exige treinamento"' : ''}>${sn(b.total)}</button></td></tr>`; }).join('')}</tbody></table></div>
             <p class="dica">* exige treinamento. Três perícias na criação, mais as da divisão (${div && div.pericias ? esc(div.pericias.map(id => X.PERICIAS.find(p => p.id === id).nome).join(', ')) : 'duas à escolha'}) e mais INT ou SAB.</p></div>
           <div class="bloco"><div class="bloco-topo"><h3>Caminhos do Zankensoki</h3><span class="pontos ${sobraAfin < 0 ? 'ruim' : sobraAfin === 0 ? 'ok' : ''}">${d.afinGasta} / ${d.afinTotal}</span></div>
             <div class="caminhos">${X.CAMINHOS.map(c => { const n = (h.afinidades || {})[c.id] | 0; return `<div class="caminho"><b>${c.nome}</b>${passo('afinidades.' + c.id, n, c.nome)}<span class="grad">${X.graduacao(n)}</span></div>`; }).join('')}</div>
@@ -206,7 +206,7 @@
   function abaFicha(h, d, aba, estado) {
     if (aba === 'combate') {
       const atq = ataquesDe(h);
-      return `<form class="rolar-livre" data-act-submit="rolar-livre"><label class="sr" for="livre-${h.id}">Rolar dados</label><input id="livre-${h.id}" name="expr" placeholder="Rolar dados: 1d20+5" autocomplete="off"><button class="btn">Rolar</button></form>
+      return `<form class="rolar-livre" data-act-submit="rolar-livre"><label class="sr" for="livre-${esc(h.id)}">Rolar dados</label><input id="livre-${esc(h.id)}" name="expr" placeholder="Rolar dados: 1d20+5" autocomplete="off"><button class="btn">Rolar</button></form>
         ${seletorMulti(estado)}
         <div class="itens"><div class="item ataque zan"><div class="item-topo"><b class="item-nome">${esc(atq[0].nome)}</b><button class="btn pequeno primario" data-act="rolar-ataque" data-i="0">Atacar</button></div>
           <div class="ataque-resumo"><span><small>Acerto</small> 1d20 ${sn(atq[0].acerto)}</span><span><small>Dano</small> ${atq[0].dano} ${sn(atq[0].bonusDano)}</span><span><small>Crítico</small> ${atq[0].margem}${atq[0].margem < 20 ? '–20' : ''}</span></div>
@@ -296,7 +296,7 @@
       <label class="busca"><span class="sr">Buscar ameaça</span><input id="busca-viloes" data-busca placeholder="Buscar ameaça" value="${esc(estado.busca || '')}"></label>
       <div class="lista-viloes">${xs.map(v => `<article class="cartao-vilao">${UI.foto(v.foto, v.nome)}
         <div class="cv-info"><h3>${esc(v.nome)}</h3><p><b>Nível ${v.nivel | 0 || 1}</b> · ${esc(v.categoria || 'Ameaça')}</p><p class="cv-stats">PV ${v.pvMax | 0} · Def ${v.defesa | 0}${v.dureza ? ' · Dureza ' + v.dureza : ''}${v.base ? ' · <span class="selo">Base</span>' : ''}</p></div>
-        <div class="cv-acoes">${modoEscolha ? `<button class="btn pequeno" data-act="ver-vilao" data-id="${v.id}">Ficha</button><button class="btn pequeno primario" data-act="add-vilao-combate" data-id="${v.id}">Adicionar</button>` : `<a class="btn pequeno primario" href="#vilao-${v.id}">Ficha</a>`}</div></article>`).join('') || '<p class="vazio">Nenhuma ameaça com esse filtro.</p>'}</div>`;
+        <div class="cv-acoes">${modoEscolha ? `<button class="btn pequeno" data-act="ver-vilao" data-id="${esc(v.id)}">Ficha</button><button class="btn pequeno primario" data-act="add-vilao-combate" data-id="${esc(v.id)}">Adicionar</button>` : `<a class="btn pequeno primario" href="#vilao-${esc(v.id)}">Ficha</a>`}</div></article>`).join('') || '<p class="vazio">Nenhuma ameaça com esse filtro.</p>'}</div>`;
   }
   function paginaViloes(estado) {
     return `<section class="pagina"><div class="pagina-topo"><div><h1 class="titulo-hq">Ameaças</h1><p class="sub">Hollows e outros inimigos, pelo Guia de Inimigos</p></div><button class="btn primario" data-act="novo-vilao">Nova ameaça</button></div>
@@ -305,7 +305,7 @@
   function fichaVilao(v, estado) {
     const so = !HB.P.podeEditarVilao(v), dis = so ? 'disabled' : '', c = combatente(v);
     const num = (f, rot, val_) => `<label class="campo mini"><span>${rot}</span><input id="sv-${f.replace(/\./g, '-')}" type="number" data-f="${f}" data-re value="${val_ | 0}" ${dis}></label>`;
-    return `<section class="pagina ficha vilao sh ${so ? 'leitura' : ''}" ${so ? '' : `data-doc="viloes:${v.id}"`}>
+    return `<section class="pagina ficha vilao sh ${so ? 'leitura' : ''}" ${so ? '' : `data-doc="viloes:${esc(v.id)}"`}>
       <div class="ficha-topo"><label class="foto-troca">${UI.foto(v.foto, v.nome, 'grande')}${so ? '' : '<input type="file" accept="image/*" data-foto hidden><span>Trocar foto</span>'}</label>
         <div class="ficha-ident"><label class="campo linha"><span>Ameaça</span><input id="sv-nome" data-f="nome" value="${esc(v.nome)}" ${dis}></label>
           <label class="campo linha"><span>Categoria</span><input id="sv-cat" data-f="categoria" value="${esc(v.categoria || '')}" placeholder="Hollow · Grande" ${dis}></label></div>
@@ -319,9 +319,9 @@
           <div class="vilao-numeros">${num('nivel', 'Nível', v.nivel || 1)}${num('pvMax', 'Vida', v.pvMax)}${num('manaMax', 'Reiryoku', v.manaMax)}${num('defesa', 'Defesa', v.defesa)}${num('dureza', 'Dureza', v.dureza)}${num('cd', 'CD', v.cd)}</div></div>
         <div class="col-meio">
           <div class="bloco"><div class="bloco-topo"><h3>Atributos</h3><span class="sub">limite ${X.limiteInimigo(v.nivel | 0 || 1)}</span></div>
-            <div class="tabela-rolagem"><table class="tabela-attr"><tbody>${X.ATRIBUTOS.map(a => `<tr><th scope="row">${a.nome}</th><td>${so ? sn(X.val(v, a.id)) : `<input id="sv-a-${a.id}" class="num" type="number" data-f="atributos.${a.id}" data-re value="${X.val(v, a.id)}">`}</td><td><button class="btn-dado" data-act="rolar-attr" data-attr="${a.id}">1d20 ${sn(X.val(v, a.id))}</button></td></tr>`).join('')}</tbody></table></div></div>
+            <div class="tabela-rolagem"><table class="tabela-attr"><tbody>${X.ATRIBUTOS.map(a => `<tr><th scope="row">${a.nome}</th><td>${so ? sn(X.val(v, a.id)) : `<input id="sv-a-${esc(a.id)}" class="num" type="number" data-f="atributos.${esc(a.id)}" data-re value="${X.val(v, a.id)}">`}</td><td><button class="btn-dado" data-act="rolar-attr" data-attr="${esc(a.id)}">1d20 ${sn(X.val(v, a.id))}</button></td></tr>`).join('')}</tbody></table></div></div>
           <div class="bloco"><div class="bloco-topo"><h3>Testes</h3></div>
-            <div class="tabela-rolagem"><table class="tabela-attr"><tbody>${X.TRS.map(t => `<tr><th scope="row">${t.nome}</th><td>${so ? sn((v.trs || {})[t.id] | 0) : `<input id="sv-t-${t.id}" class="num" type="number" data-f="trs.${t.id}" data-re value="${(v.trs || {})[t.id] | 0}">`}</td><td><button class="btn-dado" data-act="rolar-attr" data-attr="${t.id}">1d20 ${sn((v.trs || {})[t.id] | 0)}</button></td></tr>`).join('')}
+            <div class="tabela-rolagem"><table class="tabela-attr"><tbody>${X.TRS.map(t => `<tr><th scope="row">${t.nome}</th><td>${so ? sn((v.trs || {})[t.id] | 0) : `<input id="sv-t-${esc(t.id)}" class="num" type="number" data-f="trs.${esc(t.id)}" data-re value="${(v.trs || {})[t.id] | 0}">`}</td><td><button class="btn-dado" data-act="rolar-attr" data-attr="${esc(t.id)}">1d20 ${sn((v.trs || {})[t.id] | 0)}</button></td></tr>`).join('')}
               <tr><th scope="row">Percepção</th><td>${so ? sn(v.percepcao | 0) : `<input id="sv-per" class="num" type="number" data-f="percepcao" data-re value="${v.percepcao | 0}">`}</td><td><button class="btn-dado" data-act="rolar-attr" data-attr="percepcao">1d20 ${sn(v.percepcao | 0)}</button></td></tr></tbody></table></div></div>
           <div class="bloco"><div class="bloco-topo"><h3>Descrição</h3></div><textarea id="sv-desc" rows="5" data-f="desc" ${dis}>${esc(v.desc || '')}</textarea></div>
         </div>

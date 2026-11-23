@@ -6,14 +6,17 @@
   const cache = {}; COLS.forEach(c => (cache[c] = new Map()));
   let db = null, modo = 'carregando', aoMudar = () => {};
   const pend = new Map(); // "col/id" → {timer, escrevendo, de novo}
+  const servidor = new Map(); // "col/id" → último corpo visto no servidor (para gravar só o que mudou)
+  const adiados = new Map();  // "col/id" → mudança remota que chegou durante uma edição local
 
+  const ID_OK = /^[A-Za-z0-9_-]{1,64}$/;
   const novoId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   const clone = o => JSON.parse(JSON.stringify(o));
 
   function lerLocal() {
     try {
       const s = JSON.parse(localStorage.getItem(CHAVE) || '{}');
-      COLS.forEach(c => (s[c] || []).forEach(o => cache[c].set(o.id, o)));
+      COLS.forEach(c => (s[c] || []).forEach(o => { if (o && ID_OK.test(o.id || '')) cache[c].set(o.id, o); }));
     } catch (e) { /* armazenamento bloqueado: segue só em memória */ }
   }
   function gravarLocal() {
@@ -40,10 +43,15 @@
         db.collection(c).onSnapshot(snap => {
           let mudou = false;
           (typeof snap.docChanges === 'function' ? snap.docChanges() : snap.docChanges).forEach(ch => {
-            const id = ch.doc.id;
-            if (pend.has(c + '/' + id)) return; // edição local em andamento vence
-            if (ch.type === 'removed') { if (cache[c].delete(id)) mudou = true; return; }
-            const novo = clone(ch.doc.data()); novo.id = id;
+            const id = ch.doc.id, k = c + '/' + id;
+            if (!ID_OK.test(id)) return; // códigos fora do padrão do app (podem ter sido forjados) são ignorados
+            const novo = ch.type === 'removed' ? null : clone(ch.doc.data());
+            if (novo) novo.id = id;
+            // Edição local em andamento: guarda a versão do servidor e aplica quando a gravação terminar.
+            // A base de comparação continua sendo a versão de onde a edição começou.
+            if (pend.has(k)) { adiados.set(k, novo); return; }
+            if (novo) { const b = clone(novo); delete b.id; servidor.set(k, b); } else servidor.delete(k);
+            if (!novo) { if (cache[c].delete(id)) mudou = true; return; }
             const velho = cache[c].get(id);
             if (!velho || JSON.stringify(velho) !== JSON.stringify(novo)) { cache[c].set(id, novo); mudou = true; }
           });
@@ -63,9 +71,23 @@
     if (p.escrevendo) { p.deNovo = true; return; }
     p.escrevendo = true;
     try {
-      const o = cache[c].get(id);
-      if (o) { const corpo = clone(o); delete corpo.id; await db.collection(c).doc(id).set(corpo); }
-      else await db.collection(c).doc(id).delete();
+      const o = cache[c].get(id), ref = db.collection(c).doc(id), base = servidor.get(k);
+      const enviados = p.enviados = p.enviados || { campos: {}, apagados: new Set() };
+      enviados.parcial = !!(base && HB.A.modo === 'firebase');
+      if (!o) { await ref.delete(); servidor.delete(k); }
+      else {
+        const corpo = clone(o); delete corpo.id;
+        if (base && HB.A.modo === 'firebase') {
+          // Só os campos que mudaram: duas pessoas mexendo em partes diferentes da campanha não se apagam.
+          const mud = {}, apagar = Object.keys(base).filter(f => !(f in corpo));
+          Object.keys(corpo).forEach(f => { if (JSON.stringify(corpo[f]) !== JSON.stringify(base[f])) mud[f] = corpo[f]; });
+          enviados.campos = Object.assign(enviados.campos, clone(mud)); apagar.forEach(f => enviados.apagados.add(f));
+          apagar.forEach(f => { mud[f] = window.firebase.firestore.FieldValue.delete(); });
+          if (Object.keys(mud).length > 1 || (Object.keys(mud).length === 1 && !('atualizado' in mud))) await ref.update(mud);
+        } else await ref.set(corpo);
+        servidor.set(k, corpo);
+        if (!enviados.parcial) enviados.campos = clone(corpo);
+      }
     } catch (e) {
       if (e && (e.code === 'invalid_argument' || e.code === 'permission-denied')) HB.UI.aviso('Você não tem permissão para mudar isso, então a mudança não foi salva.');
       else if (e && e.code === 'quota_exceeded') HB.UI.aviso('A base está cheia. Apague fichas antigas para liberar espaço.');
@@ -73,7 +95,17 @@
     }
     p.escrevendo = false;
     if (p.deNovo) { p.deNovo = false; return escrever(c, id); }
-    if (!p.timer) pend.delete(k);
+    if (!p.timer) {
+      pend.delete(k);
+      if (adiados.has(k)) { // aplica o que chegou do servidor enquanto gravava, com os campos que acabamos de enviar por cima
+        let novo = adiados.get(k); adiados.delete(k);
+        if (novo && p.enviados) { Object.assign(novo, clone(p.enviados.campos)); p.enviados.apagados.forEach(f => delete novo[f]); }
+        if (novo) { const b = clone(novo); delete b.id; servidor.set(k, b); }
+        const velho = cache[c].get(id);
+        if (!novo) { cache[c].delete(id); aoMudar(c); }
+        else if (!velho || JSON.stringify(velho) !== JSON.stringify(novo)) { cache[c].set(id, novo); aoMudar(c); }
+      }
+    }
   }
 
   function agendar(c, id, atraso) {
@@ -99,7 +131,7 @@
       const s = JSON.parse(txt);
       if (!s || s.sistema !== 'herois-de-bueiro') throw new Error('Esse texto não é um backup do Heróis de Bueiro.');
       let n = 0;
-      COLS.filter(c => c !== 'perfis').forEach(c => (s[c] || []).forEach(o => { if (o && o.id) { cache[c].set(o.id, o); agendar(c, o.id, 50 + n * 120); n++; } }));
+      COLS.filter(c => c !== 'perfis').forEach(c => (s[c] || []).forEach(o => { if (o && ID_OK.test(String(o.id || ''))) { cache[c].set(o.id, o); agendar(c, o.id, 50 + n * 120); n++; } }));
       return n;
     },
   };

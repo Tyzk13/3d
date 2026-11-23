@@ -42,7 +42,12 @@
 
   async function entrarGoogle() {
     const p = new window.firebase.auth.GoogleAuthProvider();
-    await fb.auth().signInWithPopup(p);
+    try { await fb.auth().signInWithPopup(p); }
+    catch (e) {
+      // Celular ou navegador que bloqueia a janela: entra pela própria página.
+      if (/popup-blocked|operation-not-supported/.test((e && e.code) || '')) return fb.auth().signInWithRedirect(p);
+      throw e;
+    }
     location.reload();
   }
   async function entrarEmail(email, senha, criar, nome) {

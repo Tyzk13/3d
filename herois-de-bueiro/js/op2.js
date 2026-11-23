@@ -50,7 +50,8 @@
   function periciaEf(h, i) { // passo efetivo da perícia (bônus da ocupação incluído)
     const p = (h.pericias || [])[i]; if (!p) return 0;
     const oc = OCUPACOES[h.ocupacao];
-    const bonus = oc && oc.pericia && +h.ocupEscolha === i && p.cat === oc.pericia ? 1 : 0;
+    const esc_ = h.ocupEscolha;
+    const bonus = oc && oc.pericia && esc_ !== '' && esc_ != null && +esc_ === i && p.cat === oc.pericia ? 1 : 0;
     return Math.min(4, (p.passo | 0) + bonus);
   }
   function derivados(h) {
@@ -148,7 +149,7 @@
     const pos = [[160, 46], [262, 226], [58, 226]];
     return `<svg class="hexagono trio" viewBox="0 0 320 290" role="group" aria-label="Atributos">
       <polygon class="hex-anel" points="160,46 262,226 58,226"/>
-      ${ATRIBUTOS.map((a, i) => `<g class="hex-no" data-act="rolar-attr" data-attr="${a.id}" tabindex="0" role="button" aria-label="Rolar ${a.nome}">
+      ${ATRIBUTOS.map((a, i) => `<g class="hex-no" data-act="rolar-attr" data-attr="${esc(a.id)}" tabindex="0" role="button" aria-label="Rolar ${a.nome}">
         <circle cx="${pos[i][0]}" cy="${pos[i][1]}" r="40"/><text x="${pos[i][0]}" y="${pos[i][1] + 2}" class="hex-dado">d${dado(passoAttr(o, a.id))}</text>
         <text x="${pos[i][0]}" y="${pos[i][1] + 22}" class="hex-sigla">${a.nome.toUpperCase()}</text></g>`).join('')}
       <text x="160" y="160" class="hex-centro">MAIOR</text><text x="160" y="180" class="hex-centro-sub">atributo ou perícia</text></svg>`;
@@ -173,7 +174,7 @@
     if (sDist > 0) pend.push(`${sDist} ponto${sDist > 1 ? 's' : ''} entre PV e PD`); if (sDist < 0) pend.push(`${-sDist} ponto${sDist < -1 ? 's' : ''} a mais entre PV e PD`);
     if (ATRIBUTOS.some(a => passoAttr(h, a.id) > d.limiteAttr)) pend.push('na criação nenhum atributo passa de d8');
     const cats = ['fis', 'emo', 'men'];
-    return `<section class="pagina ficha op2 ${pode ? '' : 'leitura'}" data-doc="herois:${h.id}">
+    return `<section class="pagina ficha op2 ${pode ? '' : 'leitura'}" data-doc="herois:${esc(h.id)}">
       ${pode ? '' : `<p class="faixa">Ficha de ${esc(HB.A.nome(h.dono))}. Você pode ver e rolar, mas só o dono e o mestre da campanha mudam os números.</p>`}
       <div class="ficha-topo">
         <label class="foto-troca" title="Trocar foto">${UI.foto(h.foto, h.nome, 'grande')}<input type="file" accept="image/*" data-foto hidden><span>Trocar foto</span></label>
@@ -186,7 +187,7 @@
             <label class="campo"><span>Perfil</span><select id="o-perfil" data-f="perfil" data-re><option value="">Escolha…</option>${Object.entries(PERFIS).map(([k, v]) => `<option value="${k}" ${k === h.perfil ? 'selected' : ''}>${v.nome}</option>`).join('')}</select></label>
             <label class="campo"><span>Ocupação</span><select id="o-ocup" data-f="ocupacao" data-re><option value="">Escolha…</option>${Object.entries(OCUPACOES).map(([k, v]) => `<option value="${k}" ${k === h.ocupacao ? 'selected' : ''}>${v.nome}</option>`).join('')}</select></label>
           </div></div>
-        <div class="ficha-acoes">${camps.map(c => `<a class="chip-link" href="#campanha-${c.id}">${esc(c.nome)}</a>`).join('')}
+        <div class="ficha-acoes">${camps.map(c => `<a class="chip-link" href="#campanha-${esc(c.id)}">${esc(c.nome)}</a>`).join('')}
           ${dono || !h.dono ? '<button class="btn pequeno" data-act="duplicar-heroi">Duplicar</button><button class="btn pequeno perigo-txt" data-act="apagar-heroi">Apagar</button>' : ''}</div>
       </div>
       <div class="ficha-fixa" aria-hidden="true"><b>${esc(h.nome)}</b>${UI.barraMini('pv', pvAtual(h, d), d.pvMax)}${UI.barraMini('mana', manaAtual(h, d), d.manaMax)}<span>NEX ${h.nex | 0}%</span></div>
@@ -204,7 +205,7 @@
         </div>
         <div class="col-meio">
           <div class="bloco"><div class="bloco-topo"><h3>Atributos</h3><span class="pontos ${sAttr < 0 ? 'ruim' : sAttr === 0 ? 'ok' : ''}">${d.gastoAttr} / ${d.ptsAttr} pts</span></div>
-            <div class="tabela-rolagem"><table class="tabela-attr"><tbody>${ATRIBUTOS.map(a => `<tr><th scope="row">${a.nome}</th><td>${passo('passos.' + a.id, 'd' + dado(passoAttr(h, a.id)), a.nome, 4)}</td><td><button class="btn-dado" data-act="rolar-attr" data-attr="${a.id}">d${dado(passoAttr(h, a.id))}</button></td></tr>`).join('')}</tbody></table></div>
+            <div class="tabela-rolagem"><table class="tabela-attr"><tbody>${ATRIBUTOS.map(a => `<tr><th scope="row">${a.nome}</th><td>${passo('passos.' + a.id, 'd' + dado(passoAttr(h, a.id)), a.nome, 4)}</td><td><button class="btn-dado" data-act="rolar-attr" data-attr="${esc(a.id)}">d${dado(passoAttr(h, a.id))}</button></td></tr>`).join('')}</tbody></table></div>
             <p class="dica">Todos começam em d6 com 1 ponto. Baixar um para d4 dá +1 ponto. Máximo d8 na criação e d12 com os aumentos dos níveis 2, 5 e 8.</p></div>
           ${bonusBarra(estado)}
           <div class="bloco"><div class="bloco-topo"><h3>Perícias</h3><span class="pontos ${sPer < 0 ? 'ruim' : sPer === 0 ? 'ok' : ''}">${d.gastoPer} / ${d.ptsPer} pts</span></div>
@@ -229,7 +230,7 @@
         </div>
       </div></section>`;
   }
-  const melhoria = (h, id) => `<label class="interruptor melhoria"><input id="o-mel-${id}" type="checkbox" data-f="melhorias.${id}" ${(h.melhorias || {})[id] ? 'checked' : ''}><span>Melhorada (1 ponto de perícia)</span></label>`;
+  const melhoria = (h, id) => `<label class="interruptor melhoria"><input id="o-mel-${esc(id)}" type="checkbox" data-f="melhorias.${esc(id)}" ${(h.melhorias || {})[id] ? 'checked' : ''}><span>Melhorada (1 ponto de perícia)</span></label>`;
 
   function lista(o, campo, rotulo, item, dica) {
     const xs = o[campo] || [];
@@ -239,10 +240,10 @@
   function abaFicha(h, aba) {
     if (aba === 'combate') {
       const atq = ataquesDe(h);
-      return `<form class="rolar-livre" data-act-submit="rolar-livre"><label class="sr" for="livre-${h.id}">Rolar dados</label><input id="livre-${h.id}" name="expr" placeholder="Rolar dados: 2d6+2" autocomplete="off"><button class="btn">Rolar</button></form>
+      return `<form class="rolar-livre" data-act-submit="rolar-livre"><label class="sr" for="livre-${esc(h.id)}">Rolar dados</label><input id="livre-${esc(h.id)}" name="expr" placeholder="Rolar dados: 2d6+2" autocomplete="off"><button class="btn">Rolar</button></form>
         ${lista(h, 'ataques', 'Novo ataque', (a, i) => `<div class="item-topo"><input id="oa-n-${i}" class="item-nome" data-f="ataques.${i}.nome" value="${esc(a.nome || '')}" placeholder="Faca, revólver…"><button class="btn pequeno primario" data-act="rolar-ataque" data-i="${i}">Atacar</button></div>
           <div class="ataque-campos">
-            <label class="campo"><span>Atributo</span><select id="oa-a-${i}" data-f="ataques.${i}.attr" data-re>${ATRIBUTOS.map(x => `<option value="${x.id}" ${x.id === (a.attr || 'FIS') ? 'selected' : ''}>${x.nome}</option>`).join('')}</select></label>
+            <label class="campo"><span>Atributo</span><select id="oa-a-${i}" data-f="ataques.${i}.attr" data-re>${ATRIBUTOS.map(x => `<option value="${esc(x.id)}" ${x.id === (a.attr || 'FIS') ? 'selected' : ''}>${x.nome}</option>`).join('')}</select></label>
             <label class="campo"><span>Perícia</span><select id="oa-p-${i}" data-f="ataques.${i}.pericia" data-re><option value="">Nenhuma</option>${(h.pericias || []).map(p => `<option ${p.nome === a.pericia ? 'selected' : ''}>${esc(p.nome)}</option>`).join('')}</select></label>
             <label class="campo"><span>Arma</span><select id="oa-t-${i}" data-f="ataques.${i}.tipo" data-re>${[['branca', 'Branca'], ['fogo', 'De fogo'], ['outra', 'Outra']].map(([k, n]) => `<option value="${k}" ${k === (a.tipo || 'branca') ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
             <label class="campo"><span>Dano</span><input id="oa-d-${i}" data-f="ataques.${i}.dano" value="${esc(a.dano || '1d6')}"></label>
@@ -275,7 +276,7 @@
     return `<div class="filtros" role="tablist">${[['todos', 'Todas'], ['base', 'Base'], ['meus', 'Minhas ameaças']].map(([k, n]) => `<button class="aba ${filtro === k ? 'ativa' : ''}" data-act="filtro" data-v="${k}">${n}</button>`).join('')}</div>
       <label class="busca"><span class="sr">Buscar ameaça</span><input id="busca-viloes" data-busca placeholder="Buscar ameaça" value="${esc(estado.busca || '')}"></label>
       <div class="lista-viloes">${xs.map(v => `<article class="cartao-vilao">${UI.foto(v.foto, v.nome)}<div class="cv-info"><h3>${esc(v.nome)}</h3><p><b>NEX ${v.nex | 0}%</b> · ${esc(v.categoria || 'Ameaça')}</p><p class="cv-stats">PV ${v.pvMax | 0} · DT ${v.defesa | 0}${v.base ? ' · <span class="selo">Base</span>' : ''}</p></div>
-        <div class="cv-acoes">${modoEscolha ? `<button class="btn pequeno" data-act="ver-vilao" data-id="${v.id}">Ficha</button><button class="btn pequeno primario" data-act="add-vilao-combate" data-id="${v.id}">Adicionar</button>` : `<a class="btn pequeno primario" href="#vilao-${v.id}">Ficha</a>`}</div></article>`).join('') || '<p class="vazio">Nenhuma ameaça com esse filtro.</p>'}</div>`;
+        <div class="cv-acoes">${modoEscolha ? `<button class="btn pequeno" data-act="ver-vilao" data-id="${esc(v.id)}">Ficha</button><button class="btn pequeno primario" data-act="add-vilao-combate" data-id="${esc(v.id)}">Adicionar</button>` : `<a class="btn pequeno primario" href="#vilao-${esc(v.id)}">Ficha</a>`}</div></article>`).join('') || '<p class="vazio">Nenhuma ameaça com esse filtro.</p>'}</div>`;
   }
   function paginaViloes(estado) {
     return `<section class="pagina"><div class="pagina-topo"><div><h1 class="titulo-hq">Ameaças</h1><p class="sub">Criaturas e inimigos do Outro Lado</p></div><button class="btn primario" data-act="novo-vilao">Nova ameaça</button></div>
@@ -284,21 +285,21 @@
   function fichaVilao(v, estado) {
     const so = !HB.P.podeEditarVilao(v), dis = so ? 'disabled' : '';
     const num = (f, rot, val) => `<label class="campo mini"><span>${rot}</span><input id="ov-${f}" type="number" data-f="${f}" data-re value="${val | 0}" ${dis}></label>`;
-    return `<section class="pagina ficha vilao op2 ${so ? 'leitura' : ''}" ${so ? '' : `data-doc="viloes:${v.id}"`}>
+    return `<section class="pagina ficha vilao op2 ${so ? 'leitura' : ''}" ${so ? '' : `data-doc="viloes:${esc(v.id)}"`}>
       <div class="ficha-topo"><label class="foto-troca">${UI.foto(v.foto, v.nome, 'grande')}${so ? '' : '<input type="file" accept="image/*" data-foto hidden><span>Trocar foto</span>'}</label>
         <div class="ficha-ident"><label class="campo linha"><span>Ameaça</span><input id="ov-nome" data-f="nome" value="${esc(v.nome)}" ${dis}></label><label class="campo linha"><span>Categoria</span><input id="ov-cat" data-f="categoria" value="${esc(v.categoria || '')}" ${dis}></label></div>
         <div class="ficha-acoes">${so ? `<button class="btn pequeno primario" data-act="duplicar-vilao">${v.base ? 'Duplicar para editar' : 'Duplicar'}</button>` : '<button class="btn pequeno" data-act="duplicar-vilao">Duplicar</button><button class="btn pequeno perigo-txt" data-act="apagar-vilao">Apagar</button>'}</div></div>
       ${so ? `<p class="faixa">${v.base ? 'Ameaça base.' : 'Criada por ' + esc(HB.A.nome(v.dono)) + '.'} Duplique para mudar os números.</p>` : ''}
       <div class="ficha-grade"><div class="col-esq">${trio(v)}<div class="vilao-numeros">${num('nex', 'NEX %', v.nex)}${num('pvMax', 'PV', v.pvMax)}${num('manaMax', 'PD', v.manaMax)}${num('defesa', 'DT acerto', v.defesa)}${num('dureza', 'Dureza', v.dureza)}</div></div>
         <div class="col-meio"><div class="bloco"><div class="bloco-topo"><h3>Atributos</h3></div><div class="tabela-rolagem"><table class="tabela-attr"><tbody>
-          ${ATRIBUTOS.map(a => `<tr><th scope="row">${a.nome}</th><td>${so ? 'd' + dado(passoAttr(v, a.id)) : passo('passos.' + a.id, 'd' + dado(passoAttr(v, a.id)), a.nome, 4)}</td><td><button class="btn-dado" data-act="rolar-attr" data-attr="${a.id}">maior</button></td></tr>`).join('')}
+          ${ATRIBUTOS.map(a => `<tr><th scope="row">${a.nome}</th><td>${so ? 'd' + dado(passoAttr(v, a.id)) : passo('passos.' + a.id, 'd' + dado(passoAttr(v, a.id)), a.nome, 4)}</td><td><button class="btn-dado" data-act="rolar-attr" data-attr="${esc(a.id)}">maior</button></td></tr>`).join('')}
           <tr><th scope="row">Treino geral</th><td>${so ? 'd' + dado(v.treino | 0) : passo('treino', 'd' + dado(v.treino | 0), 'Treino', 4)}</td><td></td></tr></tbody></table></div><p class="dica">Os testes da ameaça usam o maior entre o atributo e o treino geral.</p></div>
           <div class="bloco"><div class="bloco-topo"><h3>Descrição</h3></div><textarea id="ov-desc" rows="5" data-f="desc" ${dis}>${esc(v.desc || '')}</textarea></div></div>
         <div class="col-dir"><div class="abas">${[['combate', 'Ataques'], ['poderes', 'Habilidades']].map(([k, n]) => `<button class="aba ${(estado.aba || 'combate') === k ? 'ativa' : ''}" data-act="aba" data-aba="${k}">${n}</button>`).join('')}</div>
           <div class="aba-corpo ${so ? 'so-leitura' : ''}">${(estado.aba || 'combate') === 'poderes'
             ? lista(v, 'poderes', 'Nova habilidade', (p, i) => `<div class="item-topo"><input id="ovp-n-${i}" class="item-nome" data-f="poderes.${i}.nome" value="${esc(p.nome || '')}" ${dis}><label class="campo mini"><span>PD</span><input id="ovp-c-${i}" type="number" data-f="poderes.${i}.custo" value="${p.custo | 0}" ${dis}></label></div><textarea id="ovp-d-${i}" rows="2" data-f="poderes.${i}.desc" ${dis}>${esc(p.desc || '')}</textarea>`)
             : lista(v, 'ataques', 'Novo ataque', (a, i) => `<div class="item-topo"><input id="ova-n-${i}" class="item-nome" data-f="ataques.${i}.nome" value="${esc(a.nome || '')}" ${dis}><button class="btn pequeno primario" data-act="rolar-ataque" data-i="${i}">Atacar</button></div>
-              <div class="ataque-campos"><label class="campo"><span>Atributo</span><select id="ova-a-${i}" data-f="ataques.${i}.attr" data-re ${dis}>${ATRIBUTOS.map(x => `<option value="${x.id}" ${x.id === (a.attr || 'FIS') ? 'selected' : ''}>${x.nome}</option>`).join('')}</select></label>
+              <div class="ataque-campos"><label class="campo"><span>Atributo</span><select id="ova-a-${i}" data-f="ataques.${i}.attr" data-re ${dis}>${ATRIBUTOS.map(x => `<option value="${esc(x.id)}" ${x.id === (a.attr || 'FIS') ? 'selected' : ''}>${x.nome}</option>`).join('')}</select></label>
                 <label class="campo"><span>Dado de treino</span><select id="ova-p-${i}" data-f="ataques.${i}.passo" data-num data-re ${dis}>${DADOS.map((x, k) => `<option value="${k}" ${k === (a.passo | 0) ? 'selected' : ''}>d${x}</option>`).join('')}</select></label>
                 <label class="campo"><span>Dano</span><input id="ova-d-${i}" data-f="ataques.${i}.dano" value="${esc(a.dano || '')}" ${dis}></label></div>
               <input id="ova-o-${i}" data-f="ataques.${i}.obs" value="${esc(a.obs || '')}" placeholder="Efeito, dano em PD…" ${dis}>`)}</div></div></div></section>`;
