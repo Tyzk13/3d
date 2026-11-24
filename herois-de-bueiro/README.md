@@ -3,7 +3,7 @@
 Gerenciador de fichas e campanhas de RPG. A entrada é uma estante de livros; o livro aberto define o sistema:
 - **Heróis de Bueiro** (playtest completo): 1d10 + dado do nível, maestrias, classes, origens, elementos, reputação.
 - **Shinigamis & Hollows** (Livro dos Ceifadores v0.7b): d20, seis atributos, perícias, TRs, divisões, Pontos de Partida, Caminhos, zanpakuto, kidos, Quebras, ameaças pelo Guia de Inimigos.
-- **Ordem Paranormal II** (Teorias e Homebrews, de fãs): Físico/Emoção/Mente e perícias em dados d4–d12, teste pelo maior dado + dados de bônus contra DT 7, PV/PD, ocupações, perfis Analista/Executor/Vigilante e melhorias.
+- **Ordem Paranormal II** (Teorias e Homebrews, de fãs): Físico/Emoção/Mente e perícias em dados d4–d12, teste pela soma do dado do atributo, do da perícia e dos bônus contra DT 7, PV/PD, ocupações, perfis Analista/Executor/Vigilante e melhorias.
 
 Conta, campanhas, Escudo do Mestre, combate, ganchos e backup são comuns aos dois. Fichas e campanhas sem o campo `sistema` (criadas antes do RPGHUB) são do Heróis de Bueiro.
 
@@ -55,6 +55,6 @@ Crie `js/<id>-regras.js` e `js/<id>-ficha.js` e registre com `HB.Sistemas.regist
 - Ameaças do bestiário base são originais, montadas pelo Guia de Inimigos.
 
 ## Decisões no Ordem Paranormal II
-- O PDF não define o teste: a mesa escolheu "maior entre o dado do atributo e o da perícia", com dados de bônus somando. Todos os dados em 1 = falha crítica.
+- O PDF não define o teste: a mesa joga somando o dado do atributo, o da perícia e os dados de bônus. Todos os dados em 1 = falha crítica.
 - Perícias não vêm listadas: lista inicial editável (5 físicas, 5 emocionais, 5 mentais) que cada ficha pode renomear, apagar ou ampliar.
-- Iniciativa: maior entre Físico e Reflexos. Ataque acerta com resultado ≥ DT do alvo (padrão 7).
+- Iniciativa: soma de Físico e Reflexos. Ataque acerta com resultado ≥ DT do alvo (padrão 7).

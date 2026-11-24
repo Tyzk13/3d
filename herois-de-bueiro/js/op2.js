@@ -1,5 +1,5 @@
 // Ordem Paranormal II · Teorias e Homebrews (Static, Ojimo, Portill & Vescose): regras, ficha, ameaças e ligação com o RPGHUB.
-// Teste: rola o dado do atributo e o da perícia, fica com o MAIOR e soma os dados de bônus; contra DT (padrão 7).
+// Teste: rola o dado do atributo e o da perícia e SOMA os dois, mais os dados de bônus; contra DT (padrão 7).
 (function (HB) {
   const UI = HB.UI, S = HB.S, esc = UI.esc;
   const DADOS = [4, 6, 8, 10, 12];                       // passos
@@ -70,16 +70,16 @@
 
   // ---------- Dados ----------
   const rolarD = l => ({ l, v: HB.D.d(l) });
-  // Maior entre o dado do atributo e o da perícia; dados de bônus somam a esse valor.
-  function testeMaior(quem, titulo, passoA, passoP, bonusPasso, dt, extraNota) {
+  // Soma o dado do atributo, o da perícia e os dados de bônus.
+  function testeSoma(quem, titulo, passoA, passoP, bonusPasso, dt, extraNota) {
     const base = [rolarD(dado(passoA))];
     if (passoP != null) base.push(rolarD(dado(passoP)));
-    const alto = Math.max(...base.map(x => x.v));
+    const soma = base.reduce((s, x) => s + x.v, 0);
     const bonus = bonusPasso ? [rolarD(dado(bonusPasso - 1))] : [];
-    const total = alto + bonus.reduce((s, x) => s + x.v, 0);
+    const total = soma + bonus.reduce((s, x) => s + x.v, 0);
     const falha = base.every(x => x.v === 1);
     const r = {
-      tipo: 'teste', quem, titulo, formula: 'maior de ' + base.map(x => 'd' + x.l).join(' e ') + (bonus.length ? ' + d' + bonus[0].l : ''),
+      tipo: 'teste', quem, titulo, formula: base.map(x => 'd' + x.l).join(' + ') + (bonus.length ? ' + d' + bonus[0].l : ''),
       dados: base.concat(bonus), bonus: 0, total, nota: [falha ? 'falha crítica (todos os dados em 1)' : '', extraNota].filter(Boolean).join(' · '),
     };
     if (dt != null) { r.alvoDef = dt; r.acertou = !falha && total >= dt; r.rotuloAlvo = 'DT'; }
@@ -100,15 +100,15 @@
   function teste(o, id, opts = {}) {
     const quem = o.nome || '', bonus = opts.ajuste > 0 ? Math.min(5, opts.ajuste) : 0;
     const a = ATRIBUTOS.find(x => x.id === id);
-    if (a) return testeMaior(quem, a.nome, passoAttr(o, id), ehVilao(o) ? (o.treino == null ? null : o.treino | 0) : null, bonus);
-    if (id === 'iniciativa') return testeMaior(quem, 'Iniciativa', passoAttr(o, 'FIS'), ehVilao(o) ? o.treino | 0 : periciaEf(o, idxPericia(o, 'Reflexos')), 0);
+    if (a) return testeSoma(quem, a.nome, passoAttr(o, id), ehVilao(o) ? (o.treino == null ? null : o.treino | 0) : null, bonus);
+    if (id === 'iniciativa') return testeSoma(quem, 'Iniciativa', passoAttr(o, 'FIS'), ehVilao(o) ? o.treino | 0 : periciaEf(o, idxPericia(o, 'Reflexos')), 0);
     const i = +String(id).replace('p', ''); const p = (o.pericias || [])[i]; if (!p) return null;
-    return testeMaior(quem, p.nome || 'Perícia', passoAttr(o, attrDaCat[p.cat] || 'FIS'), periciaEf(o, i), bonus);
+    return testeSoma(quem, p.nome || 'Perícia', passoAttr(o, attrDaCat[p.cat] || 'FIS'), periciaEf(o, i), bonus);
   }
   const idxPericia = (o, nome) => (o.pericias || []).findIndex(p => p.nome === nome);
   function ataque(o, i, opts = {}) {
     const a = ataquesDe(o)[i]; if (!a) return null;
-    const r = testeMaior(o.nome || '', a.nome, a.pa, a.pp, 0, opts.alvoDef == null ? null : opts.alvoDef, a.obs);
+    const r = testeSoma(o.nome || '', a.nome, a.pa, a.pp, 0, opts.alvoDef == null ? null : opts.alvoDef, a.obs);
     r.tipo = 'ataque';
     const d = HB.SH.rolarExpr(a.dano);
     r.dano = { formula: a.dano + (a.bonusDano ? ' + ' + a.bonusDano : ''), dados: d.dados, total: Math.max(0, d.total + a.bonusDano) };
@@ -125,7 +125,7 @@
       linha: v ? (o.categoria || 'Ameaça') + (o.nex ? ' · NEX ' + o.nex + '%' : '') : nomeClasse(o),
       numeros: v ? [['DT para acertar', o.defesa | 0 || DT_PADRAO], ['Treino', 'd' + dado(o.treino | 0)]] : [['DT para acertar', d.defesa], ['Nível', d.n], ['NEX', (o.nex | 0) + '%']],
       testes, escudo: testes.slice(0, 6),
-      ataques: ataquesDe(o).map(a => ({ nome: a.nome, sub: `maior de d${dado(a.pa)}${a.pp != null ? ' e d' + dado(a.pp) : ''} · dano ${a.dano}${a.bonusDano ? ' + ' + a.bonusDano : ''}${a.obs ? ' · ' + a.obs : ''}` })),
+      ataques: ataquesDe(o).map(a => ({ nome: a.nome, sub: `d${dado(a.pa)}${a.pp != null ? ' + d' + dado(a.pp) : ''} · dano ${a.dano}${a.bonusDano ? ' + ' + a.bonusDano : ''}${a.obs ? ' · ' + a.obs : ''}` })),
       poderes: (v ? o.poderes || [] : (o.habilidades || []).filter(x => x.custo)).map(p => ({ nome: p.nome || 'Habilidade', custo: p.custo | 0, desc: p.desc || '' })),
       multiAtaque: false,
     };
@@ -152,7 +152,7 @@
       ${ATRIBUTOS.map((a, i) => `<g class="hex-no" data-act="rolar-attr" data-attr="${esc(a.id)}" tabindex="0" role="button" aria-label="Rolar ${a.nome}">
         <circle cx="${pos[i][0]}" cy="${pos[i][1]}" r="40"/><text x="${pos[i][0]}" y="${pos[i][1] + 2}" class="hex-dado">d${dado(passoAttr(o, a.id))}</text>
         <text x="${pos[i][0]}" y="${pos[i][1] + 22}" class="hex-sigla">${a.nome.toUpperCase()}</text></g>`).join('')}
-      <text x="160" y="160" class="hex-centro">MAIOR</text><text x="160" y="180" class="hex-centro-sub">atributo ou perícia</text></svg>`;
+      <text x="160" y="160" class="hex-centro">SOMA</text><text x="160" y="180" class="hex-centro-sub">atributo + perícia</text></svg>`;
   }
   function bonusBarra(estado) {
     const b = estado.ajuste | 0;
@@ -213,7 +213,7 @@
               <div class="tabela-rolagem"><table class="tabela-attr pericias"><tbody>${(h.pericias || []).map((p, i) => p.cat !== c ? '' : `<tr>
                 <th scope="row"><input id="op-pn-${i}" class="nome-pericia" data-f="pericias.${i}.nome" value="${esc(p.nome)}" aria-label="Nome da perícia"></th>
                 <td>${passo('pericias.' + i + '.passo', 'd' + dado(periciaEf(h, i)) + (periciaEf(h, i) !== (p.passo | 0) ? '*' : ''), p.nome, 4)}</td>
-                <td><button class="btn-dado" data-act="rolar-attr" data-attr="p${i}">maior</button></td>
+                <td><button class="btn-dado" data-act="rolar-attr" data-attr="p${i}">rolar</button></td>
                 <td><button class="icone" data-act="remover-item" data-campo="pericias" data-i="${i}" aria-label="Remover perícia">✕</button></td></tr>`).join('')}</tbody></table></div>`).join('')}
             <div class="escolhas"><label class="campo"><span>Nova perícia</span><select id="op-nova-cat">${cats.map(c => `<option value="${c}">${CAT[c]}</option>`).join('')}</select></label><button class="btn pequeno" data-act="op-nova-pericia">Adicionar</button></div>
             <p class="dica">Toda perícia começa em d4; cada ponto sobe um passo. Pontos: 4 + metade do dado de Mente, mais 7 nos níveis 3, 6 e 9. Melhorar uma habilidade também custa 1 ponto. * bônus da ocupação.</p></div>
@@ -248,7 +248,7 @@
             <label class="campo"><span>Arma</span><select id="oa-t-${i}" data-f="ataques.${i}.tipo" data-re>${[['branca', 'Branca'], ['fogo', 'De fogo'], ['outra', 'Outra']].map(([k, n]) => `<option value="${k}" ${k === (a.tipo || 'branca') ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
             <label class="campo"><span>Dano</span><input id="oa-d-${i}" data-f="ataques.${i}.dano" value="${esc(a.dano || '1d6')}"></label>
             <label class="campo mini"><span>+ Dano</span><input id="oa-b-${i}" type="number" data-f="ataques.${i}.bonus" data-re value="${a.bonus | 0}"></label></div>
-          <div class="ataque-resumo"><span><small>Teste</small> maior de d${dado(atq[i].pa)}${atq[i].pp != null ? ' e d' + dado(atq[i].pp) : ''}</span><span><small>Dano</small> ${esc(atq[i].dano)}${atq[i].bonusDano ? ' + ' + atq[i].bonusDano : ''}</span></div>
+          <div class="ataque-resumo"><span><small>Teste</small> d${dado(atq[i].pa)}${atq[i].pp != null ? ' + d' + dado(atq[i].pp) : ''}</span><span><small>Dano</small> ${esc(atq[i].dano)}${atq[i].bonusDano ? ' + ' + atq[i].bonusDano : ''}</span></div>
           <input id="oa-o-${i}" data-f="ataques.${i}.obs" value="${esc(a.obs || '')}" placeholder="Alcance, munição, efeito…">`)}
         <p class="dica">O ataque acerta com resultado igual ou maior que a DT do alvo (padrão 7). Mão Pesada e Para Bellum já somam +2 no dano da arma certa.</p>`;
     }
@@ -292,8 +292,8 @@
       ${so ? `<p class="faixa">${v.base ? 'Ameaça base.' : 'Criada por ' + esc(HB.A.nome(v.dono)) + '.'} Duplique para mudar os números.</p>` : ''}
       <div class="ficha-grade"><div class="col-esq">${trio(v)}<div class="vilao-numeros">${num('nex', 'NEX %', v.nex)}${num('pvMax', 'PV', v.pvMax)}${num('manaMax', 'PD', v.manaMax)}${num('defesa', 'DT acerto', v.defesa)}${num('dureza', 'Dureza', v.dureza)}</div></div>
         <div class="col-meio"><div class="bloco"><div class="bloco-topo"><h3>Atributos</h3></div><div class="tabela-rolagem"><table class="tabela-attr"><tbody>
-          ${ATRIBUTOS.map(a => `<tr><th scope="row">${a.nome}</th><td>${so ? 'd' + dado(passoAttr(v, a.id)) : passo('passos.' + a.id, 'd' + dado(passoAttr(v, a.id)), a.nome, 4)}</td><td><button class="btn-dado" data-act="rolar-attr" data-attr="${esc(a.id)}">maior</button></td></tr>`).join('')}
-          <tr><th scope="row">Treino geral</th><td>${so ? 'd' + dado(v.treino | 0) : passo('treino', 'd' + dado(v.treino | 0), 'Treino', 4)}</td><td></td></tr></tbody></table></div><p class="dica">Os testes da ameaça usam o maior entre o atributo e o treino geral.</p></div>
+          ${ATRIBUTOS.map(a => `<tr><th scope="row">${a.nome}</th><td>${so ? 'd' + dado(passoAttr(v, a.id)) : passo('passos.' + a.id, 'd' + dado(passoAttr(v, a.id)), a.nome, 4)}</td><td><button class="btn-dado" data-act="rolar-attr" data-attr="${esc(a.id)}">rolar</button></td></tr>`).join('')}
+          <tr><th scope="row">Treino geral</th><td>${so ? 'd' + dado(v.treino | 0) : passo('treino', 'd' + dado(v.treino | 0), 'Treino', 4)}</td><td></td></tr></tbody></table></div><p class="dica">Os testes da ameaça somam o dado do atributo e o do treino geral.</p></div>
           <div class="bloco"><div class="bloco-topo"><h3>Descrição</h3></div><textarea id="ov-desc" rows="5" data-f="desc" ${dis}>${esc(v.desc || '')}</textarea></div></div>
         <div class="col-dir"><div class="abas">${[['combate', 'Ataques'], ['poderes', 'Habilidades']].map(([k, n]) => `<button class="aba ${(estado.aba || 'combate') === k ? 'ativa' : ''}" data-act="aba" data-aba="${k}">${n}</button>`).join('')}</div>
           <div class="aba-corpo ${so ? 'so-leitura' : ''}">${(estado.aba || 'combate') === 'poderes'
@@ -308,8 +308,8 @@
   function regras() {
     return `<section class="pagina regras"><div class="pagina-topo"><div><h1 class="titulo-hq">Regras</h1><p class="sub">Teorias e homebrews da comunidade sobre o playtest de Ordem Paranormal 2. Muito do material é especulativo, como o próprio livro avisa.</p></div>${HB.botaoLivro('op2')}</div>
       <div class="regras-grade">
-      <article class="bloco"><h2>Testes</h2><p>Role o dado do <b>atributo</b> e o dado da <b>perícia</b> e fique com o <b>maior</b>. Dados de bônus (como +d4 de Foco) somam a esse valor. Compare com a DT, normalmente <b>7</b>. Todos os dados em 1 é falha crítica.</p>
-        <p class="dica">O PDF não define a mecânica do teste; o RPGHUB usa "maior dado", escolhido pela mesa.</p></article>
+      <article class="bloco"><h2>Testes</h2><p>Role o dado do <b>atributo</b> e o dado da <b>perícia</b> e <b>some</b> os dois. Dados de bônus (como +d4 de Foco) também somam. Compare com a DT, normalmente <b>7</b>. Todos os dados em 1 é falha crítica.</p>
+        <p class="dica">O PDF não define a mecânica do teste; o RPGHUB soma os dados, como a mesa joga.</p></article>
       <article class="bloco"><h2>Atributos</h2><p>Físico, Emoção e Mente. Todos começam em d6 com 1 ponto; cada ponto sobe um passo (d4 → d6 → d8 → d10 → d12). Baixar um atributo para d4 dá +1 ponto. Máximo d8 na criação; +1 ponto nos níveis 2, 5 e 8, até d12.</p></article>
       <article class="bloco"><h2>PV e PD</h2><p>PV iniciais = valor máximo do dado de Físico; PD = valor máximo do dado de Emoção. Mais 6 pontos para dividir entre os dois no início e 6 a cada nível.</p></article>
       <article class="bloco"><h2>Perícias</h2><p>Começam em d4. Pontos = 4 + metade do dado de Mente, mais 7 nos níveis 3, 6 e 9. Os pontos também compram melhorias das habilidades de ocupação, perfil e nível.</p></article>
@@ -321,7 +321,7 @@
   }
 
   HB.Sistemas.registrar({
-    id: 'op2', nome: 'Ordem Paranormal II', sub: 'Teorias e homebrews · maior dado',
+    id: 'op2', nome: 'Ordem Paranormal II', sub: 'Teorias e homebrews · soma dos dados',
     descricao: 'Agentes contra o paranormal. Três atributos e perícias em dados (d4 a d12), PV e Determinação, ocupações e os perfis Analista, Executor e Vigilante.',
     livro: { pdf: 'livros/ordem-paranormal-ii-teorias-e-homebrews.pdf', titulo: 'Ordem Paranormal II · Teorias e Homebrews', tamanho: '424 KB', creditos: 'Material de fãs de Static, Ojimo, Portill & Vescose sobre o playtest de Ordem Paranormal 2.' },
     rotulos: { personagens: 'Agentes', personagem: 'agente', novo: 'Novo agente', ameacas: 'Ameaças', ameaca: 'ameaça', novaAmeaca: 'Nova ameaça', recurso: 'PD' },
