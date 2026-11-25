@@ -31,6 +31,7 @@
       <div class="prog-modo" role="group" aria-label="Como calcular">
         <button class="chip ${man ? '' : 'on'}" data-act="modo-calc" data-v="auto">Automático</button>
         <button class="chip ${man ? 'on' : ''}" data-act="modo-calc" data-v="manual">Manual</button></div>
+      ${HB.P && HB.P.podeEditarHeroi(h) && (!pr.tabela || atual < pr.tabela.linhas.length) ? `<a class="btn primario" href="#nivel-${esc(h.id)}">${pr.tabela ? 'Subir para o nível ' + (atual + 1) : 'Ganhar um nível de experiência'}</a>` : ''}
       <p class="dica">${man ? 'Manual: você digita os números e a ficha não cobra pontos. A tabela abaixo continua mostrando o que o livro daria.'
         : 'Automático: vida, ' + esc(sis.rotulos.recurso) + ', defesa e pontos saem das regras do livro, pelo nível e pelas escolhas.'}</p>
       ${man ? `<div class="prog-manual">${campo('pvMax', 'Vida máxima')}${campo('manaMax', sis.rotulos.recurso + ' máximo')}${campo('defesa', sis.id === 'op2' ? 'DT para acertar' : 'Defesa')}</div>` : ''}

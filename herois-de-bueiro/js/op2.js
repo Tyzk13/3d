@@ -368,5 +368,5 @@
       if (campo === 'nex') o.nex = Math.max(0, Math.min(99, o.nex | 0));
     },
   });
-  HB.OP2 = { DADOS, dado, CAT };
+  HB.OP2 = { DADOS, dado, CAT, ATRIBUTOS, OCUPACOES, PERFIS, AUMENTOS, GRAUS, HAB_NIVEL, derivados, periciaEf, passoAttr };
 })(window.HB);

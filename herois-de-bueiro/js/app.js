@@ -27,6 +27,8 @@
     else if (nome === 'viloes') html = SI.ativo.paginaViloes(estado);
     else if (nome === 'vilao') { const v = F.pegarVilao(id); html = v ? SI.de(v).fichaVilao(v, estado) : naoAchou('Essa ameaça não existe mais.', '#viloes'); }
     else if (nome === 'regras') html = SI.ativo.regras();
+    else if (nome === 'criar') { html = HB.Criador.telaCriar(); if (!html) { location.hash = '#herois'; return; } }
+    else if (nome === 'nivel') { const h = S.pegar('herois', id); html = h && P.podeEditarHeroi(h) ? HB.Criador.telaNivel(h) : naoAchou('Essa ficha não existe ou não é sua.', '#herois'); }
     else html = paginaInicio();
     const foco = document.activeElement && document.activeElement.id;
     raiz().innerHTML = html;
@@ -36,7 +38,7 @@
     if (foco) { const el = document.getElementById(foco); if (el && el.matches('input,textarea')) { el.focus(); if (el.setSelectionRange && el.type !== 'number') { const n = el.value.length; el.setSelectionRange(n, n); } } }
     document.querySelectorAll('.nav a').forEach(a => a.classList.toggle('ativo', a.dataset.sec === secao(nome)));
   }
-  const secao = n => ({ inicio: '',  heroi: 'herois', herois: 'herois', campanhas: 'campanhas', mesa: 'campanhas', campanha: 'campanhas', escudo: 'campanhas', viloes: 'viloes', vilao: 'viloes', regras: 'regras' })[n] || '';
+  const secao = n => ({ inicio: '', criar: 'herois', nivel: 'herois',  heroi: 'herois', herois: 'herois', campanhas: 'campanhas', mesa: 'campanhas', campanha: 'campanhas', escudo: 'campanhas', viloes: 'viloes', vilao: 'viloes', regras: 'regras' })[n] || '';
   const naoAchou = (t, volta) => `<section class="pagina"><div class="vazio-grande"><p>${esc(t)}</p><a class="btn" href="${volta}">Voltar</a></div></section>`;
 
   // Fichas de outras pessoas: dá para ver, trocar de aba e rolar; não dá para mudar.
@@ -190,7 +192,8 @@
 
   // ---------- Ações ----------
   const A = {
-    'novo-heroi'() { const sis = SI.ativo || SI.de(null); const h = sis.novoPersonagem(); h.sistema = sis.id; h.dono = P.eu(); h.jogador = AU.usuario.nome; S.salvar('herois', h, 0); location.hash = '#heroi-' + h.id; },
+    // Abre a criação guiada (passo a passo); dá para pular e abrir a ficha em branco.
+    'novo-heroi'() { const sis = SI.ativo || SI.de(null); HB.Criador.iniciar(sis, P.eu(), AU.usuario.nome); location.hash = '#criar'; render(); },
     'duplicar-heroi'(el) { const x = docDe(el); const n = S.clone(x.o); delete n.id; n.nome += ' (cópia)'; n.criado = Date.now(); n.dono = P.eu(); n.mestres = []; S.salvar('herois', n, 0); location.hash = '#heroi-' + n.id; },
     'assumir-heroi'(el) { const h = S.pegar('herois', el.dataset.id); h.dono = P.eu(); S.salvar('herois', h, 0); render(); UI.aviso(h.nome + ' agora é seu.', 'info'); },
     condicao(el) { const x = docDe(el), v = el.dataset.v, cs = x.o.condicoes || []; x.o.condicoes = cs.includes(v) ? cs.filter(c => c !== v) : cs.concat(v); S.salvar('herois', x.o, 300); render(); },
@@ -516,6 +519,8 @@
     j.classList.add('larga');
   }
 
+  Object.assign(A, HB.Criador.acoes(topo => { render(); if (topo) window.scrollTo(0, 0); }));
+
   const SUBMITS = {
     'rolar-livre'(form) {
       const expr = form.expr.value, f = fonteAtual(), c = campanhaAtual();
@@ -565,6 +570,7 @@
         return;
       }
       if (el.matches('[data-f]') && el.type !== 'number' && el.tagName !== 'SELECT' && el.type !== 'checkbox') gravarCampo(el, false);
+      if (el.matches('[data-w]') && el.type !== 'number' && el.tagName !== 'SELECT') HB.Criador.campo(el, false);
       if (el.matches('[data-f-part]')) {
         const c = campanhaAtual(), cb = combateAtual(c), p = cb.parts.find(x => x.uid === el.dataset.fPart);
         if (p) { p.nome = el.value; S.salvar('campanhas', c, 800); }
@@ -573,6 +579,7 @@
     document.addEventListener('change', e => {
       const el = e.target;
       if (el.matches('[data-act-change]')) return CHANGES[el.dataset.actChange](el);
+      if (el.matches('[data-w]') && (el.type === 'number' || el.tagName === 'SELECT')) { HB.Criador.campo(el, true); return render(); }
       if (el.matches('[data-f]') && (el.type === 'number' || el.tagName === 'SELECT' || el.type === 'checkbox')) gravarCampo(el, true);
       if (el.matches('[data-foto], [data-capa]') && el.files[0]) {
         const x = docDe(el), ehCapa = el.matches('[data-capa]'), arq = el.files[0]; el.value = '';
