@@ -109,7 +109,6 @@
     const sobraAttr = d.pontosAttr - d.gastos, sobraAfin = d.afinTotal - d.afinGasta;
     const treinadas = X.PERICIAS.filter(p => ((h.pericias || {})[p.id] || {}).grau).length;
     const pend = [];
-    if (!h.divisao) pend.push('escolha a divisão');
     if (!part) pend.push('escolha o Ponto de Partida');
     if (sobraAttr > 0) pend.push(`distribua ${sobraAttr} ponto${sobraAttr > 1 ? 's' : ''} de atributo`);
     if (sobraAttr < 0) pend.push(`${-sobraAttr} ponto${sobraAttr < -1 ? 's' : ''} de atributo acima do total`);
@@ -124,7 +123,7 @@
           <label class="campo linha"><span>Jogador</span><input id="s-jogador" data-f="jogador" value="${esc(h.jogador || '')}"></label>
           <div class="ficha-sel tres">
             <label class="campo"><span>Nível</span><input id="s-nivel" type="number" min="1" max="20" data-f="nivel" data-re value="${d.n}"></label>
-            <label class="campo"><span>Divisão</span><select id="s-divisao" data-f="divisao" data-num data-re><option value="0">Escolha…</option>${X.DIVISOES.map(x => `<option value="${x.n}" ${x.n === (h.divisao | 0) ? 'selected' : ''}>${X.nomeDivisao(x.n)}</option>`).join('')}</select></label>
+            <label class="campo"><span>Divisão</span><select id="s-divisao" data-f="divisao" data-num data-re><option value="0">Sem divisão</option>${X.DIVISOES.map(x => `<option value="${x.n}" ${x.n === (h.divisao | 0) ? 'selected' : ''}>${X.nomeDivisao(x.n)}</option>`).join('')}</select></label>
             <label class="campo"><span>Ponto de Partida</span><select id="s-partida" data-f="partida" data-re><option value="">Escolha…</option>${Object.entries(X.PARTIDAS).map(([k, v]) => `<option value="${k}" ${k === h.partida ? 'selected' : ''}>${v.nome}</option>`).join('')}</select></label>
           </div>
         </div>
@@ -158,7 +157,7 @@
           <div class="bloco"><div class="bloco-topo"><h3>Atributos</h3><span class="pontos ${sobraAttr < 0 ? 'ruim' : sobraAttr === 0 ? 'ok' : ''}">${d.gastos} / ${d.pontosAttr} pts · limite ${d.limite}</span></div>
             <div class="tabela-rolagem"><table class="tabela-attr"><tbody>${X.ATRIBUTOS.map(a => `<tr><th scope="row">${a.nome}</th><td>${passo('atributos.' + a.id, sn(X.val(h, a.id)), a.nome)}</td>
               <td><button class="btn-dado" data-act="rolar-attr" data-attr="${esc(a.id)}">1d20 ${sn(X.val(h, a.id))}</button></td></tr>`).join('')}</tbody></table></div>
-            <p class="dica">7 pontos iniciais + 3 da divisão${div ? ` (${esc(div.nota || div.attrs.map(X.nomeAttr).join(' e '))}, máx. 2 no mesmo)` : ''} + 2 nos níveis 3, 6, 9, 12, 15 e 18. Na criação, ninguém passa de 4.</p></div>
+            <p class="dica">7 pontos iniciais + 3 ${div ? `da divisão (${esc(div.nota || div.attrs.map(X.nomeAttr).join(' e '))}, máx. 2 no mesmo)` : 'extras em quaisquer atributos (sem divisão, máx. 2 no mesmo)'} + 2 nos níveis 3, 6, 9, 12, 15 e 18. Na criação, ninguém passa de 4.</p></div>
           <div class="bloco"><div class="bloco-topo"><h3>Testes de resistência</h3></div>
             <div class="tabela-rolagem"><table class="tabela-attr"><tbody>${X.TRS.map(t => { const b = X.bonusTR(h, t.id, d.bt); return `<tr><th scope="row">${t.nome} <small>${t.attr}</small></th>
               <td>${selGrau('trs.' + t.id + '.grau', b.grau, 'tr-' + t.id)}</td><td><input id="tr-o-${esc(t.id)}" class="num" type="number" data-f="trs.${esc(t.id)}.outros" data-re value="${((h.trs || {})[t.id] || {}).outros | 0}" aria-label="Outros"></td>
@@ -174,7 +173,7 @@
             <div class="caminhos">${X.CAMINHOS.map(c => { const n = (h.afinidades || {})[c.id] | 0; return `<div class="caminho"><b>${c.nome} <small class="trad">${c.trad}</small></b>${passo('afinidades.' + c.id, n, c.nome)}<span class="grad">${X.graduacao(n)}</span></div>`; }).join('')}</div>
             <p class="dica">O Ponto de Partida dá +1 em dois Caminhos; cada nível dá um Ponto de Progressão (+1 em um Caminho). Máximo 10.</p></div>
           <div class="bloco"><div class="bloco-topo"><h3>Origem</h3></div>
-            ${div ? `<p class="regra"><b>${X.nomeDivisao(div.n)}.</b> ${esc(div.car)}</p>` : '<p class="regra">Sem divisão.</p>'}
+            ${div ? `<p class="regra"><b>${X.nomeDivisao(div.n)}.</b> ${esc(div.car)}</p>` : `<p class="regra"><b>Sem divisão.</b> ${esc(X.SEM_DIVISAO.replace('Sem divisão: os', 'Os'))}</p>`}
             ${part ? `<p class="regra"><b>${part.nome}.</b> ${part.pv} de vida inicial + CON. ${esc(part.chave)}. ${esc(part.bonus)}</p>` : ''}
             <div class="escolhas">
               <label class="campo"><span>Atributo da CD de Classe</span><select id="s-cdattr" data-f="cdAttr" data-re>${X.TODOS.map(a => `<option ${a === d.cdAttr ? 'selected' : ''}>${a}</option>`).join('')}</select></label>
@@ -348,9 +347,9 @@
       <div class="regras-grade">
       <article class="bloco"><h2>Testes</h2><p>Role <b>1d20</b> + atributo + bônus de treinamento (se treinado) + outros, contra a CD: 10 média, 15 difícil, 20 desafiadora, 30 magistral, 40 quase impossível. Mestre numa perícia soma 1,5× o bônus de treinamento.</p>
         ${t(['Nível', 'Bônus de treinamento'], [['1–4', '+2'], ['5–8', '+3'], ['9–12', '+4'], ['13–16', '+5'], ['17–20', '+6']])}</article>
-      <article class="bloco"><h2>Personagem</h2><p>Atributos começam em 0; 7 pontos para distribuir, mais 3 da divisão. Máximo 4 na criação, 5 depois e 10 a partir do nível 10. Vida inicial = Ponto de Partida + CON. Reiryoku = 5 + ESP. Defesa = 10 + metade do nível + DES ou FOR. Atenção = 10 + Percepção. Deslocamento 9 m.</p></article>
+      <article class="bloco"><h2>Personagem</h2><p>Atributos começam em 0; 7 pontos para distribuir, mais 3 da divisão (ou em quaisquer atributos, sem divisão). Máximo 4 na criação, 5 depois e 10 a partir do nível 10. Vida inicial = Ponto de Partida + CON. Reiryoku = 5 + ESP. Defesa = 10 + metade do nível + DES ou FOR. Atenção = 10 + Percepção. Deslocamento 9 m.</p></article>
       <article class="bloco largo"><h2>Pontos de Partida</h2>${t(['Partida', 'Vida', 'Afinidades', 'Bônus'], Object.values(X.PARTIDAS).map(p => [p.nome, p.pv + ' + CON', p.afin.map(a => X.CAMINHOS.find(c => c.id === a).nome).join(' e '), p.bonus]))}</article>
-      <article class="bloco largo"><h2>Divisões da Gotei 13</h2>${t(['Divisão', 'Atributos', 'Característica'], X.DIVISOES.map(x => [X.nomeDivisao(x.n), x.nota || x.attrs.map(X.nomeAttr).join(' e '), x.car]))}</article>
+      <article class="bloco largo"><h2>Divisões da Gotei 13</h2><p>A divisão é <b>opcional</b>. ${esc(X.SEM_DIVISAO)}</p>${t(['Divisão', 'Atributos', 'Característica'], X.DIVISOES.map(x => [X.nomeDivisao(x.n), x.nota || x.attrs.map(X.nomeAttr).join(' e '), x.car]))}</article>
       <article class="bloco"><h2>Combate</h2><p>Iniciativa: teste de Percepção; empate vai para quem tem mais Destreza. Cada rodada dá 3 ações e 1 reação (Turno Rápido: age primeiro com 2 ações). Ataque: 1d20 + FOR (DES com fineza ou à distância; INT/SAB/ESP para kidos) + treino contra a Defesa. Segundo ataque no turno −5, terceiro −10 (armas leves −4/−8).</p>
         <p>20 natural sobe um grau; crítico dobra o dano. 1 natural é Desastre: erra e os inimigos ao alcance podem atacar como reação. Dano = dado + atributo + bônus − Dureza.</p></article>
       <article class="bloco"><h2>Ferimentos e destino</h2><p>Em 0 de vida o personagem fica Inconsciente e recebe uma Quebra e um Ferimento. Três Quebras destroem o destino. Um descanso longo remove uma Quebra.</p>
@@ -393,7 +392,7 @@
         nivel: d.n,
         inicio: [
           '<b>Atributos:</b> todos em 0, com <b>7 pontos</b> para distribuir, mais <b>3 da divisão</b>. Ninguém passa de 4 na criação.',
-          div ? `<b>${X.nomeDivisao(div.n)}:</b> treinado em 2 perícias ${div.pericias ? 'entre ' + esc(div.pericias.map(nomeP).join(', ')) : 'à escolha'}; pontos de divisão em ${esc(div.nota || div.attrs.map(X.nomeAttr).join(' e '))} (máx. 2 em um). ${esc(div.car)}` : '<b>Divisão:</b> escolha na ficha (dá perícias, atributos e uma característica).',
+          div ? `<b>${X.nomeDivisao(div.n)}:</b> treinado em 2 perícias ${div.pericias ? 'entre ' + esc(div.pericias.map(nomeP).join(', ')) : 'à escolha'}; pontos de divisão em ${esc(div.nota || div.attrs.map(X.nomeAttr).join(' e '))} (máx. 2 em um). ${esc(div.car)}` : `<b>Sem divisão</b> (opcional): ${esc(X.SEM_DIVISAO.replace('Sem divisão: ', ''))}`,
           part ? `<b>${part.nome}:</b> ${part.pv} de vida inicial + CON; Afinidade +1 em ${esc(part.afin.map(a => X.CAMINHOS.find(c => c.id === a).nome).join(' e '))}; ${esc(part.chave)}. ${esc(part.bonus)}` : '<b>Ponto de Partida:</b> escolha na ficha (dá vida inicial, afinidades, habilidade base e bônus).',
           '<b>Perícias:</b> treinado em 3 à escolha, mais tantas quanto o valor de INT ou SAB (escolha definitiva na criação).',
           '<b>Testes de resistência:</b> treinado em 2.',

@@ -60,6 +60,8 @@
     { n: 13, pericias: ['investigacao', 'percepcao', 'diplomacia', 'sobrevivencia'], attrs: ['INT', 'SAB'], car: 'Conhecimento dos Vivos e Mortos: +4 em Percepção para achar almas a guiar e +2 em Percepção no mundo humano.' },
   ];
   const nomeDivisao = n => (n ? n + 'ª Divisão' : 'Sem divisão');
+  // A divisão é opcional (decisão da mesa; o livro diz que "a maioria" entra numa).
+  const SEM_DIVISAO = 'Sem divisão: os 3 pontos extras vão em quaisquer atributos (máx. 2 no mesmo) e as 2 perícias extras são à escolha; sem característica de divisão.';
 
   // Forma selada da zanpakuto → arma.
   const FORMAS = {
@@ -175,7 +177,7 @@
   const limiteInimigo = n => 4 + 2 * Math.floor(n / 6);
 
   HB.SH = {
-    ATRIBUTOS, TODOS, nomeAttr, PERICIAS, TRS, CAMINHOS, GLOSSARIO, graduacao, PARTIDAS, DIVISOES, nomeDivisao, FORMAS, TIPOS_ZANPAKUTO, TIPOS_DANO, CONDICOES,
+    ATRIBUTOS, TODOS, nomeAttr, PERICIAS, TRS, CAMINHOS, GLOSSARIO, SEM_DIVISAO, graduacao, PARTIDAS, DIVISOES, nomeDivisao, FORMAS, TIPOS_ZANPAKUTO, TIPOS_DANO, CONDICOES,
     bonusTreino, pvPorNivel, MARCOS, AUMENTOS, limiteAttr, val, bonusPericia, bonusTR, derivados,
     rolarExpr, testeD20, jogadaAtaque, G, PERFIS, limiteInimigo,
     sinal: n => (n >= 0 ? '+' : '−') + Math.abs(n),

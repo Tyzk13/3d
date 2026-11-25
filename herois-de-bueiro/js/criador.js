@@ -67,13 +67,14 @@
     const soma = h => X.TODOS.reduce((s, a) => s + X.val(h, a), 0);
     const cri = h => (h._cri = h._cri || { divPericias: [], livres: [], trs: [], extraAttr: 'INT' });
     return [passoIdentidade(sis),
-      { titulo: 'Divisão da Gotei 13', html: h => cartoes(X.DIVISOES.map(d => ({ id: d.n, nome: X.nomeDivisao(d.n), sub: 'Atributos: ' + (d.nota || d.attrs.map(X.nomeAttr).join(' e ')), desc: d.car })), 'divisao', h.divisao || ''),
-        valido: h => (h.divisao ? ok(X.nomeDivisao(h.divisao) + ' escolhida.') : falta('Escolha uma divisão.')) },
+      { titulo: 'Divisão da Gotei 13 (opcional)', html: h => cartoes([{ id: 0, nome: 'Sem divisão', sub: 'Atributos: quaisquer · perícias à escolha', desc: 'Sem característica de divisão.' }]
+          .concat(X.DIVISOES.map(d => ({ id: d.n, nome: X.nomeDivisao(d.n), sub: 'Atributos: ' + (d.nota || d.attrs.map(X.nomeAttr).join(' e ')), desc: d.car }))), 'divisao', h.divisao | 0),
+        valido: h => ok(h.divisao ? X.nomeDivisao(h.divisao) + ' escolhida.' : 'Sem divisão. Os 3 pontos extras e as 2 perícias extras ficam livres.') },
       { titulo: 'Ponto de Partida', html: h => cartoes(Object.entries(X.PARTIDAS).map(([k, p]) => ({ id: k, nome: p.nome, sub: p.pv + ' de vida + CON · Afinidade: ' + p.afin.map(a => X.CAMINHOS.find(c => c.id === a).nome).join(' e '), desc: p.chave + '. ' + p.bonus })), 'partida', h.partida || ''),
         valido: h => (X.PARTIDAS[h.partida] ? ok(X.PARTIDAS[h.partida].nome + ' escolhido.') : falta('Escolha um Ponto de Partida.')) },
       { titulo: 'Atributos', html: h => { const div = X.DIVISOES.find(d => d.n === (h.divisao | 0)), man = h.modoCalc === 'manual', t = soma(h);
-          return `${man ? '<p class="dica">Manual: valores livres de −5 a 10.</p>' : `<p class="pontos-grande ${t > 10 ? 'ruim' : t === 10 ? 'ok' : ''}">${t} / 10 pontos (7 iniciais + 3 da divisão) · máximo 4 em um atributo</p>
-            <p class="dica">Pontos da divisão: ${esc(div ? div.nota || div.attrs.map(X.nomeAttr).join(' e ') : '—')} (no máximo 2 no mesmo).</p>`}
+          return `${man ? '<p class="dica">Manual: valores livres de −5 a 10.</p>' : `<p class="pontos-grande ${t > 10 ? 'ruim' : t === 10 ? 'ok' : ''}">${t} / 10 pontos (7 iniciais + 3 ${div ? 'da divisão' : 'extras'}) · máximo 4 em um atributo</p>
+            <p class="dica">${div ? 'Pontos da divisão: ' + esc(div.nota || div.attrs.map(X.nomeAttr).join(' e ')) : 'Sem divisão: os 3 pontos extras vão em quaisquer atributos'} (no máximo 2 no mesmo).</p>`}
             <div class="cri-attrs">${X.ATRIBUTOS.map(a => `<div class="cri-attr"><b>${a.nome}</b>${passo('atributos.' + a.id, X.sinal(X.val(h, a.id)), a.nome, man ? -5 : 0, man ? 10 : 4)}${linha('Teste', '1d20 ' + X.sinal(X.val(h, a.id)))}</div>`).join('')}</div>`; },
         valido: h => { if (h.modoCalc === 'manual') return ok('Atributos definidos.'); const t = soma(h); if (t > 10) return falta('Pontos demais: tire ' + (t - 10) + '.'); return t < 10 ? ok('Sobram ' + (10 - t) + ' pontos; dá para distribuir depois.') : ok('Todos os pontos distribuídos.'); } },
       { titulo: 'Perícias', html: h => { const c = cri(h), div = X.DIVISOES.find(d => d.n === (h.divisao | 0)), man = h.modoCalc === 'manual';
@@ -81,7 +82,7 @@
           if (man) return `<p class="dica">Manual: marque todas as perícias treinadas.</p>${chips(todas, '_cri.livres', c.livres, 0)}`;
           const nExtra = Math.max(0, X.val(h, c.extraAttr)), nLivres = 3 + nExtra;
           const opDiv = div && div.pericias ? div.pericias.map(id => ({ id, nome: nomeP(id) })) : todas;
-          return `<h3>Da divisão: escolha 2 <small>${c.divPericias.length}/2</small></h3>${chips(opDiv, '_cri.divPericias', c.divPericias, 2, c.livres)}
+          return `<h3>${div ? 'Da divisão' : 'Extras (sem divisão)'}: escolha 2 <small>${c.divPericias.length}/2</small></h3>${chips(opDiv, '_cri.divPericias', c.divPericias, 2, c.livres)}
             <h3>Perícias extras vêm de</h3>${cartoes([{ id: 'INT', nome: 'Inteligência', sub: 'estudo · ' + Math.max(0, X.val(h, 'INT')) + ' perícia(s)' }, { id: 'SAB', nome: 'Sabedoria', sub: 'vivência · ' + Math.max(0, X.val(h, 'SAB')) + ' perícia(s)' }], '_cri.extraAttr', c.extraAttr)}
             <h3>À escolha: ${nLivres} <small>(3 + ${nExtra} de ${c.extraAttr}) · ${c.livres.length}/${nLivres}</small></h3>${chips(todas, '_cri.livres', c.livres, nLivres, c.divPericias)}
             <p class="dica">* exige treinamento para ser usada.</p>`; },
