@@ -210,7 +210,7 @@
       const x = docDe(el), h = x.o, a = el.dataset.attr, d = +el.dataset.d;
       h.base = h.base || {}; const atual = h.base[a] | 0, novo = Math.max(0, Math.min(R.NIVEL_MAX, atual + d));
       const der = R.derivados(h);
-      if (d > 0 && der.gastos + R.CUSTO_NIVEL > der.total) return UI.aviso('Sem pontos sobrando. Aumente o total ou tire de outro atributo.', 'info');
+      if (d > 0 && h.modoCalc !== 'manual' && der.gastos + R.CUSTO_NIVEL > der.total) return UI.aviso('Sem pontos sobrando. Aumente o total ou tire de outro atributo.', 'info');
       h.base[a] = novo; S.salvar('herois', h); render();
     },
     ajuste(el) { estado.ajuste = Math.max(-5, Math.min(5, (estado.ajuste | 0) + +el.dataset.d)); render(); },
@@ -472,6 +472,12 @@
       const x = docDe(el); if (!x || el.closest('.leitura')) return;
       x.o.pericias = (x.o.pericias || []).concat({ nome: 'Nova perícia', cat: UI.$('#op-nova-cat').value, passo: 0 });
       S.salvar(x.col, x.o); render();
+    },
+    'modo-calc'(el) {
+      const x = docDe(el); if (!x || el.closest('.leitura')) return;
+      if (el.dataset.v === 'manual' && !x.o.manual) { const d = SI.de(x.o).derivados(x.o); x.o.manual = { pvMax: d.pvMax, manaMax: d.manaMax, defesa: d.defesa }; }
+      x.o.modoCalc = el.dataset.v; S.salvar(x.col, x.o, 0); render();
+      UI.aviso(el.dataset.v === 'manual' ? 'Modo manual: digite os números na aba Progressão.' : 'Modo automático: os números seguem o livro.', 'info');
     },
     'sh-multi'(el) { estado.multi = +el.dataset.v; render(); },
     'sh-passo'(el) {

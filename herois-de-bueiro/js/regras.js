@@ -195,7 +195,7 @@ window.HB = window.HB || {};
     const pvMax = c ? c.pv[0] + c.pv[1] * niv.VIG : 0;
     const manaMax = c ? c.mana[0] + c.mana[1] * niv.FEI : 0;
     const def = c ? c.def + niv.AGI : niv.AGI;
-    return {
+    const r = {
       mods, niv, maestria: maestrias(h),
       pvMax: pvMax + (h.pvExtra | 0),
       manaMax: manaMax + (h.manaExtra | 0),
@@ -203,6 +203,7 @@ window.HB = window.HB || {};
       gastos: pontosGastos(h),
       total: h.pontos == null ? PONTOS_INICIAIS : h.pontos,
     };
+    return HB.modoManual ? HB.modoManual(h, r) : r;
   }
 
   // Situações que mudam o nível de dado numa rolagem (mostradas como atalhos).

@@ -53,5 +53,23 @@
     cartaoVilaoInfo: v => ({ topo: 'Ameaça ' + (v.ameaca | 0), stats: `PV ${v.pvMax | 0} · Def ${v.defesa | 0}` }),
     combatente, teste, ataque,
     regras: () => HB.paginaRegrasHB(),
+    // O livro não tem tabela de níveis: mostra o que se ganha na criação e como o mestre faz evoluir.
+    progressao(h, d) {
+      const esc = HB.UI.esc, c = R.CLASSES[h.classe], o = R.ORIGENS[h.origem];
+      const bonus = def => [Object.entries((def || {}).fixo || {}).map(([a, v]) => (v > 0 ? '+' : '') + v + ' ' + R.nomeAttr(a)).join(', '),
+        ((def || {}).escolhas || []).map(e => e.tipo === 'pacote' ? e.rotulo + ': ' + e.opcoes.map(x => x.nome).join(' ou ') : e.rotulo + ' ' + e.opcoes.map(R.nomeAttr).join(' ou ')).join('; ')].filter(Boolean).join('; ');
+      const total = h.pontos == null ? R.PONTOS_INICIAIS : h.pontos | 0, extras = Math.floor((total - R.PONTOS_INICIAIS) / R.CUSTO_NIVEL);
+      return {
+        inicio: [
+          `<b>${R.PONTOS_INICIAIS} pontos de atributo</b>; cada nível de experiência custa ${R.CUSTO_NIVEL} (até 4 níveis comprados). Níveis: Inexperiente (0), Comum (d4), Bom (d6), Experiente (d8), Expert (d10), Mestre (2d6).`,
+          c ? `<b>Classe ${esc(c.nome)}:</b> ${esc(c.resumo)}. Bônus: ${esc(bonus(c))}${c.maestria ? '; ' + Object.entries(c.maestria).map(([m, v]) => 'nível ' + v + ' em ' + R.MAESTRIAS.find(x => x.id === m).nome).join('') : '; nível ' + c.maestriaEscolha + ' na maestria escolhida'}.` : '<b>Classe:</b> escolha na ficha (dá vida, mana, defesa, níveis de atributo e maestria).',
+          o ? `<b>Origem ${esc(o.nome)}:</b> ${esc(o.texto)}${bonus(o) ? ' Bônus: ' + esc(bonus(o)) + '.' : ''}` : '<b>Origem:</b> escolha na ficha (dá níveis de atributo e habilidades).',
+          '<b>Maestrias</b> (corpo a corpo, distância, magia): bônus de ataque +2 por nível, vindos da classe e da origem.',
+          '<b>Reputação</b> começa em 0 (neutra).',
+        ],
+        tabela: null,
+        nota: `O livro do Heróis de Bueiro não tem tabela de níveis. Para evoluir, o mestre concede pontos de atributo (campo de pontos totais, 5 pontos = 1 nível) ou ajusta "Outros" nos atributos, maestrias, vida e mana. ${extras > 0 ? `Este herói já recebeu <b>${extras} nível${extras > 1 ? 'is' : ''} extra${extras > 1 ? 's' : ''}</b> (${total} pontos no total).` : 'Este herói ainda está com os 20 pontos iniciais.'}`,
+      };
+    },
   });
 })(window.HB);

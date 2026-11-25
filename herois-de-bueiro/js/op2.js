@@ -65,7 +65,8 @@
     const distrib = 6 * n, gastoDist = (h.pvPontos | 0) + (h.pdPontos | 0);
     const pvMax = dado(passoAttr(h, 'FIS')) + (h.pvPontos | 0) + (oc.pvNivel ? n : 0) + (h.pvExtra | 0);
     const manaMax = dado(passoAttr(h, 'EMO')) + (h.pdPontos | 0) + (oc.pdNivel ? n : 0) + (h.manaExtra | 0);
-    return { n, pvMax, manaMax, defesa: DT_PADRAO + (h.defExtra | 0), ptsAttr, gastoAttr, ptsPer, gastoPer, distrib, gastoDist, melhorias, limiteAttr: n === 1 && !ate(AUMENTOS, n) ? 2 : 4, impetoMax: 3 + (h.melhorias && h.melhorias['perfil-unica'] ? 1 : 0) };
+    const r = { n, pvMax, manaMax, defesa: DT_PADRAO + (h.defExtra | 0), ptsAttr, gastoAttr, ptsPer, gastoPer, distrib, gastoDist, melhorias, limiteAttr: n === 1 && !ate(AUMENTOS, n) ? 2 : 4, impetoMax: 3 + (h.melhorias && h.melhorias['perfil-unica'] ? 1 : 0) };
+    return HB.modoManual ? HB.modoManual(h, r) : r;
   }
 
   // ---------- Dados ----------
@@ -225,8 +226,8 @@
           </div>
         </div>
         <div class="col-dir">
-          <div class="abas" role="tablist">${[['combate', 'Combate'], ['habilidades', 'Habilidades'], ['inventario', 'Inventário'], ['pessoal', 'Pessoal']].map(([k, n]) => `<button role="tab" aria-selected="${aba === k}" class="aba ${aba === k ? 'ativa' : ''}" data-act="aba" data-aba="${k}">${n}</button>`).join('')}</div>
-          <div class="aba-corpo">${abaFicha(h, aba)}</div>
+          <div class="abas" role="tablist">${[['combate', 'Combate'], ['habilidades', 'Habilidades'], ['inventario', 'Inventário'], ['progressao', 'Progressão'], ['pessoal', 'Pessoal']].map(([k, n]) => `<button role="tab" aria-selected="${aba === k}" class="aba ${aba === k ? 'ativa' : ''}" data-act="aba" data-aba="${k}">${n}</button>`).join('')}</div>
+          <div class="aba-corpo">${aba === 'progressao' ? HB.Sistemas.de(h) && HB.progressaoHTML(h, HB.Sistemas.de(h), d) : abaFicha(h, aba)}</div>
         </div>
       </div></section>`;
   }
@@ -330,6 +331,31 @@
     dadosRapidos: DADOS.map(l => ({ rotulo: 'd' + l, expr: '1d' + l })).concat([{ rotulo: 'd20', expr: '1d20' }]),
     novoPersonagem, nomeClasse, derivados: h => { const d = derivados(h); return { pvMax: d.pvMax, manaMax: d.manaMax, defesa: d.defesa }; },
     ficha, bestiario: BESTIARIO, novoVilao, fichaVilao, listaViloes, paginaViloes, combatente, teste, ataque, regras,
+    progressao(h, d) {
+      const oc = OCUPACOES[h.ocupacao], pf = PERFIS[h.perfil], men = dado(passoAttr(h, 'MEN'));
+      const extraNivel = oc && oc.pvNivel ? ' · +1 PV (Calejado)' : oc && oc.pdNivel ? ' · +1 PD (Dedicação)' : '';
+      const linhas = Array.from({ length: 10 }, (_, i) => {
+        const n = i + 1, g = [];
+        if (n === 1) g.push(pf ? esc(pf.unica[0]) : 'habilidade de perfil');
+        if (AUMENTOS.includes(n)) g.push('+1 ponto de atributo');
+        if (GRAUS.includes(n)) g.push('+7 pontos de perícia');
+        const k = HAB_NIVEL.indexOf(n); if (k >= 0) g.push((pf ? esc(pf.nivel[k][0]) : 'habilidade de nível do perfil'));
+        return { n, cels: [g.join(' · ') || '—', '+6 pontos' + extraNivel] };
+      });
+      return {
+        nivel: d.n,
+        inicio: [
+          '<b>Atributos:</b> Físico, Emoção e Mente começam em d6, com <b>1 ponto</b> para subir um passo. Baixar um para d4 dá +1 ponto. Máximo d8 na criação.',
+          `<b>PV</b> = valor máximo do dado de Físico; <b>PD</b> = valor máximo do dado de Emoção; mais <b>6 pontos</b> para dividir entre os dois.`,
+          `<b>Perícias:</b> começam em d4; <b>4 + metade do dado de Mente</b> pontos (Mente d${men} = ${4 + men / 2} pontos). Os pontos também compram melhorias das habilidades.`,
+          oc ? `<b>Ocupação ${esc(oc.nome)} · ${esc(oc.hab)}:</b> ${esc(oc.texto)}` : '<b>Ocupação:</b> escolha na ficha (dá uma habilidade).',
+          pf ? `<b>Perfil ${esc(pf.nome)} · ${esc(pf.unica[0])}:</b> ${esc(pf.unica[1])}` : '<b>Perfil:</b> Analista, Executor ou Vigilante (dá a habilidade do nível 1).',
+          '<b>NEX</b> (exposição paranormal) anotado na ficha; o livro supõe blocos de 5% e 10%.',
+        ],
+        tabela: { colunas: ['Nível', 'Ganhos', 'PV/PD'], linhas },
+        nota: 'A tabela segue o livro (níveis 1 a 10), que marca boa parte dela como especulação sobre o playtest.',
+      };
+    },
     rolarIniciativa(o) { return teste(o, 'iniciativa').total; },
     novoItem(col, campo) {
       if (campo === 'ataques') return col === 'viloes' ? { nome: 'Ataque', attr: 'FIS', passo: 1, dano: '1d6' } : { nome: 'Novo ataque', attr: 'FIS', pericia: 'Luta', tipo: 'branca', dano: '1d6', bonus: 0 };

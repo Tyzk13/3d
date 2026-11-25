@@ -631,3 +631,18 @@ body[data-sistema="op2"] .bloco-topo h3 { font-size: 1.15rem; }
 .regra.bloqueada { opacity: .45; }
 .q-linha small { color: var(--giz-2); font-weight: 400; }
 @media (max-width: 560px) { .ficha-sel.quatro { grid-template-columns: 1fr 1fr; } }
+
+/* ---------- Progressão ---------- */
+.prog { display: grid; gap: .7rem; }
+.prog h3 { font-size: 1rem; margin-top: .4rem; }
+.prog-modo { display: flex; gap: .4rem; }
+.prog-modo .chip { font-size: .85rem; padding: .35rem .9rem; }
+.prog-manual { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; background: var(--concreto); border: 1px dashed var(--faixa); border-radius: 8px; padding: .6rem; }
+.prog-manual small { font-size: .68rem; }
+.prog-inicio { margin: 0; padding-left: 1.1rem; display: grid; gap: .35rem; font-size: .88rem; }
+.prog-tabela td { font-size: .82rem; }
+.prog-tabela tr.ganho td { color: var(--giz-2); }
+.prog-tabela tr.atual td { background: color-mix(in srgb, var(--faixa) 16%, transparent); color: var(--giz); font-weight: 600; }
+.prog-tabela tr.proximo td:first-child small { color: var(--faixa); font-weight: 700; }
+.ok-marca { color: var(--ok); font-weight: 800; }
+@media (max-width: 560px) { .prog-manual { grid-template-columns: 1fr; } }

@@ -186,7 +186,7 @@
         </div>
 
         <div class="col-dir">
-          <div class="abas" role="tablist">${[['combate', 'Combate'], ['zanpakuto', 'Zanpakuto'], ['kidos', 'Kidos'], ['habilidades', 'Habilidades'], ['inventario', 'Inventário'], ['pessoal', 'Pessoal']]
+          <div class="abas" role="tablist">${[['combate', 'Combate'], ['zanpakuto', 'Zanpakuto'], ['kidos', 'Kidos'], ['habilidades', 'Habilidades'], ['inventario', 'Inventário'], ['progressao', 'Progressão'], ['pessoal', 'Pessoal']]
             .map(([k, n]) => `<button role="tab" aria-selected="${aba === k}" class="aba ${aba === k ? 'ativa' : ''}" data-act="aba" data-aba="${k}">${n}</button>`).join('')}</div>
           <div class="aba-corpo">${abaFicha(h, d, aba, estado)}</div>
         </div>
@@ -245,6 +245,7 @@
         <label class="campo"><span>Shikai (forma, efeitos, técnicas)</span><textarea id="z-shikai" rows="5" data-f="zanpakuto.shikai">${esc(z.shikai || '')}</textarea></label>
         <label class="campo"><span>Bankai</span><textarea id="z-bankai" rows="5" data-f="zanpakuto.bankai">${esc(z.bankai || '')}</textarea></label>`;
     }
+    if (aba === 'progressao') return HB.progressaoHTML(h, HB.Sistemas.de(h), d);
     if (aba === 'kidos') return lista(h, 'kidos', 'Novo kido', (k, i) => `<div class="item-topo"><input id="k-n-${i}" class="item-nome" data-f="kidos.${i}.nome" value="${esc(k.nome || '')}" placeholder="Hado nº 4: Byakurai">
         <label class="campo mini"><span>Reiryoku</span><input id="k-c-${i}" type="number" data-f="kidos.${i}.custo" value="${k.custo | 0}"></label><button class="btn pequeno" data-act="sh-usar-kido" data-i="${i}">Usar</button></div>
       <textarea id="k-d-${i}" rows="2" data-f="kidos.${i}.desc" placeholder="Ações, alcance, efeito, dano, TR…">${esc(k.desc || '')}</textarea>`,
@@ -372,6 +373,35 @@
     derivados: h => { const d = X.derivados(h); return { pvMax: d.pvMax, manaMax: d.manaMax, defesa: d.defesa }; },
     ficha, bestiario: BESTIARIO, novoVilao, fichaVilao, listaViloes, paginaViloes,
     combatente, teste, ataque, regras, aplicarGuia,
+    progressao(h, d) {
+      const div = X.DIVISOES.find(x => x.n === (h.divisao | 0)), part = X.PARTIDAS[h.partida];
+      const CON = X.val(h, 'CON'), ESP = X.val(h, 'ESP'), nomeP = id => X.PERICIAS.find(p => p.id === id).nome;
+      const linhas = Array.from({ length: 20 }, (_, i) => {
+        const n = i + 1, marco = X.MARCOS.includes(n), g = [];
+        g.push(n === 1 ? 'Ponto de Partida · 1 Progressão' : '1 Progressão');
+        if (X.AUMENTOS.includes(n)) g.push('+2 atributo');
+        if ([6, 12, 18].includes(n)) g.push('mestre em 1 perícia');
+        if (n === 10) g.push('limite de atributo 10');
+        if (X.bonusTreino(n) > X.bonusTreino(n - 1 || 1)) g.push('treino +1');
+        const vida = n === 1 ? `${part ? part.pv : '?'} + CON (${(part ? part.pv : 0) + CON})` : `+${X.pvPorNivel(n)}${marco ? ` + CON (${X.pvPorNivel(n) + CON})` : ''}`;
+        const rei = n === 1 ? `5 + ESP (${5 + ESP})` : `+3${marco ? ` + ESP (${3 + ESP})` : ''}`;
+        return { n, cels: [g.join(' · '), vida, rei, '+' + X.bonusTreino(n)] };
+      });
+      return {
+        nivel: d.n,
+        inicio: [
+          '<b>Atributos:</b> todos em 0, com <b>7 pontos</b> para distribuir, mais <b>3 da divisão</b>. Ninguém passa de 4 na criação.',
+          div ? `<b>${X.nomeDivisao(div.n)}:</b> treinado em 2 perícias ${div.pericias ? 'entre ' + esc(div.pericias.map(nomeP).join(', ')) : 'à escolha'}; pontos de divisão em ${esc(div.nota || div.attrs.map(X.nomeAttr).join(' e '))} (máx. 2 em um). ${esc(div.car)}` : '<b>Divisão:</b> escolha na ficha (dá perícias, atributos e uma característica).',
+          part ? `<b>${part.nome}:</b> ${part.pv} de vida inicial + CON; Afinidade +1 em ${esc(part.afin.map(a => X.CAMINHOS.find(c => c.id === a).nome).join(' e '))}; ${esc(part.chave)}. ${esc(part.bonus)}` : '<b>Ponto de Partida:</b> escolha na ficha (dá vida inicial, afinidades, habilidade base e bônus).',
+          '<b>Perícias:</b> treinado em 3 à escolha, mais tantas quanto o valor de INT ou SAB (escolha definitiva na criação).',
+          '<b>Testes de resistência:</b> treinado em 2.',
+          '<b>Zanpakuto</b> (forma selada à escolha) e <b>50 mil Kan</b>.',
+          `<b>Recursos:</b> Reiryoku = 5 + ESP; Defesa = 10 + metade do nível + DES ou FOR; Atenção = 10 + Percepção; Deslocamento 9 m; bônus de treinamento +2.`,
+        ],
+        tabela: { colunas: ['Nível', 'Ganhos', 'Vida', 'Reiryoku', 'Treino'], linhas },
+        nota: '<b>Progressão</b> = uma habilidade ou aptidão (com os requisitos) e +1 de Afinidade num Caminho. Vida e Reiryoku entre parênteses já usam o CON e o ESP atuais deste personagem; o CON somado à vida é retroativo.',
+      };
+    },
     rolarIniciativa(o) { const c = combatente(o); return HB.D.d(20) + c.iniBonus; },
     // Ponto de Partida novo: põe as afinidades iniciais se ainda estiverem zeradas.
     aoMudarCampo(o, campo) {

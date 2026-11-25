@@ -99,12 +99,13 @@
     const afinGasta = CAMINHOS.reduce((s, c) => s + ((h.afinidades || {})[c.id] | 0), 0);
     const afinTotal = n + 2; // 1 ponto de progressão por nível + 2 do Ponto de Partida
     const cdAttr = h.cdAttr || 'ESP', kidoAttr = h.kidoAttr || 'INT';
-    return {
+    const r = {
       n, bt, pvMax, manaMax, defesa, defAttr, atencao: 10 + per.total, percepcao: per.total, desloc: 9 + (h.deslExtra | 0),
       dureza: (h.dureza | 0) + (h.partida === 'lutador' ? 2 : 0),
       cdClasse: 10 + val(h, cdAttr) + bt, cdKido: 10 + val(h, kidoAttr) + bt, cdAttr, kidoAttr,
       pontosAttr, gastos, afinGasta, afinTotal, limite: limiteAttr(n), mestrias: mestrias(n),
     };
+    return HB.modoManual ? HB.modoManual(h, r) : r;
   }
 
   // ---------- Dados ----------

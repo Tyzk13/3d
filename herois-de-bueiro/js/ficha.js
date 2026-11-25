@@ -156,7 +156,7 @@
         </div>
 
         <div class="col-dir">
-          <div class="abas" role="tablist">${[['combate', 'Combate'], ['poderes', 'Poderes'], ['inventario', 'Inventário'], ['reputacao', 'Reputação'], ['descricao', 'Descrição']]
+          <div class="abas" role="tablist">${[['combate', 'Combate'], ['poderes', 'Poderes'], ['inventario', 'Inventário'], ['reputacao', 'Reputação'], ['progressao', 'Progressão'], ['descricao', 'Descrição']]
             .map(([k, n]) => `<button role="tab" aria-selected="${aba === k}" class="aba ${aba === k ? 'ativa' : ''}" data-act="aba" data-aba="${k}">${n}</button>`).join('')}</div>
           <div class="aba-corpo">${abaHeroi(h, d, aba)}</div>
         </div>
@@ -216,6 +216,7 @@
         <label class="campo mini"><span>Qtd</span><input id="iv-q-${p.i}" type="number" data-f="inventario.${p.i}.qtd" value="${p.o.qtd == null ? 1 : p.o.qtd}"></label></div>
       <input id="iv-d-${p.i}" data-f="inventario.${p.i}.desc" value="${esc(p.o.desc || '')}" placeholder="Detalhes">`);
     if (aba === 'reputacao') return abaReputacao(h);
+    if (aba === 'progressao') return HB.progressaoHTML(h, HB.Sistemas.de(h), d);
     const campos = [['aparencia', 'Aparência'], ['personalidade', 'Personalidade'], ['historia', 'História'], ['notas', 'Anotações']];
     return campos.map(([k, n]) => `<label class="campo"><span>${n}</span><textarea id="h-desc-${k}" rows="${k === 'historia' ? 6 : 3}" data-f="desc.${k}">${esc((h.desc || {})[k] || '')}</textarea></label>`).join('');
   }
