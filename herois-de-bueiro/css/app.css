@@ -571,7 +571,7 @@ body[data-sistema="sh"] { background-image: none; }
 .livro-item { display: grid; gap: .7rem; align-content: start; }
 .livro-pdf { margin: 0; font-size: .86rem; display: grid; gap: .15rem; padding-left: 22px; }
 .livro-pdf a { font-weight: 700; }
-.pagina-topo .btn small { display: inline; margin-left: .3rem; font-weight: 600; opacity: .75; }
+.pagina-topo .btn small { display: inline; margin-left: .3rem; font-weight: 600; opacity: .9; color: inherit; }
 
 /* ---------- Praticidade ---------- */
 button.barra-num { background: none; border: 0; color: inherit; font: inherit; font-weight: 800; cursor: pointer; width: 100%; }
@@ -689,3 +689,16 @@ body[data-sistema="op2"] .bloco-topo h3 { font-size: 1.15rem; }
 .selo-hollow { font-size: .7rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: #111; background: #f2c94c; padding: .15rem .5rem; border-radius: 4px; }
 .hollow-contador { margin: 0; font-size: .9rem; } .hollow-contador b { font-size: 1.6rem; color: #f2c94c; }
 .item.cero { border-color: #f2c94c; }
+
+/* ---------- Compêndio ---------- */
+.comp-btn { margin-bottom: .2rem; justify-self: start; }
+.comp-lista { display: grid; gap: .5rem; max-height: 60vh; overflow: auto; }
+.comp-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .6rem; align-items: start; background: var(--asfalto); border: 1px solid var(--linha); border-radius: 8px; padding: .6rem; }
+.comp-item small { display: block; color: var(--faixa); font-size: .72rem; font-weight: 600; }
+.comp-item p { margin: .25rem 0 0; font-size: .82rem; color: var(--giz-2); }
+.comp-grupo { display: grid; gap: .35rem; }
+.comp-ent { background: var(--concreto); border: 1px solid var(--linha); border-radius: 8px; padding: .5rem .8rem; }
+.comp-ent summary { cursor: pointer; font-weight: 700; display: flex; justify-content: space-between; gap: .6rem; }
+.comp-ent summary small { color: var(--giz-2); font-weight: 500; }
+.comp-ent p { margin: .5rem 0 .2rem; font-size: .88rem; color: var(--giz); line-height: 1.5; }
+.secao small { font-size: .9rem; color: var(--giz-2); font-family: var(--f-texto); }

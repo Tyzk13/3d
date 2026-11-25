@@ -239,7 +239,7 @@
           <button class="icone apagar-item" data-act="remover-item" data-campo="ataques" data-i="${i}" aria-label="Remover ataque">✕</button></div>`).join('')}</div>
         ${X.hollowAtiva(h) ? `<div class="item ataque cero"><div class="item-topo"><b class="item-nome">Cero <small class="trad">Hollowficação</small></b><button class="btn pequeno primario" data-act="rolar-ataque" data-i="${atq.length - 1}">Atacar</button></div>
           <div class="ataque-resumo"><span><small>Acerto</small> 1d20 ${sn(atq[atq.length - 1].acerto)}</span><span><small>Dano</small> ${esc((h.cero || {}).dano || 'defina no bloco Vizard')}</span></div></div>` : ''}
-        <button class="btn largo" data-act="sh-adicionar" data-campo="ataques">Novo ataque</button>
+        <button class="btn largo" data-act="sh-adicionar" data-campo="ataques">Novo ataque</button>${HB.SHC.botao('ataques', 'Arma do livro como ataque')}
         <p class="dica">20 natural sobe um grau (erro vira acerto, acerto vira crítico); crítico dobra o dano. 1 natural é Desastre.</p>`;
     }
     if (aba === 'zanpakuto') {
@@ -259,17 +259,18 @@
           <label class="campo mini"><span>+ Dano</span><input id="z-dano" type="number" data-f="zanpakuto.bonusDano" data-re value="${z.bonusDano | 0}"></label>
         </div>
         <label class="campo"><span>Comando de liberação</span><input id="z-cmd" data-f="zanpakuto.comando" value="${esc(z.comando || '')}"></label>
+        <div class="barra-acoes">${HB.SHC.botao('shikai', 'Efeitos de Shikai do livro')}${HB.SHC.botao('bankai', 'Efeitos de Bankai do livro')}</div>
         <label class="campo"><span>Shikai (forma, efeitos, técnicas)</span><textarea id="z-shikai" rows="5" data-f="zanpakuto.shikai">${esc(z.shikai || '')}</textarea></label>
         <label class="campo"><span>Bankai</span><textarea id="z-bankai" rows="5" data-f="zanpakuto.bankai">${esc(z.bankai || '')}</textarea></label>`;
     }
     if (aba === 'progressao') return HB.progressaoHTML(h, HB.Sistemas.de(h), d);
-    if (aba === 'kidos') return lista(h, 'kidos', 'Novo kido', (k, i) => `<div class="item-topo"><input id="k-n-${i}" class="item-nome" data-f="kidos.${i}.nome" value="${esc(k.nome || '')}" placeholder="Hado nº 4: Byakurai">
+    if (aba === 'kidos') return HB.SHC.botao('kidos', 'Adicionar kido do livro') + lista(h, 'kidos', 'Novo kido', (k, i) => `<div class="item-topo"><input id="k-n-${i}" class="item-nome" data-f="kidos.${i}.nome" value="${esc(k.nome || '')}" placeholder="Hado nº 4: Byakurai">
         <label class="campo mini"><span>Reiryoku</span><input id="k-c-${i}" type="number" data-f="kidos.${i}.custo" value="${k.custo | 0}"></label><button class="btn pequeno" data-act="sh-usar-kido" data-i="${i}">Usar</button></div>
       <textarea id="k-d-${i}" rows="2" data-f="kidos.${i}.desc" placeholder="Ações, alcance, efeito, dano, TR…">${esc(k.desc || '')}</textarea>`,
       `Kido são as artes espirituais: Hado (ataque), Bakudo (contenção) e Kaido (cura). Ataques espirituais usam 1d20 + ${d.kidoAttr} + treino. CD de Kido ${d.cdKido}. Usar desconta o Reiryoku.`);
-    if (aba === 'habilidades') return lista(h, 'habilidades', 'Nova habilidade ou aptidão', (x, i) => `<div class="item-topo"><input id="hb-n-${i}" class="item-nome" data-f="habilidades.${i}.nome" value="${esc(x.nome || '')}" placeholder="Habilidade Chave do Zanjutsu"></div>
+    if (aba === 'habilidades') return HB.SHC.botao('habilidades', 'Adicionar do livro (habilidades, aptidões, treinos)') + lista(h, 'habilidades', 'Nova habilidade ou aptidão', (x, i) => `<div class="item-topo"><input id="hb-n-${i}" class="item-nome" data-f="habilidades.${i}.nome" value="${esc(x.nome || '')}" placeholder="Habilidade Chave do Zanjutsu"></div>
       <textarea id="hb-d-${i}" rows="2" data-f="habilidades.${i}.desc">${esc(x.desc || '')}</textarea>`, 'Habilidades de Caminho, Marcos de Progresso e Aptidões.');
-    if (aba === 'inventario') return `<label class="campo mini"><span>Kan</span><input id="s-kan" type="number" data-f="kan" value="${h.kan | 0}"></label>` + lista(h, 'inventario', 'Novo item', (x, i) => `<div class="item-topo"><input id="iv-n-${i}" class="item-nome" data-f="inventario.${i}.nome" value="${esc(x.nome || '')}" placeholder="Item">
+    if (aba === 'inventario') return HB.SHC.botao('inventario', 'Adicionar item ou arma do livro') + `<label class="campo mini"><span>Kan</span><input id="s-kan" type="number" data-f="kan" value="${h.kan | 0}"></label>` + lista(h, 'inventario', 'Novo item', (x, i) => `<div class="item-topo"><input id="iv-n-${i}" class="item-nome" data-f="inventario.${i}.nome" value="${esc(x.nome || '')}" placeholder="Item">
         <label class="campo mini"><span>Qtd</span><input id="iv-q-${i}" type="number" data-f="inventario.${i}.qtd" value="${x.qtd == null ? 1 : x.qtd}"></label></div><input id="iv-d-${i}" data-f="inventario.${i}.desc" value="${esc(x.desc || '')}" placeholder="Detalhes">`);
     const campos = [['aspectos', 'Aspectos', 3], ['filosofia', 'Filosofia', 2], ['ligacoes', 'Ligações', 3], ['objetivos', 'Objetivos', 3], ['historia', 'História', 5], ['ferimentos', 'Ferimentos', 2], ['notas', 'Anotações', 3]];
     return campos.map(([k, n, r]) => `<label class="campo"><span>${n}</span><textarea id="p-${k}" rows="${r}" data-f="pessoal.${k}">${esc((h.pessoal || {})[k] || '')}</textarea></label>`).join('');
@@ -377,7 +378,7 @@
 
   function regras() {
     const t = (cab, linhas) => `<div class="tabela-rolagem"><table class="tabela-regra"><thead><tr>${cab.map(c => `<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>${linhas.map(l => `<tr>${l.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
-    return `<section class="pagina regras"><div class="pagina-topo"><div><h1 class="titulo-hq">Regras</h1><p class="sub">Resumo do Livro dos Ceifadores (v0.7b, playtest). Para textos completos de habilidades, kidos e zanpakuto, consulte o livro.</p></div>${HB.botaoLivro('sh')}</div>
+    return `<section class="pagina regras"><div class="pagina-topo"><div><h1 class="titulo-hq">Regras</h1><p class="sub">Resumo do Livro dos Ceifadores (v0.7b, playtest). Habilidades, aptidões, kidos, efeitos de zanpakuto, itens e armas estão no Compêndio.</p></div><div class="barra-acoes"><a class="btn" href="#compendio">Abrir compêndio</a>${HB.botaoLivro('sh')}</div></div>
       <div class="regras-grade">
       <article class="bloco"><h2>Testes</h2><p>Role <b>1d20</b> + atributo + bônus de treinamento (se treinado) + outros, contra a CD: 10 média, 15 difícil, 20 desafiadora, 30 magistral, 40 quase impossível. Mestre numa perícia soma 1,5× o bônus de treinamento.</p>
         ${t(['Nível', 'Bônus de treinamento'], [['1–4', '+2'], ['5–8', '+3'], ['9–12', '+4'], ['13–16', '+5'], ['17–20', '+6']])}</article>

@@ -27,6 +27,7 @@
     else if (nome === 'viloes') html = SI.ativo.paginaViloes(estado);
     else if (nome === 'vilao') { const v = F.pegarVilao(id); html = v ? SI.de(v).fichaVilao(v, estado) : naoAchou('Essa ameaça não existe mais.', '#viloes'); }
     else if (nome === 'regras') html = SI.ativo.regras();
+    else if (nome === 'compendio') html = SI.idAtivo === 'sh' ? HB.SHC.pagina(estado) : naoAchou('O compêndio é do Shinigamis & Hollows. Abra esse livro na estante.', '#inicio');
     else if (nome === 'criar') { html = HB.Criador.telaCriar(); if (!html) { location.hash = '#herois'; return; } }
     else if (nome === 'nivel') { const h = S.pegar('herois', id); html = h && P.podeEditarHeroi(h) ? HB.Criador.telaNivel(h) : naoAchou('Essa ficha não existe ou não é sua.', '#herois'); }
     else html = paginaInicio();
@@ -38,7 +39,7 @@
     if (foco) { const el = document.getElementById(foco); if (el && el.matches('input,textarea')) { el.focus(); if (/^(text|search|email|url|tel|password)?$/.test(el.type || '') || el.tagName === 'TEXTAREA') { try { const n = el.value.length; el.setSelectionRange(n, n); } catch (e) { /* campo sem cursor de texto */ } } } }
     document.querySelectorAll('.nav a').forEach(a => a.classList.toggle('ativo', a.dataset.sec === secao(nome)));
   }
-  const secao = n => ({ inicio: '', criar: 'herois', nivel: 'herois',  heroi: 'herois', herois: 'herois', campanhas: 'campanhas', mesa: 'campanhas', campanha: 'campanhas', escudo: 'campanhas', viloes: 'viloes', vilao: 'viloes', regras: 'regras' })[n] || '';
+  const secao = n => ({ inicio: '', criar: 'herois', nivel: 'herois', compendio: 'regras',  heroi: 'herois', herois: 'herois', campanhas: 'campanhas', mesa: 'campanhas', campanha: 'campanhas', escudo: 'campanhas', viloes: 'viloes', vilao: 'viloes', regras: 'regras' })[n] || '';
   const naoAchou = (t, volta) => `<section class="pagina"><div class="vazio-grande"><p>${esc(t)}</p><a class="btn" href="${volta}">Voltar</a></div></section>`;
 
   // Fichas de outras pessoas: dá para ver, trocar de aba e rolar; não dá para mudar.
@@ -174,6 +175,8 @@
     UI.resultado(r, campanhaId);
     if (aj) { estado.ajuste = 0; render(); }
   }
+  // Compêndio: aplica a entrada escolhida no destino (a regra de cada destino fica em sh-comp-ui.js).
+  function DESTINOS_OK(h, dest, e) { HB.SHC.aplicar(h, dest, e); }
   // Iniciativa rolada (Shinigamis & Hollows) ao entrar no combate.
   function iniDe(c, part, fonte) { const sis = SI.de(c); if (sis.iniciativa === 'rolada' && fonte) part.ini = sis.rolarIniciativa(fonte); return part; }
 
@@ -493,6 +496,10 @@
       if (v === 'recuperar' && gasta(4)) h.hollowUsada = false;
       if (v === 'descanso') { h.hollowUsada = false; UI.aviso('Descanso curto: a máscara está disponível de novo.', 'info'); }
       S.salvar(x.col, x.o, 200); render();
+    },
+    'comp-seletor'(el) {
+      const x = docDe(el); if (!x || el.closest('.leitura')) return;
+      HB.SHC.seletor(el.dataset.dest, e => { DESTINOS_OK(x.o, el.dataset.dest, e); S.salvar(x.col, x.o, 200); render(); UI.aviso(e.n + ' adicionado.', 'info'); });
     },
     'sh-multi'(el) { estado.multi = +el.dataset.v; render(); },
     'sh-passo'(el) {
