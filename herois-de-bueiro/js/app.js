@@ -35,7 +35,7 @@
     travarLeitura();
     raiz().querySelectorAll('input:not([type=number]):not([type=file]):not([type=checkbox]):not([type=range]):not([maxlength])').forEach(i => (i.maxLength = 200));
     raiz().querySelectorAll('textarea:not([maxlength])').forEach(t => (t.maxLength = 5000));
-    if (foco) { const el = document.getElementById(foco); if (el && el.matches('input,textarea')) { el.focus(); if (el.setSelectionRange && el.type !== 'number') { const n = el.value.length; el.setSelectionRange(n, n); } } }
+    if (foco) { const el = document.getElementById(foco); if (el && el.matches('input,textarea')) { el.focus(); if (/^(text|search|email|url|tel|password)?$/.test(el.type || '') || el.tagName === 'TEXTAREA') { try { const n = el.value.length; el.setSelectionRange(n, n); } catch (e) { /* campo sem cursor de texto */ } } } }
     document.querySelectorAll('.nav a').forEach(a => a.classList.toggle('ativo', a.dataset.sec === secao(nome)));
   }
   const secao = n => ({ inicio: '', criar: 'herois', nivel: 'herois',  heroi: 'herois', herois: 'herois', campanhas: 'campanhas', mesa: 'campanhas', campanha: 'campanhas', escudo: 'campanhas', viloes: 'viloes', vilao: 'viloes', regras: 'regras' })[n] || '';
@@ -482,6 +482,18 @@
       x.o.modoCalc = el.dataset.v; S.salvar(x.col, x.o, 0); render();
       UI.aviso(el.dataset.v === 'manual' ? 'Modo manual: digite os números na aba Progressão.' : 'Modo automático: os números seguem o livro.', 'info');
     },
+    // Vizard: Hollowficação (duração em rodadas, 1 uso por descanso curto, Convicção para estender ou recuperar).
+    'sh-hollow'(el) {
+      const x = docDe(el); if (!x || el.closest('.leitura')) return; const h = x.o, v = el.dataset.v, X = HB.SH;
+      const gasta = n => { if ((h.conviccao | 0) < n) { UI.aviso(`Convicção insuficiente: precisa de ${n}.`, 'info'); return false; } h.conviccao = (h.conviccao | 0) - n; return true; };
+      if (v === 'ativar') { const r = X.duracaoHollow(h).rodadas; if (!r) return UI.aviso('Com a Bankai ativa a máscara não se sustenta (duração 0).', 'info'); h.hollowAtiva = true; h.hollowUsada = true; h.hollowRodadas = r; UI.aviso('Hollowficação ativa: ' + r + ' rodada(s).', 'info'); }
+      if (v === 'rodada') { h.hollowRodadas = Math.max(0, (h.hollowRodadas | 0) - 1); if (!h.hollowRodadas) { h.hollowAtiva = false; UI.aviso('A máscara se desfez.', 'info'); } }
+      if (v === 'estender' && gasta(1)) h.hollowRodadas = (h.hollowRodadas | 0) + 1;
+      if (v === 'encerrar') h.hollowAtiva = false;
+      if (v === 'recuperar' && gasta(4)) h.hollowUsada = false;
+      if (v === 'descanso') { h.hollowUsada = false; UI.aviso('Descanso curto: a máscara está disponível de novo.', 'info'); }
+      S.salvar(x.col, x.o, 200); render();
+    },
     'sh-multi'(el) { estado.multi = +el.dataset.v; render(); },
     'sh-passo'(el) {
       const x = docDe(el); if (!x || el.closest('.leitura')) return;
@@ -491,7 +503,8 @@
       o[k] = Math.max(lim[0], Math.min(lim[1], (o[k] | 0) + +el.dataset.d));
       S.salvar(x.col, x.o); render();
     },
-    'sh-quebra'(el) { const x = docDe(el); if (!x) return; const v = +el.dataset.v; x.o.quebras = (x.o.quebras | 0) === v ? v - 1 : v; S.salvar(x.col, x.o, 300); render(); if (x.o.quebras >= 3) UI.aviso('Três Quebras: o destino foi destruído. Converse com o mestre.', 'info'); },
+    'sh-quebra'(el) { const x = docDe(el); if (!x) return; const v = +el.dataset.v, antes = x.o.quebras | 0; x.o.quebras = antes === v ? v - 1 : v;
+      if (x.o.quebras > antes && x.o.hollowAtiva) { x.o.hollowAtiva = false; UI.aviso('A Quebra encerrou a Hollowficação.', 'info'); } S.salvar(x.col, x.o, 300); render(); if (x.o.quebras >= 3) UI.aviso('Três Quebras: o destino foi destruído. Converse com o mestre.', 'info'); },
     'sh-adicionar'(el) {
       const x = docDe(el); if (!x) return; const k = el.dataset.campo;
       const doSis = SI.de(x.o).novoItem && SI.de(x.o).novoItem(x.col, k);

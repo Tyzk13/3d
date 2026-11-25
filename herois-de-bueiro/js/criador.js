@@ -65,13 +65,18 @@
   function passosSH(sis) {
     const X = HB.SH, nomeP = id => X.PERICIAS.find(p => p.id === id).nome;
     const soma = h => X.TODOS.reduce((s, a) => s + X.val(h, a), 0);
-    const cri = h => (h._cri = h._cri || { divPericias: [], livres: [], trs: [], extraAttr: 'INT' });
+    const cri = h => (h._cri = Object.assign({ divPericias: [], livres: [], trs: [], extraAttr: 'INT' }, h._cri || {}));
     return [passoIdentidade(sis),
       { titulo: 'Divisão da Gotei 13 (opcional)', html: h => cartoes([{ id: 0, nome: 'Sem divisão', sub: 'Atributos: quaisquer · perícias à escolha', desc: 'Sem característica de divisão.' }]
           .concat(X.DIVISOES.map(d => ({ id: d.n, nome: X.nomeDivisao(d.n), sub: 'Atributos: ' + (d.nota || d.attrs.map(X.nomeAttr).join(' e ')), desc: d.car }))), 'divisao', h.divisao | 0),
         valido: h => ok(h.divisao ? X.nomeDivisao(h.divisao) + ' escolhida.' : 'Sem divisão. Os 3 pontos extras e as 2 perícias extras ficam livres.') },
       { titulo: 'Ponto de Partida', html: h => cartoes(Object.entries(X.PARTIDAS).map(([k, p]) => ({ id: k, nome: p.nome, sub: p.pv + ' de vida + CON · Afinidade: ' + p.afin.map(a => X.CAMINHOS.find(c => c.id === a).nome).join(' e '), desc: p.chave + '. ' + p.bonus })), 'partida', h.partida || ''),
         valido: h => (X.PARTIDAS[h.partida] ? ok(X.PARTIDAS[h.partida].nome + ' escolhido.') : falta('Escolha um Ponto de Partida.')) },
+      { titulo: 'Origem especial e clã (opcional)', html: h => `<h3>Vizard</h3>${cartoes([{ id: 'nao', nome: 'Só shinigami', desc: 'Sem poderes de hollow.' },
+            { id: 'sim', nome: 'Vizard', sub: 'com aprovação do Narrador', desc: 'Hollow interior e máscara: na Hollowficação, +1 em Força, Destreza e Constituição e acesso ao Cero. É crime digno de execução na Soul Society.' }], '_cri.vizard', (h._cri && h._cri.vizard) || 'nao')}
+          <h3>Clã</h3>${cartoes([{ id: '', nome: 'Nenhum' }].concat(Object.entries(X.CLAS).map(([k, c]) => ({ id: k, nome: c.nome, sub: 'narrativo', desc: c.texto }))), 'cla', h.cla || '')}
+          <p class="dica">Clãs podem substituir a divisão ou somar a ela, se o Narrador permitir. No livro (v0.7b) ainda não têm regras próprias.</p>`,
+        valido: h => ok([h._cri && h._cri.vizard === 'sim' ? 'Vizard' : 'Shinigami', h.cla ? X.CLAS[h.cla].nome : ''].filter(Boolean).join(' · ') + '.') },
       { titulo: 'Atributos', html: h => { const div = X.DIVISOES.find(d => d.n === (h.divisao | 0)), man = h.modoCalc === 'manual', t = soma(h);
           return `${man ? '<p class="dica">Manual: valores livres de −5 a 10.</p>' : `<p class="pontos-grande ${t > 10 ? 'ruim' : t === 10 ? 'ok' : ''}">${t} / 10 pontos (7 iniciais + 3 ${div ? 'da divisão' : 'extras'}) · máximo 4 em um atributo</p>
             <p class="dica">${div ? 'Pontos da divisão: ' + esc(div.nota || div.attrs.map(X.nomeAttr).join(' e ')) : 'Sem divisão: os 3 pontos extras vão em quaisquer atributos'} (no máximo 2 no mesmo).</p>`}
@@ -99,12 +104,14 @@
       { titulo: 'Resumo', html: h => { const d = X.derivados(h), c = cri(h);
           return `<div class="cri-resumo">${linha('Divisão · Partida', esc(sis.nomeClasse(h)))}${linha('Vida', d.pvMax)}${linha('Reiryoku', d.manaMax)}${linha('Defesa', d.defesa)}${linha('Bônus de treino', '+' + d.bt)}
             ${linha('Perícias treinadas', esc(c.divPericias.concat(c.livres).map(nomeP).join(', ') || '—'))}${linha('Testes treinados', esc(c.trs.map(t => X.TRS.find(x => x.id === t).nome).join(', ') || '—'))}
+            ${linha('Origem', esc((c.vizard === 'sim' ? 'Shinigami · Vizard' : 'Shinigami') + (h.cla ? ' · ' + X.CLAS[h.cla].nome : '')))}
             ${linha('Zanpakuto', esc((h.zanpakuto.nome || 'sem nome') + ' · ' + X.FORMAS[h.zanpakuto.forma].nome))}</div><p class="dica">Kidos, habilidades e foto você completa na ficha. Começa com 50 mil Kan.</p>`; },
         valido: () => ok('Tudo certo. Crie a ficha.') },
     ];
   }
   function finalizarSH(h) {
     const c = h._cri || {}; delete h._cri;
+    h.vizard = c.vizard === 'sim';
     (c.divPericias || []).concat(c.livres || []).forEach(id => { h.pericias[id] = { grau: 1, outros: 0 }; });
     (c.trs || []).forEach(id => { h.trs[id] = { grau: 1, outros: 0 }; });
   }

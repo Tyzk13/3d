@@ -685,3 +685,7 @@ body[data-sistema="op2"] .bloco-topo h3 { font-size: 1.15rem; }
 .glossario div { display: grid; gap: .1rem; border-left: 3px solid var(--faixa); padding-left: .6rem; }
 .glossario dt { font-weight: 700; }
 .glossario dd { margin: 0; color: var(--giz-2); font-size: .86rem; }
+.bloco.vizard.ativa { border-color: #f2c94c; box-shadow: 0 0 0 1px #f2c94c inset, 0 0 18px rgba(242,201,76,.25); }
+.selo-hollow { font-size: .7rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: #111; background: #f2c94c; padding: .15rem .5rem; border-radius: 4px; }
+.hollow-contador { margin: 0; font-size: .9rem; } .hollow-contador b { font-size: 1.6rem; color: #f2c94c; }
+.item.cero { border-color: #f2c94c; }

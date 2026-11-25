@@ -84,7 +84,24 @@
   const aumentosAte = n => AUMENTOS.filter(m => m <= n).length;
   const mestrias = n => [6, 12, 18].filter(m => m <= n).length;
 
-  const val = (h, a) => ((h.atributos || {})[a] | 0);
+  // ---------- Vizard (origem especial, por cima de Shinigami) ----------
+  const hollowAtiva = h => !!(h && h.vizard && h.hollowAtiva);
+  const bonusHollow = h => (hollowAtiva(h) ? ((h.vizardTreino | 0) >= 4 ? 2 : 1) : 0); // FOR, DES e CON
+  const bonusTestesHollow = h => (hollowAtiva(h) && (h.vizardTreino | 0) >= 2 ? 1 : 0); // treino etapa 2: +1 em todos os testes
+  function duracaoHollow(h) {
+    const t = h.vizardTreino | 0, z = (h.zanpakuto || {}).estado;
+    const rodadas = Math.max(0, 2 + (t >= 1 ? 1 : 0) + (t >= 3 ? 2 : 0) - (z === 'shikai' ? 1 : z === 'bankai' ? 3 : 0));
+    return { rodadas, minutos: 3 + (t >= 1 ? 1 : 0) + (t >= 3 ? 2 : 0) };
+  }
+  const TREINO_VIZARD = ['+1 rodada em combate e +1 minuto fora dele', '+1 em todos os testes com a Hollowficação ativa', '+2 rodadas em combate e +2 minutos fora dele', 'Força, Destreza e Constituição +2 (em vez de +1) na Hollowficação'];
+  // Clãs: no livro (v0.7b) só têm descrição; podem substituir a divisão ou somar a ela, com aval do Narrador.
+  const CLAS = {
+    homemlobo: { nome: 'Clã dos Homem-Lobo', texto: 'Almas "pecaminosas" em exílio auto imposto na Soul Society, punidas com uma forma meio homem, meio lobo.' },
+    ise: { nome: 'Clã Ise', texto: 'Linhagem de sacerdotes que conduz rituais. Só nascem mulheres; os maridos morrem cedo (Maldição Ise). Não têm zanpakuto individual: a líder herda a espada sagrada do clã.' },
+    kuchiki: { nome: 'Clã Kuchiki', texto: 'Uma das Quatro Grandes Famílias Nobres, encarregada de compilar e proteger a história da Soul Society.' },
+  };
+  const valBase = (h, a) => ((h.atributos || {})[a] | 0);
+  const val = (h, a) => valBase(h, a) + (['FOR', 'DES', 'CON'].includes(a) ? bonusHollow(h) : 0);
   function bonusPericia(h, id, bt) {
     const p = PERICIAS.find(x => x.id === id); const t = ((h.pericias || {})[id]) || {};
     const grau = t.grau | 0; // 0 nada, 1 treinado, 2 mestre
@@ -100,7 +117,7 @@
   function derivados(h) {
     const n = Math.max(1, Math.min(20, h.nivel | 0 || 1));
     const bt = bonusTreino(n), p = PARTIDAS[h.partida];
-    const CON = val(h, 'CON'), ESP = val(h, 'ESP');
+    const CON = valBase(h, 'CON'), ESP = valBase(h, 'ESP'); // a vida não muda com a Hollowficação
     const vidaNiveis = Array.from({ length: n - 1 }, (_, i) => pvPorNivel(i + 2)).reduce((a, b) => a + b, 0);
     const pvMax = (p ? p.pv : 10) + CON * (1 + marcosAte(n)) + vidaNiveis + (h.pvExtra | 0);
     const manaMax = 5 + ESP * (1 + marcosAte(n)) + 3 * (n - 1) + (h.manaExtra | 0);
@@ -108,7 +125,7 @@
     const defesa = 10 + Math.floor(n / 2) + val(h, defAttr) + (h.defExtra | 0) + (h.partida === 'duelista' && h.duelistaMao ? 1 : 0);
     const per = bonusPericia(h, 'percepcao', bt);
     const pontosAttr = 7 + 3 + 2 * aumentosAte(n);
-    const gastos = TODOS.reduce((s, a) => s + Math.max(0, val(h, a)), 0) - TODOS.reduce((s, a) => s + Math.max(0, -val(h, a)), 0);
+    const gastos = TODOS.reduce((s, a) => s + valBase(h, a), 0);
     const afinGasta = CAMINHOS.reduce((s, c) => s + ((h.afinidades || {})[c.id] | 0), 0);
     const afinTotal = n + 2; // 1 ponto de progressão por nível + 2 do Ponto de Partida
     const cdAttr = h.cdAttr || 'ESP', kidoAttr = h.kidoAttr || 'INT';
@@ -177,7 +194,7 @@
   const limiteInimigo = n => 4 + 2 * Math.floor(n / 6);
 
   HB.SH = {
-    ATRIBUTOS, TODOS, nomeAttr, PERICIAS, TRS, CAMINHOS, GLOSSARIO, SEM_DIVISAO, graduacao, PARTIDAS, DIVISOES, nomeDivisao, FORMAS, TIPOS_ZANPAKUTO, TIPOS_DANO, CONDICOES,
+    ATRIBUTOS, TODOS, nomeAttr, PERICIAS, TRS, CAMINHOS, GLOSSARIO, SEM_DIVISAO, hollowAtiva, bonusHollow, bonusTestesHollow, duracaoHollow, TREINO_VIZARD, CLAS, valBase, graduacao, PARTIDAS, DIVISOES, nomeDivisao, FORMAS, TIPOS_ZANPAKUTO, TIPOS_DANO, CONDICOES,
     bonusTreino, pvPorNivel, MARCOS, AUMENTOS, limiteAttr, val, bonusPericia, bonusTR, derivados,
     rolarExpr, testeD20, jogadaAtaque, G, PERFIS, limiteInimigo,
     sinal: n => (n >= 0 ? '+' : '−') + Math.abs(n),

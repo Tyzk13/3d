@@ -30,16 +30,25 @@
   }
   function ataquesDe(o) {
     if (ehVilao(o)) return (o.ataques || []).map(a => ({ nome: a.nome || 'Ataque', acerto: a.acerto | 0, dano: a.dano || '1d6', bonusDano: 0, margem: a.margem | 0 || 20, tipoDano: a.tipoDano || '', obs: a.obs || '' }));
-    const d = X.derivados(o);
-    return [ataqueZanpakuto(o, d)].concat((o.ataques || []).map(a => {
+    const d = X.derivados(o), bh = X.bonusTestesHollow(o);
+    const lista = [ataqueZanpakuto(o, d)].concat((o.ataques || []).map(a => {
       const attr = a.attr || (a.tipo === 'distancia' ? 'DES' : a.tipo === 'espiritual' ? 'ESP' : 'FOR');
       return { nome: a.nome || 'Ataque', acerto: X.val(o, attr) + d.bt + (a.bonusAtk | 0), dano: a.dano || '1d4', bonusDano: (a.tipo === 'espiritual' ? 0 : X.val(o, attr)) + (a.bonus | 0), margem: a.margem | 0 || 20, tipoDano: a.tipoDano || '', obs: a.obs || '', leve: !!a.leve };
     }));
+    // Hollowficação: libera o Cero (o livro não dá o dano: a mesa define na ficha).
+    if (X.hollowAtiva(o)) lista.push({ nome: 'Cero', acerto: X.val(o, 'ESP') + d.bt, dano: (o.cero || {}).dano || '0', bonusDano: 0, margem: 20, tipoDano: 'Energético', obs: (o.cero || {}).dano ? 'Hollowficação' : 'defina o dano do Cero no bloco Vizard', cero: true });
+    lista.forEach(a => (a.acerto += bh));
+    return lista;
   }
   const penalidade = (multi, leve) => [0, leve ? -4 : -5, leve ? -8 : -10][Math.max(0, Math.min(2, multi | 0))];
 
   // ---------- Testes ----------
   function teste(o, id, opts = {}) {
+    const r = testeBase(o, id, opts), bh = ehVilao(o) ? 0 : X.bonusTestesHollow(o);
+    if (r && bh) { r.total += bh; r.bonus += bh; r.formula += ' + 1'; r.nota = [r.nota, 'Hollowficação +1'].filter(Boolean).join(' · '); }
+    return r;
+  }
+  function testeBase(o, id, opts = {}) {
     const quem = o.nome || '';
     if (ehVilao(o)) {
       if (X.TODOS.includes(id)) return X.testeD20(quem, X.nomeAttr(id), X.val(o, id));
@@ -76,7 +85,7 @@
     return {
       pvMax: v ? o.pvMax | 0 : d.pvMax, manaMax: v ? o.manaMax | 0 : d.manaMax, def: v ? o.defesa | 0 : d.defesa, dureza: v ? o.dureza | 0 : d.dureza,
       agi: X.val(o, 'DES'), ordemClasse: 0, iniBonus: v ? o.percepcao | 0 : d.percepcao,
-      linha: v ? (o.categoria || 'Ameaça') + ' · Nível ' + (o.nivel | 0 || 1) : nomeClasse(o),
+      linha: v ? (o.categoria || 'Ameaça') + ' · Nível ' + (o.nivel | 0 || 1) : nomeClasse(o) + (X.hollowAtiva(o) ? ' · Hollowficação ativa' : ''),
       numeros: v ? [['Defesa', o.defesa | 0], ['Dureza', o.dureza | 0], ['CD', o.cd | 0], ['Percepção', sn(o.percepcao | 0)]]
         : [['Defesa', d.defesa], ['Dureza', d.dureza], ['Treino', '+' + d.bt], ['CD Classe', d.cdClasse], ['CD Kido', d.cdKido]],
       testes, escudo: testes.slice(0, 6),
@@ -113,7 +122,7 @@
     if (sobraAttr > 0) pend.push(`distribua ${sobraAttr} ponto${sobraAttr > 1 ? 's' : ''} de atributo`);
     if (sobraAttr < 0) pend.push(`${-sobraAttr} ponto${sobraAttr < -1 ? 's' : ''} de atributo acima do total`);
     if (sobraAfin > 0) pend.push(`distribua ${sobraAfin} de Afinidade nos Caminhos`);
-    if (X.TODOS.some(a => X.val(h, a) > d.limite)) pend.push(`atributo acima do limite ${d.limite}`);
+    if (X.TODOS.some(a => X.valBase(h, a) > d.limite)) pend.push(`atributo acima do limite ${d.limite}`);
     return `<section class="pagina ficha sh ${pode ? '' : 'leitura'}" data-doc="herois:${esc(h.id)}">
       ${pode ? '' : `<p class="faixa">Ficha de ${esc(HB.A.nome(h.dono))}. Você pode ver e rolar, mas só o dono e o mestre da campanha mudam os números.</p>`}
       <div class="ficha-topo">
@@ -150,6 +159,7 @@
             <div class="q-linha"><span>Quebras</span>${[1, 2, 3].map(i => `<button class="quebra ${i <= (h.quebras | 0) ? 'on' : ''}" data-act="sh-quebra" data-v="${i}" aria-label="Quebra ${i}">${i <= (h.quebras | 0) ? '✕' : ''}</button>`).join('')}</div>
             <div class="q-linha"><span>Convicção</span>${passo('conviccao', h.conviccao | 0, 'Convicção')}</div>
             <p class="dica">Três Quebras destroem o destino. Um descanso longo tira uma.</p></div>
+          ${h.vizard ? blocoVizard(h) : ''}
           <div class="condicoes" aria-label="Condições">${X.CONDICOES.map(x => `<button class="cond ${(h.condicoes || []).includes(x) ? 'on' : ''}" data-act="condicao" data-v="${x}" aria-pressed="${(h.condicoes || []).includes(x)}">${x}</button>`).join('')}</div>
         </div>
 
@@ -175,6 +185,11 @@
           <div class="bloco"><div class="bloco-topo"><h3>Origem</h3></div>
             ${div ? `<p class="regra"><b>${X.nomeDivisao(div.n)}.</b> ${esc(div.car)}</p>` : `<p class="regra"><b>Sem divisão.</b> ${esc(X.SEM_DIVISAO.replace('Sem divisão: os', 'Os'))}</p>`}
             ${part ? `<p class="regra"><b>${part.nome}.</b> ${part.pv} de vida inicial + CON. ${esc(part.chave)}. ${esc(part.bonus)}</p>` : ''}
+            ${h.cla && X.CLAS[h.cla] ? `<p class="regra"><b>${esc(X.CLAS[h.cla].nome)}.</b> ${esc(X.CLAS[h.cla].texto)} <small>(narrativo: o livro ainda não dá regras para os clãs)</small></p>` : ''}
+            <div class="escolhas">
+              <label class="campo"><span>Clã (opcional)</span><select id="s-cla" data-f="cla" data-re><option value="">Nenhum</option>${Object.entries(X.CLAS).map(([k, c]) => `<option value="${k}" ${k === h.cla ? 'selected' : ''}>${esc(c.nome)}</option>`).join('')}</select></label>
+              <label class="interruptor"><input id="s-vizard" type="checkbox" data-f="vizard" ${h.vizard ? 'checked' : ''}><span>Vizard (origem especial: Hollowficação)</span></label>
+            </div>
             <div class="escolhas">
               <label class="campo"><span>Atributo da CD de Classe</span><select id="s-cdattr" data-f="cdAttr" data-re>${X.TODOS.map(a => `<option ${a === d.cdAttr ? 'selected' : ''}>${a}</option>`).join('')}</select></label>
               <label class="campo"><span>Atributo do Kido</span><select id="s-kidoattr" data-f="kidoAttr" data-re>${['INT', 'SAB', 'ESP'].map(a => `<option ${a === d.kidoAttr ? 'selected' : ''}>${a}</option>`).join('')}</select></label>
@@ -222,6 +237,8 @@
           <div class="ataque-resumo"><span><small>Acerto</small> 1d20 ${sn(atq[i + 1].acerto)}</span><span><small>Dano</small> ${esc(atq[i + 1].dano)} ${sn(atq[i + 1].bonusDano)}</span></div>
           <input id="sa-o-${i}" data-f="ataques.${i}.obs" value="${esc(a.obs || '')}" placeholder="Tipo de dano, alcance, traços…">
           <button class="icone apagar-item" data-act="remover-item" data-campo="ataques" data-i="${i}" aria-label="Remover ataque">✕</button></div>`).join('')}</div>
+        ${X.hollowAtiva(h) ? `<div class="item ataque cero"><div class="item-topo"><b class="item-nome">Cero <small class="trad">Hollowficação</small></b><button class="btn pequeno primario" data-act="rolar-ataque" data-i="${atq.length - 1}">Atacar</button></div>
+          <div class="ataque-resumo"><span><small>Acerto</small> 1d20 ${sn(atq[atq.length - 1].acerto)}</span><span><small>Dano</small> ${esc((h.cero || {}).dano || 'defina no bloco Vizard')}</span></div></div>` : ''}
         <button class="btn largo" data-act="sh-adicionar" data-campo="ataques">Novo ataque</button>
         <p class="dica">20 natural sobe um grau (erro vira acerto, acerto vira crítico); crítico dobra o dano. 1 natural é Desastre.</p>`;
     }
@@ -256,6 +273,23 @@
         <label class="campo mini"><span>Qtd</span><input id="iv-q-${i}" type="number" data-f="inventario.${i}.qtd" value="${x.qtd == null ? 1 : x.qtd}"></label></div><input id="iv-d-${i}" data-f="inventario.${i}.desc" value="${esc(x.desc || '')}" placeholder="Detalhes">`);
     const campos = [['aspectos', 'Aspectos', 3], ['filosofia', 'Filosofia', 2], ['ligacoes', 'Ligações', 3], ['objetivos', 'Objetivos', 3], ['historia', 'História', 5], ['ferimentos', 'Ferimentos', 2], ['notas', 'Anotações', 3]];
     return campos.map(([k, n, r]) => `<label class="campo"><span>${n}</span><textarea id="p-${k}" rows="${r}" data-f="pessoal.${k}">${esc((h.pessoal || {})[k] || '')}</textarea></label>`).join('');
+  }
+
+  function blocoVizard(h) {
+    const ativa = X.hollowAtiva(h), dur = X.duracaoHollow(h), t = h.vizardTreino | 0, b = X.bonusHollow(h) || ((t >= 4) ? 2 : 1);
+    return `<div class="bloco vizard ${ativa ? 'ativa' : ''}"><div class="bloco-topo"><h3>Vizard <small class="trad">Hollowficação</small></h3>${ativa ? '<span class="selo-hollow">Máscara ativa</span>' : ''}</div>
+      <label class="interruptor"><input id="s-vz-ctrl" type="checkbox" data-f="vizardControle" ${h.vizardControle ? 'checked' : ''}><span>Hollow interior dominado (máscara controlada)</span></label>
+      ${h.vizardControle ? '' : '<p class="dica">Sem dominar o hollow interior, a Hollowficação surge sozinha, quando o Narrador decidir. Domine com o Foco Especial "Confrontar Hollow Interior" num interlúdio.</p>'}
+      <label class="campo"><span>Máscara (forma e aparência)</span><input id="s-vz-mask" data-f="mascara" value="${esc(h.mascara || '')}" placeholder="Crânio de chacal, chifres partidos…"></label>
+      <p class="regra">Na Hollowficação: Força, Destreza e Constituição +${b}${t >= 2 ? ', +1 em todos os testes' : ''}, Cero liberado, habilidades de Liberação Espiritual com +1 dado e CD +2. Dura <b>${dur.rodadas} rodada${dur.rodadas === 1 ? '' : 's'}</b> em combate ou ${dur.minutos} minutos fora dele. 1 uso por descanso curto.</p>
+      ${ativa ? `<p class="hollow-contador"><b>${h.hollowRodadas | 0}</b> rodada${(h.hollowRodadas | 0) === 1 ? '' : 's'} restante${(h.hollowRodadas | 0) === 1 ? '' : 's'}</p>
+        <div class="barra-acoes"><button class="btn pequeno" data-act="sh-hollow" data-v="rodada">Passar rodada</button><button class="btn pequeno" data-act="sh-hollow" data-v="estender">Estender +1 rodada (1 Convicção)</button>
+          <button class="btn pequeno perigo-txt" data-act="sh-hollow" data-v="encerrar" ${h.vizardControle ? '' : 'disabled title="Precisa dominar o hollow interior para desfazer"'}>Desfazer máscara</button></div>`
+        : `<div class="barra-acoes"><button class="btn pequeno primario" data-act="sh-hollow" data-v="ativar" ${h.hollowUsada ? 'disabled' : ''}>Ativar Hollowficação</button>
+          ${h.hollowUsada ? '<button class="btn pequeno" data-act="sh-hollow" data-v="recuperar">Recuperar máscara (4 Convicção)</button><button class="btn pequeno" data-act="sh-hollow" data-v="descanso">Descanso curto</button>' : ''}</div>`}
+      <div class="escolhas"><label class="campo"><span>Dano do Cero</span><input id="s-vz-cero" data-f="cero.dano" value="${esc((h.cero || {}).dano || '')}" placeholder="combine com o Narrador, ex.: 2d8"></label>
+        <label class="campo"><span>Treino de Vizard</span><select id="s-vz-treino" data-f="vizardTreino" data-num data-re><option value="0">Sem treino</option>${X.TREINO_VIZARD.map((x, i) => `<option value="${i + 1}" ${t === i + 1 ? 'selected' : ''}>${i + 1}ª etapa: ${esc(x)}</option>`).join('')}</select></label></div>
+    </div>`;
   }
 
   // ---------- Ameaças (hollows) ----------
@@ -354,6 +388,10 @@
         <p>20 natural sobe um grau; crítico dobra o dano. 1 natural é Desastre: erra e os inimigos ao alcance podem atacar como reação. Dano = dado + atributo + bônus − Dureza.</p></article>
       <article class="bloco"><h2>Ferimentos e destino</h2><p>Em 0 de vida o personagem fica Inconsciente e recebe uma Quebra e um Ferimento. Três Quebras destroem o destino. Um descanso longo remove uma Quebra.</p>
         ${t(['Nível', 'Vida', 'Reiryoku'], [['1', 'Partida + CON', '5 + ESP'], ['2–4', '+5', '+3'], ['5', '+5 + CON', '+3 + ESP'], ['6–8', '+5', '+3'], ['9', '+6 + CON', '+3 + ESP'], ['10–16', '+6 (+CON no 13)', '+3 (+ESP no 13)'], ['17–20', '+7 (+CON no 17)', '+3 (+ESP no 17)']])}</article>
+      <article class="bloco"><h2>Vizard</h2><p>Origem especial, por cima da de Shinigami, na criação (com aprovação) ou durante o jogo. Não dá atributos nem perícias, só a <b>Hollowficação</b>: hollow interior, máscara, Força, Destreza e Constituição +1, Cero e habilidades de Liberação Espiritual com +1 dado e CD +2. Dura 2 rodadas em combate (−1 com Shikai, −3 com Bankai) ou 3 minutos fora dele; 1 uso por descanso curto; acaba ao receber uma Quebra. Convicção: Estender (1) e Recuperar Máscara (4).</p>
+        <div class="tabela-rolagem"><table class="tabela-regra"><thead><tr><th>Treino de Vizard</th><th>Benefício</th></tr></thead><tbody>${X.TREINO_VIZARD.map((t, i) => `<tr><td>${i + 1}ª etapa</td><td>${esc(t)}</td></tr>`).join('')}</tbody></table></div></article>
+      <article class="bloco"><h2>Clãs</h2><p>Opções que podem substituir a divisão ou somar a ela, com aval do Narrador; somando, escolhe-se só uma lista de perícias e de atributos. Nesta versão do livro só têm descrição:</p>
+        <ul class="elementos">${Object.values(X.CLAS).map(c => `<li style="--el:var(--faixa)"><b>${esc(c.nome)}</b>: ${esc(c.texto)}</li>`).join('')}</ul></article>
       <article class="bloco largo"><h2>Glossário</h2><p class="sub">Termos do Bleach que o livro mantém em japonês.</p><dl class="glossario">${X.GLOSSARIO.map(([t, s]) => `<div><dt>${esc(t)}</dt><dd>${esc(s)}</dd></div>`).join('')}</dl></article>
       <article class="bloco"><h2>Caminhos</h2><p>${X.CAMINHOS.map(c => c.rotulo).join(', ')}. Afinidade 1–2 Aprendiz, 3–4 Iniciado, 5–6 Intermediário, 7–9 Avançado, 10 Mestre. Cada Graduação nova dá um Marco de Progresso, se você tiver a Habilidade Chave do Caminho.</p></article>
       </div></section>`;
@@ -397,6 +435,8 @@
           '<b>Perícias:</b> treinado em 3 à escolha, mais tantas quanto o valor de INT ou SAB (escolha definitiva na criação).',
           '<b>Testes de resistência:</b> treinado em 2.',
           '<b>Zanpakuto</b> (forma selada à escolha) e <b>50 mil Kan</b>.',
+          h.vizard ? '<b>Vizard:</b> hollow interior e Hollowficação (Força, Destreza e Constituição +1, Cero); 1 uso por descanso curto.' : '<b>Vizard</b> (opcional, com aprovação): origem especial com a Hollowficação.',
+          h.cla && X.CLAS[h.cla] ? `<b>${esc(X.CLAS[h.cla].nome)}</b> (narrativo).` : '<b>Clã</b> (opcional, narrativo): Homem-Lobo, Ise ou Kuchiki.',
           `<b>Recursos:</b> Reiryoku = 5 + ESP; Defesa = 10 + metade do nível + DES ou FOR; Atenção = 10 + Percepção; Deslocamento 9 m; bônus de treinamento +2.`,
         ],
         tabela: { colunas: ['Nível', 'Ganhos', 'Vida', 'Reiryoku', 'Treino'], linhas },
