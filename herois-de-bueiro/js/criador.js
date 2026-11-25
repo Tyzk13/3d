@@ -90,7 +90,8 @@
       { titulo: 'Testes de resistência', html: h => { const c = cri(h), man = h.modoCalc === 'manual'; return `<p class="dica">${man ? 'Manual: marque os treinados.' : 'Escolha 2 para ser treinado.'}</p>${chips(X.TRS.map(t => ({ id: t.id, nome: t.nome + ' (' + t.attr + ')' })), '_cri.trs', c.trs, man ? 0 : 2)}`; },
         valido: h => { const c = cri(h); return h.modoCalc === 'manual' || c.trs.length === 2 ? ok('Testes escolhidos.') : falta('Escolha ' + (2 - c.trs.length) + ' teste(s).'); } },
       { titulo: 'Zanpakuto', html: h => { const z = h.zanpakuto;
-          return `<label class="campo"><span>Nome do espírito</span><input id="cri-zan" data-w="zanpakuto.nome" value="${esc(z.nome || '')}" maxlength="200"></label>
+          return `<p class="dica"><b>Zanpakuto</b>: a espada ceifadora de almas. O nome é o do espírito que vive nela (o personagem ainda não sabe).</p>
+            <label class="campo"><span>Nome do espírito</span><input id="cri-zan" data-w="zanpakuto.nome" value="${esc(z.nome || '')}" maxlength="200"></label>
             <h3>Forma selada</h3>${cartoes(Object.entries(X.FORMAS).map(([k, f]) => ({ id: k, nome: f.nome, sub: f.dano + ' ' + f.tipo.toLowerCase() + ' · crítico ' + f.crit + (f.crit < 20 ? '–20' : ''), desc: f.tracos })), 'zanpakuto.forma', z.forma)}
             <h3>Tipo</h3>${cartoes(X.TIPOS_ZANPAKUTO.map(t => ({ id: t, nome: t })), 'zanpakuto.tipo', z.tipo || '')}`; },
         valido: h => (h.zanpakuto.tipo ? ok('Zanpakuto pronta. Shikai e bankai vêm com o tempo.') : falta('Escolha o tipo da zanpakuto.')) },
@@ -152,7 +153,7 @@
       const gastos = X.TODOS.reduce((s, a) => s + ((t.attrs || {})[a] | 0), 0);
       return { titulo: `Subir para o nível ${n}`, max: n > 20, itens: [
         `<div class="cri-resumo">${linha('Vida', '+' + X.pvPorNivel(n) + (marco ? ' + CON (' + (X.pvPorNivel(n) + X.val(h, 'CON')) + ')' : ''))}${linha('Reiryoku', '+3' + (marco ? ' + ESP (' + (3 + X.val(h, 'ESP')) + ')' : ''))}${linha('Bônus de treino', '+' + X.bonusTreino(n) + (X.bonusTreino(n) > d.bt ? ' (sobe!)' : ''))}${n === 10 ? linha('Limite de atributo', '10') : ''}</div>`,
-        `<h3>Ponto de Progressão</h3><p class="dica">+1 de Afinidade num Caminho e uma habilidade ou aptidão.</p>${cartoes(X.CAMINHOS.map(c => ({ id: c.id, nome: c.nome, sub: 'Afinidade ' + ((h.afinidades || {})[c.id] | 0) + ' → ' + (((h.afinidades || {})[c.id] | 0) + 1) + ' (' + X.graduacao(((h.afinidades || {})[c.id] | 0) + 1) + ')' })), 'caminho', t.caminho || '')}
+        `<h3>Ponto de Progressão</h3><p class="dica">+1 de Afinidade num Caminho e uma habilidade ou aptidão.</p>${cartoes(X.CAMINHOS.map(c => ({ id: c.id, nome: c.rotulo, sub: 'Afinidade ' + ((h.afinidades || {})[c.id] | 0) + ' → ' + (((h.afinidades || {})[c.id] | 0) + 1) + ' (' + X.graduacao(((h.afinidades || {})[c.id] | 0) + 1) + ')' })), 'caminho', t.caminho || '')}
           <label class="campo"><span>Habilidade ou aptidão escolhida (opcional)</span><input id="nv-hab" data-w="hab" value="${esc(t.hab || '')}" maxlength="200" placeholder="Ex.: Golpes Precisos"></label>`,
         aum ? `<h3>Aumento de Atributo: 2 pontos <small>${gastos}/2</small></h3><div class="cri-attrs">${X.ATRIBUTOS.map(a => `<div class="cri-attr"><b>${a.nome} ${X.sinal(X.val(h, a.id))}</b>${passo('attrs.' + a.id, '+' + ((t.attrs || {})[a.id] | 0), a.nome, 0, 2)}</div>`).join('')}</div>` : '',
         mest ? `<h3>Mestre em uma perícia</h3>${treinadas.length ? cartoes(treinadas.map(p => ({ id: p.id, nome: p.nome })), 'mestre', t.mestre || '') : '<p class="dica">Nenhuma perícia treinada para virar mestre.</p>'}` : ''],

@@ -679,3 +679,9 @@ body[data-sistema="op2"] .bloco-topo h3 { font-size: 1.15rem; }
 .cri-rodape > span { display: flex; gap: .5rem; }
 .link { background: none; border: 0; color: var(--faixa); text-decoration: underline; cursor: pointer; font: inherit; padding: 0; }
 .prog > .btn.primario { justify-self: start; }
+.trad { color: var(--giz-2); font-weight: 500; font-size: .74em; font-family: var(--f-texto); letter-spacing: 0; text-transform: none; }
+.recursos h4 small { text-transform: none; letter-spacing: 0; font-weight: 500; }
+.glossario { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: .5rem .9rem; margin: 0; }
+.glossario div { display: grid; gap: .1rem; border-left: 3px solid var(--faixa); padding-left: .6rem; }
+.glossario dt { font-weight: 700; }
+.glossario dd { margin: 0; color: var(--giz-2); font-size: .86rem; }

@@ -19,7 +19,18 @@
   ].map(([id, nome, attr, treino]) => ({ id, nome, attr, treino: !!treino }));
   const TRS = [{ id: 'fortitude', nome: 'Fortitude', attr: 'CON' }, { id: 'reflexos', nome: 'Reflexos', attr: 'DES' }, { id: 'vontade', nome: 'Vontade', attr: 'SAB' }];
 
-  const CAMINHOS = [{ id: 'zanjutsu', nome: 'Zanjutsu' }, { id: 'hakuda', nome: 'Hakuda' }, { id: 'hoho', nome: 'Hoho' }, { id: 'kido', nome: 'Kido' }];
+  // Termos do Bleach mantidos como no livro, com a tradução ao lado.
+  const CAMINHOS = [{ id: 'zanjutsu', nome: 'Zanjutsu', trad: 'esgrima' }, { id: 'hakuda', nome: 'Hakuda', trad: 'luta corporal' }, { id: 'hoho', nome: 'Hoho', trad: 'passos rápidos' }, { id: 'kido', nome: 'Kido', trad: 'artes espirituais' }];
+  CAMINHOS.forEach(c => (c.rotulo = c.nome + ' (' + c.trad + ')'));
+  const GLOSSARIO = [
+    ['Zanpakuto', 'espada ceifadora de almas; carrega o espírito que dá poder ao shinigami'], ['Shikai', 'liberação inicial da zanpakuto'], ['Bankai', 'liberação final da zanpakuto'],
+    ['Zankensoki', 'as quatro artes de combate dos shinigamis'], ['Zanjutsu', 'esgrima com a zanpakuto'], ['Hakuda', 'luta corporal'], ['Hoho', 'passos rápidos (deslocamento e esquiva)'],
+    ['Kido', 'artes espirituais'], ['Hado', 'kido de ataque (destruição)'], ['Bakudo', 'kido de contenção (amarração)'], ['Kaido', 'kido de cura'],
+    ['Reiryoku', 'energia espiritual (o recurso da ficha)'], ['Reiatsu', 'pressão espiritual, a reiryoku sentida no ar'], ['Shunko', 'técnica que une Hakuda e Kido (clarão veloz)'],
+    ['Gotei 13', 'as treze divisões de shinigamis'], ['Onmitsukido', 'força secreta da 2ª Divisão'], ['Soul Society', 'mundo das almas'], ['Seireitei', 'cidade dos shinigamis, na Soul Society'],
+    ['Rukongai', 'distritos das almas comuns em volta da Seireitei'], ['Hollow', 'alma corrompida que devora outras'], ['Menos', 'hollow gigante'], ['Vizard', 'shinigami com poderes de hollow'],
+    ['Saketsu', 'núcleo de poder do shinigami (ligado às Quebras)'], ['Kan', 'moeda da Soul Society'],
+  ];
   const graduacao = n => (n >= 10 ? 'Mestre' : n >= 7 ? 'Avançado' : n >= 5 ? 'Intermediário' : n >= 3 ? 'Iniciado' : n >= 1 ? 'Aprendiz' : '—');
 
   const PARTIDAS = {
@@ -164,7 +175,7 @@
   const limiteInimigo = n => 4 + 2 * Math.floor(n / 6);
 
   HB.SH = {
-    ATRIBUTOS, TODOS, nomeAttr, PERICIAS, TRS, CAMINHOS, graduacao, PARTIDAS, DIVISOES, nomeDivisao, FORMAS, TIPOS_ZANPAKUTO, TIPOS_DANO, CONDICOES,
+    ATRIBUTOS, TODOS, nomeAttr, PERICIAS, TRS, CAMINHOS, GLOSSARIO, graduacao, PARTIDAS, DIVISOES, nomeDivisao, FORMAS, TIPOS_ZANPAKUTO, TIPOS_DANO, CONDICOES,
     bonusTreino, pvPorNivel, MARCOS, AUMENTOS, limiteAttr, val, bonusPericia, bonusTR, derivados,
     rolarExpr, testeD20, jogadaAtaque, G, PERFIS, limiteInimigo,
     sinal: n => (n >= 0 ? '+' : '−') + Math.abs(n),

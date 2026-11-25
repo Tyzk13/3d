@@ -136,7 +136,7 @@
       <div class="ficha-grade">
         <div class="col-esq">
           ${hexagono(h, d.limite)}
-          <div class="recursos"><h4>Vida</h4>${UI.barra('pv', pvAtual(h, d), d.pvMax, 'heroi:' + h.id)}<h4>Reiryoku</h4>${UI.barra('mana', manaAtual(h, d), d.manaMax, 'heroi:' + h.id)}</div>
+          <div class="recursos"><h4>Vida</h4>${UI.barra('pv', pvAtual(h, d), d.pvMax, 'heroi:' + h.id)}<h4 title="energia espiritual">Reiryoku <small>(energia espiritual)</small></h4>${UI.barra('mana', manaAtual(h, d), d.manaMax, 'heroi:' + h.id)}</div>
           <div class="defesa-linha">
             <div class="escudo"><b>${d.defesa}</b><small>Defesa</small></div>
             <div class="defesa-conta">10 + ${Math.floor(d.n / 2)} (nível) + <select id="s-defattr" data-f="defAttr" data-re aria-label="Atributo da defesa"><option value="DES" ${d.defAttr === 'DES' ? 'selected' : ''}>DES ${sn(X.val(h, 'DES'))}</option><option value="FOR" ${d.defAttr === 'FOR' ? 'selected' : ''}>FOR ${sn(X.val(h, 'FOR'))}</option></select>
@@ -170,8 +170,8 @@
               <td>${selGrau('pericias.' + p.id + '.grau', b.grau, 'pe-' + p.id)}</td><td><input id="pe-o-${esc(p.id)}" class="num" type="number" data-f="pericias.${esc(p.id)}.outros" data-re value="${((h.pericias || {})[p.id] || {}).outros | 0}" aria-label="Outros"></td>
               <td><button class="btn-dado" data-act="rolar-attr" data-attr="${esc(p.id)}" ${b.bloqueada ? 'title="Exige treinamento"' : ''}>${sn(b.total)}</button></td></tr>`; }).join('')}</tbody></table></div>
             <p class="dica">* exige treinamento. Três perícias na criação, mais as da divisão (${div && div.pericias ? esc(div.pericias.map(id => X.PERICIAS.find(p => p.id === id).nome).join(', ')) : 'duas à escolha'}) e mais INT ou SAB.</p></div>
-          <div class="bloco"><div class="bloco-topo"><h3>Caminhos do Zankensoki</h3><span class="pontos ${sobraAfin < 0 ? 'ruim' : sobraAfin === 0 ? 'ok' : ''}">${d.afinGasta} / ${d.afinTotal}</span></div>
-            <div class="caminhos">${X.CAMINHOS.map(c => { const n = (h.afinidades || {})[c.id] | 0; return `<div class="caminho"><b>${c.nome}</b>${passo('afinidades.' + c.id, n, c.nome)}<span class="grad">${X.graduacao(n)}</span></div>`; }).join('')}</div>
+          <div class="bloco"><div class="bloco-topo"><h3>Caminhos do Zankensoki <small class="trad">(artes de combate)</small></h3><span class="pontos ${sobraAfin < 0 ? 'ruim' : sobraAfin === 0 ? 'ok' : ''}">${d.afinGasta} / ${d.afinTotal}</span></div>
+            <div class="caminhos">${X.CAMINHOS.map(c => { const n = (h.afinidades || {})[c.id] | 0; return `<div class="caminho"><b>${c.nome} <small class="trad">${c.trad}</small></b>${passo('afinidades.' + c.id, n, c.nome)}<span class="grad">${X.graduacao(n)}</span></div>`; }).join('')}</div>
             <p class="dica">O Ponto de Partida dá +1 em dois Caminhos; cada nível dá um Ponto de Progressão (+1 em um Caminho). Máximo 10.</p></div>
           <div class="bloco"><div class="bloco-topo"><h3>Origem</h3></div>
             ${div ? `<p class="regra"><b>${X.nomeDivisao(div.n)}.</b> ${esc(div.car)}</p>` : '<p class="regra">Sem divisão.</p>'}
@@ -228,11 +228,12 @@
     }
     if (aba === 'zanpakuto') {
       const z = h.zanpakuto || {}, f = X.FORMAS[z.forma] || X.FORMAS.katana;
-      return `<label class="campo"><span>Nome do espírito</span><input id="z-nome" data-f="zanpakuto.nome" value="${esc(z.nome || '')}" placeholder="O nome que ela ainda não revelou"></label>
+      return `<p class="dica"><b>Zanpakuto</b> é a espada ceifadora de almas: o espírito dela dá poder ao shinigami. <b>Shikai</b> é a liberação inicial e <b>Bankai</b>, a liberação final.</p>
+        <label class="campo"><span>Nome do espírito</span><input id="z-nome" data-f="zanpakuto.nome" value="${esc(z.nome || '')}" placeholder="O nome que ela ainda não revelou"></label>
         <div class="escolhas">
           <label class="campo"><span>Forma selada</span><select id="z-forma" data-f="zanpakuto.forma" data-re>${Object.entries(X.FORMAS).map(([k, v]) => `<option value="${k}" ${k === (z.forma || 'katana') ? 'selected' : ''}>${v.nome}</option>`).join('')}</select></label>
           <label class="campo"><span>Tipo</span><select id="z-tipo" data-f="zanpakuto.tipo" data-re><option value="">Escolha…</option>${X.TIPOS_ZANPAKUTO.map(t => `<option ${t === z.tipo ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
-          <label class="campo"><span>Estado</span><select id="z-estado" data-f="zanpakuto.estado" data-re>${[['selada', 'Selada'], ['shikai', 'Shikai'], ['bankai', 'Bankai']].map(([k, n]) => `<option value="${k}" ${k === (z.estado || 'selada') ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
+          <label class="campo"><span>Estado</span><select id="z-estado" data-f="zanpakuto.estado" data-re>${[['selada', 'Selada'], ['shikai', 'Shikai (liberação inicial)'], ['bankai', 'Bankai (liberação final)']].map(([k, n]) => `<option value="${k}" ${k === (z.estado || 'selada') ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
           <label class="campo mini"><span>Sintonia</span><input id="z-sint" type="number" data-f="zanpakuto.sintonia" data-re value="${(z.sintonia | 0) + (h.partida === 'esgrimista' ? 0 : 0)}"></label>
         </div>
         <p class="regra">${esc(f.nome)}: ${f.dano}${f.dano2 ? ' (' + f.dano2 + ' com duas mãos)' : ''} ${f.tipo.toLowerCase()}, crítico ${f.crit}${f.crit < 20 ? '–20' : ''}. ${esc(f.tracos)}.${h.partida === 'esgrimista' ? ' Esgrimista: +1 de Sintonia.' : ''}</p>
@@ -249,7 +250,7 @@
     if (aba === 'kidos') return lista(h, 'kidos', 'Novo kido', (k, i) => `<div class="item-topo"><input id="k-n-${i}" class="item-nome" data-f="kidos.${i}.nome" value="${esc(k.nome || '')}" placeholder="Hado nº 4: Byakurai">
         <label class="campo mini"><span>Reiryoku</span><input id="k-c-${i}" type="number" data-f="kidos.${i}.custo" value="${k.custo | 0}"></label><button class="btn pequeno" data-act="sh-usar-kido" data-i="${i}">Usar</button></div>
       <textarea id="k-d-${i}" rows="2" data-f="kidos.${i}.desc" placeholder="Ações, alcance, efeito, dano, TR…">${esc(k.desc || '')}</textarea>`,
-      `Ataques espirituais usam 1d20 + ${d.kidoAttr} + treino. CD de Kido ${d.cdKido}. Usar desconta o Reiryoku.`);
+      `Kido são as artes espirituais: Hado (ataque), Bakudo (contenção) e Kaido (cura). Ataques espirituais usam 1d20 + ${d.kidoAttr} + treino. CD de Kido ${d.cdKido}. Usar desconta o Reiryoku.`);
     if (aba === 'habilidades') return lista(h, 'habilidades', 'Nova habilidade ou aptidão', (x, i) => `<div class="item-topo"><input id="hb-n-${i}" class="item-nome" data-f="habilidades.${i}.nome" value="${esc(x.nome || '')}" placeholder="Habilidade Chave do Zanjutsu"></div>
       <textarea id="hb-d-${i}" rows="2" data-f="habilidades.${i}.desc">${esc(x.desc || '')}</textarea>`, 'Habilidades de Caminho, Marcos de Progresso e Aptidões.');
     if (aba === 'inventario') return `<label class="campo mini"><span>Kan</span><input id="s-kan" type="number" data-f="kan" value="${h.kan | 0}"></label>` + lista(h, 'inventario', 'Novo item', (x, i) => `<div class="item-topo"><input id="iv-n-${i}" class="item-nome" data-f="inventario.${i}.nome" value="${esc(x.nome || '')}" placeholder="Item">
@@ -354,7 +355,8 @@
         <p>20 natural sobe um grau; crítico dobra o dano. 1 natural é Desastre: erra e os inimigos ao alcance podem atacar como reação. Dano = dado + atributo + bônus − Dureza.</p></article>
       <article class="bloco"><h2>Ferimentos e destino</h2><p>Em 0 de vida o personagem fica Inconsciente e recebe uma Quebra e um Ferimento. Três Quebras destroem o destino. Um descanso longo remove uma Quebra.</p>
         ${t(['Nível', 'Vida', 'Reiryoku'], [['1', 'Partida + CON', '5 + ESP'], ['2–4', '+5', '+3'], ['5', '+5 + CON', '+3 + ESP'], ['6–8', '+5', '+3'], ['9', '+6 + CON', '+3 + ESP'], ['10–16', '+6 (+CON no 13)', '+3 (+ESP no 13)'], ['17–20', '+7 (+CON no 17)', '+3 (+ESP no 17)']])}</article>
-      <article class="bloco"><h2>Caminhos</h2><p>Zanjutsu, Hakuda, Hoho e Kido. Afinidade 1–2 Aprendiz, 3–4 Iniciado, 5–6 Intermediário, 7–9 Avançado, 10 Mestre. Cada Graduação nova dá um Marco de Progresso, se você tiver a Habilidade Chave do Caminho.</p></article>
+      <article class="bloco largo"><h2>Glossário</h2><p class="sub">Termos do Bleach que o livro mantém em japonês.</p><dl class="glossario">${X.GLOSSARIO.map(([t, s]) => `<div><dt>${esc(t)}</dt><dd>${esc(s)}</dd></div>`).join('')}</dl></article>
+      <article class="bloco"><h2>Caminhos</h2><p>${X.CAMINHOS.map(c => c.rotulo).join(', ')}. Afinidade 1–2 Aprendiz, 3–4 Iniciado, 5–6 Intermediário, 7–9 Avançado, 10 Mestre. Cada Graduação nova dá um Marco de Progresso, se você tiver a Habilidade Chave do Caminho.</p></article>
       </div></section>`;
   }
 
